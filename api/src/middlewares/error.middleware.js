@@ -4,10 +4,15 @@
 export function errorMiddleware(error, req, res, next) {
   console.error(error);
 
-  const statusCode = error.statusCode || 500;
+  if (error.statusCode) {
+    return res.status(error.statusCode).json({
+      status: "error",
+      message: error.message,
+    });
+  }
 
-  return res.status(statusCode).json({
+  return res.status(500).json({
     status: "error",
-    message: error.message || "Internal server error",
+    message: "Internal server error",
   });
 }

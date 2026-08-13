@@ -51,3 +51,10 @@ export function getTokenExpiration(token) {
 export function verifyRefreshToken(token) {
   return jwt.verify(token, env.jwt.refreshSecret);
 }
+
+/* ====================================
+        VERIFICAR ACCESS TOKEN
+==================================== */
+export function verifyAccessToken(token) {
+  return jwt.verify(token, env.jwt.accessSecret);
+}

@@ -6,6 +6,5 @@ export function createAppError(message, statusCode) {
 
   error.statusCode = statusCode;
 
-  console.log("🚀 ~ createAppError ~ error:", error);
   return error;
 }
