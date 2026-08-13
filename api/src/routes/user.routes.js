@@ -18,6 +18,7 @@ import {
   getUsersQuerySchema,
   userEmailParamsSchema,
 } from "../schemas/user.schema.js";
+
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireUserOwnership } from "../middlewares/ownership.middleware.js";
 
@@ -26,22 +27,27 @@ const router = express.Router();
 /* ====================================
             CREAR USUARIO
 ==================================== */
+
 router.post("/", validate(createUserSchema), createUser);
 
 /* ====================================
              LISTAR USUARIOS
 ==================================== */
+
 router.get(
   "/",
   authenticate,
   validate(getUsersQuerySchema, "query"),
   getUsersController,
 );
+
 /* ====================================
-OBTENER USUARIO POR EMAIL
+      OBTENER USUARIO POR EMAIL
 ==================================== */
+
 router.get(
   "/email/:email",
+  authenticate,
   validate(userEmailParamsSchema, "params"),
   getUserByEmailController,
 );
@@ -49,32 +55,38 @@ router.get(
 /* ====================================
           OBTENER USUARIO POR ID
 ==================================== */
+
 router.get(
   "/:id",
-  validate(userIdParamsSchema, "params"),
   authenticate,
+  validate(userIdParamsSchema, "params"),
   requireUserOwnership,
   getUser,
 );
+
 /* ====================================
           ACTUALIZAR USUARIO
 ==================================== */
+
 router.patch(
   "/:id",
+  authenticate,
   validate(userIdParamsSchema, "params"),
   validate(updateUserSchema),
-  authenticate,
   requireUserOwnership,
   updateUser,
 );
+
 /* ====================================
              ELIMINAR USUARIO
 ==================================== */
+
 router.delete(
   "/:id",
-  validate(userIdParamsSchema, "params"),
   authenticate,
+  validate(userIdParamsSchema, "params"),
   requireUserOwnership,
   deleteUser,
 );
+
 export default router;

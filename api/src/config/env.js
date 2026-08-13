@@ -19,6 +19,9 @@ const envSchema = z.object({
 
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+
+  CORS_ORIGIN_DEV: z.string().url(),
+  CORS_ORIGIN_PRODUCTION: z.string().url(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -30,6 +33,25 @@ if (!parsedEnv.success) {
   process.exit(1);
 }
 
+/* ====================================
+      VALIDACIONES DE PRODUCCIÓN
+==================================== */
+
+if (
+  parsedEnv.data.NODE_ENV === "production" &&
+  (parsedEnv.data.JWT_ACCESS_SECRET ===
+    "tu_access_secret_super_largo_y_aleatorio" ||
+    parsedEnv.data.JWT_REFRESH_SECRET ===
+      "tu_refresh_secret_super_largo_y_aleatorio")
+) {
+  console.error("JWT secrets inseguros para producción");
+  process.exit(1);
+}
+
+/* ====================================
+          CONFIGURACIÓN DE ENV
+==================================== */
+
 const env = {
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
@@ -40,6 +62,11 @@ const env = {
     name: parsedEnv.data.DATABASE_NAME,
     user: parsedEnv.data.DATABASE_USER,
     password: parsedEnv.data.DATABASE_PASSWORD,
+  },
+
+  cors: {
+    dev: parsedEnv.data.CORS_ORIGIN_DEV,
+    production: parsedEnv.data.CORS_ORIGIN_PRODUCTION,
   },
 
   jwt: {

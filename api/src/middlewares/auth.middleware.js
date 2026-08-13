@@ -1,10 +1,11 @@
 import { verifyAccessToken } from "../utils/jwt.js";
+import { findUserById } from "../repositories/user.repository.js";
 import { createAppError } from "../errors/app.errors.js";
 
 /* ====================================
           AUTENTICAR USUARIO
 ==================================== */
-export function authenticate(req, res, next) {
+export async function authenticate(req, res, next) {
   try {
     const authorization = req.headers.authorization;
 
@@ -20,8 +21,14 @@ export function authenticate(req, res, next) {
 
     const payload = verifyAccessToken(token);
 
+    const user = await findUserById(payload.sub);
+
+    if (!user) {
+      throw createAppError("Usuario no encontrado", 401);
+    }
+
     req.user = {
-      id: payload.sub,
+      id: user.id,
     };
 
     next();

@@ -4,22 +4,31 @@ import { login, refresh, logout } from "../controllers/auth.controller.js";
 
 import { validate } from "../middlewares/validate.middleware.js";
 
-import { loginSchema, refreshTokenSchema } from "../schemas/auth.schema.js";
+import { loginSchema } from "../schemas/auth.schema.js";
+
+import {
+  loginRateLimiter,
+  refreshRateLimiter,
+} from "../middlewares/rate-limit.middleware.js";
 
 const router = express.Router();
 
 /* ====================================
               INICIAR SESIÓN
 ==================================== */
-router.post("/login", validate(loginSchema), login);
+
+router.post("/login", loginRateLimiter, validate(loginSchema), login);
 
 /* ====================================
             REFRESCAR TOKEN
 ==================================== */
-router.post("/refresh", validate(refreshTokenSchema), refresh);
+
+router.post("/refresh", refreshRateLimiter, refresh);
 
 /* ====================================
              CERRAR SESIÓN
 ==================================== */
-router.post("/logout", validate(refreshTokenSchema), logout);
+
+router.post("/logout", logout);
+
 export default router;

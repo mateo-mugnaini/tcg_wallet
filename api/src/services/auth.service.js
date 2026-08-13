@@ -59,7 +59,7 @@ export async function loginUser({ email, password }) {
 }
 
 /* ====================================
-          REFRESCAR SESIÓN
+            REFRESCAR SESIÓN
 ==================================== */
 export async function refreshUserToken(refreshToken) {
   const tokenHash = hashToken(refreshToken);
@@ -90,6 +90,9 @@ export async function refreshUserToken(refreshToken) {
     throw createAppError("Refresh token inválido", 401);
   }
 
+  /*
+   * ROTACIÓN DEL REFRESH TOKEN
+   */
   await revokeRefreshToken(storedToken.id);
 
   const accessToken = generateAccessToken(storedToken.user_id);
