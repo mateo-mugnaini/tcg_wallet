@@ -109,3 +109,30 @@ export async function refreshUserToken(refreshToken) {
     refreshToken: newRefreshToken,
   };
 }
+
+/* ====================================
+              CERRAR SESIÓN
+==================================== */
+export async function logoutUser(refreshToken) {
+  const tokenHash = hashToken(refreshToken);
+
+  const storedToken = await findRefreshTokenByHash(tokenHash);
+
+  if (!storedToken) {
+    throw createAppError("Refresh token inválido", 401);
+  }
+
+  if (storedToken.revoked_at) {
+    throw createAppError("Refresh token ya revocado", 401);
+  }
+
+  const revokedToken = await revokeRefreshToken(storedToken.id);
+
+  if (!revokedToken) {
+    throw createAppError("No se pudo cerrar la sesión", 500);
+  }
+
+  return {
+    message: "Sesión cerrada correctamente",
+  };
+}

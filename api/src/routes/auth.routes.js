@@ -1,6 +1,6 @@
 import express from "express";
 
-import { login, refresh } from "../controllers/auth.controller.js";
+import { login, refresh, logout } from "../controllers/auth.controller.js";
 
 import { validate } from "../middlewares/validate.middleware.js";
 
@@ -18,4 +18,8 @@ router.post("/login", validate(loginSchema), login);
 ==================================== */
 router.post("/refresh", validate(refreshTokenSchema), refresh);
 
+/* ====================================
+             CERRAR SESIÓN
+==================================== */
+router.post("/logout", validate(refreshTokenSchema), logout);
 export default router;
