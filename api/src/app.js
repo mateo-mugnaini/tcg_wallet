@@ -1,6 +1,7 @@
 import express from "express";
 
 import userRoutes from "./routes/user.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 const app = express();
@@ -16,10 +17,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-/* ====================================
-              USER ROUTES
-==================================== */
 app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
 /* ====================================
             ERROR MIDDLEWARE
