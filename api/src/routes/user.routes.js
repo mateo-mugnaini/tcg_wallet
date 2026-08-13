@@ -20,7 +20,7 @@ import {
 } from "../schemas/user.schema.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
-import { requireUserOwnership } from "../middlewares/ownership.middleware.js";
+import { requireOwnership } from "../middlewares/authorization.middleware.js";
 
 const router = express.Router();
 
@@ -60,7 +60,7 @@ router.get(
   "/:id",
   authenticate,
   validate(userIdParamsSchema, "params"),
-  requireUserOwnership,
+  requireOwnership,
   getUser,
 );
 
@@ -73,7 +73,7 @@ router.patch(
   authenticate,
   validate(userIdParamsSchema, "params"),
   validate(updateUserSchema),
-  requireUserOwnership,
+  requireOwnership,
   updateUser,
 );
 
@@ -85,7 +85,7 @@ router.delete(
   "/:id",
   authenticate,
   validate(userIdParamsSchema, "params"),
-  requireUserOwnership,
+  requireOwnership,
   deleteUser,
 );
 

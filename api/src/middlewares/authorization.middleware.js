@@ -3,8 +3,12 @@ import { createAppError } from "../errors/app.errors.js";
 /* ====================================
         VALIDAR PROPIETARIO
 ==================================== */
-export function requireUserOwnership(req, res, next) {
+export function requireOwnership(req, res, next) {
   try {
+    if (!req.user) {
+      throw createAppError("Usuario no autenticado", 401);
+    }
+
     const authenticatedUserId = req.user.id;
     const requestedUserId = req.params.id;
 
