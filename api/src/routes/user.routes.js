@@ -1,19 +1,21 @@
 import express from "express";
 
 import {
-  createUser,
   getUser,
-  getUserByEmailController,
+  updateUser,
+  createUser,
   getUsersController,
+  getUserByEmailController,
 } from "../controllers/user.controller.js";
 
 import { validate } from "../middlewares/validate.middleware.js";
 
 import {
   createUserSchema,
-  userEmailParamsSchema,
+  updateUserSchema,
   userIdParamsSchema,
   getUsersQuerySchema,
+  userEmailParamsSchema,
 } from "../schemas/user.schema.js";
 
 const router = express.Router();
@@ -41,5 +43,15 @@ router.get(
           OBTENER USUARIO POR ID
 ==================================== */
 router.get("/:id", validate(userIdParamsSchema, "params"), getUser);
+
+/* ====================================
+          ACTUALIZAR USUARIO
+==================================== */
+router.patch(
+  "/:id",
+  validate(userIdParamsSchema, "params"),
+  validate(updateUserSchema),
+  updateUser,
+);
 
 export default router;

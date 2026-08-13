@@ -70,3 +70,39 @@ export const getUsersQuerySchema = z.object({
 
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
+
+/* ====================================
+        SCHEMA ACTUALIZAR USUARIO
+==================================== */
+export const updateUserSchema = z
+  .object({
+    username: z
+      .string()
+      .trim()
+      .min(3, "El username debe tener al menos 3 caracteres")
+      .max(50, "El username no puede superar los 50 caracteres")
+      .optional(),
+
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("El email no es válido")
+      .max(255, "El email no puede superar los 255 caracteres")
+      .optional(),
+
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
+      .max(255, "La contraseña no puede superar los 255 caracteres")
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      data.username !== undefined ||
+      data.email !== undefined ||
+      data.password !== undefined,
+    {
+      message: "Debes proporcionar al menos un campo para actualizar",
+    },
+  );

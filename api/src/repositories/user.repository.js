@@ -185,3 +185,44 @@ export async function countUsers({ search }) {
 
   return Number(result.rows[0].total);
 }
+/* ====================================
+          ACTUALIZAR USUARIO
+==================================== */
+export async function updateUser(id, { username, email, password }) {
+  const fields = [];
+  const values = [];
+
+  if (username !== undefined) {
+    values.push(username);
+    fields.push(`username = $${values.length}`);
+  }
+
+  if (email !== undefined) {
+    values.push(email);
+    fields.push(`email = $${values.length}`);
+  }
+
+  if (password !== undefined) {
+    values.push(password);
+    fields.push(`password = $${values.length}`);
+  }
+
+  values.push(id);
+
+  const idParameter = values.length;
+
+  const result = await pool.query(
+    `
+      UPDATE users
+      SET
+        ${fields.join(", ")},
+        updated_at = NOW()
+      WHERE id = $${idParameter}
+      RETURNING
+        ${USER_COLUMNS}
+    `,
+    values,
+  );
+
+  return result.rows[0] ?? null;
+}

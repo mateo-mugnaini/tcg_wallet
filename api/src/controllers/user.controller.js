@@ -3,6 +3,7 @@ import {
   getUserById,
   registerUser,
   getUsers,
+  editUser,
 } from "../services/user.service.js";
 /* ====================================
             CREAR USUARIO
@@ -51,6 +52,19 @@ export async function getUsersController(req, res, next) {
     const result = await getUsers(req.validated.query);
 
     return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+          ACTUALIZAR USUARIO
+==================================== */
+export async function updateUser(req, res, next) {
+  try {
+    const user = await editUser(req.params.id, req.validated.body);
+
+    return res.status(200).json(user);
   } catch (error) {
     next(error);
   }

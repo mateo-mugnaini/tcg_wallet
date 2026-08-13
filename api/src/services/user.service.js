@@ -1,14 +1,16 @@
 import bcrypt from "bcrypt";
 
 import {
-  findUserByEmail,
-  findUserById,
-  findUserByUsername,
-  findUserForAuthentication,
   findUsers,
   countUsers,
   createUser,
+  updateUser,
+  findUserById,
+  findUserByEmail,
+  findUserByUsername,
+  findUserForAuthentication,
 } from "../repositories/user.repository.js";
+
 import { createAppError } from "../errors/app.errors.js";
 
 /* ====================================
@@ -88,4 +90,43 @@ export async function getUsers({ page, limit, search, sortBy, sortOrder }) {
       totalPages,
     },
   };
+}
+
+/* ====================================
+          ACTUALIZAR USUARIO
+==================================== */
+export async function editUser(id, { username, email, password }) {
+  const existingUser = await findUserById(id);
+
+  if (!existingUser) {
+    throw createAppError("Usuario no encontrado", 404);
+  }
+
+  if (email !== undefined) {
+    const existingUserByEmail = await findUserByEmail(email);
+
+    if (existingUserByEmail && existingUserByEmail.id !== id) {
+      throw createAppError("El email ya está registrado", 409);
+    }
+  }
+
+  if (username !== undefined) {
+    const existingUserByUsername = await findUserByUsername(username);
+
+    if (existingUserByUsername && existingUserByUsername.id !== id) {
+      throw createAppError("El username ya está registrado", 409);
+    }
+  }
+
+  let hashedPassword;
+
+  if (password !== undefined) {
+    hashedPassword = await bcrypt.hash(password, 12);
+  }
+
+  return updateUser(id, {
+    username,
+    email,
+    password: hashedPassword,
+  });
 }
