@@ -7,6 +7,7 @@ import {
   findRefreshTokenByHash,
   revokeRefreshToken,
   revokeRefreshTokenFamily,
+  rotateRefreshToken,
 } from "../repositories/refresh-token.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
@@ -112,12 +113,6 @@ export async function refreshUserToken(refreshToken) {
    *
    * El token actual se revoca.
    */
-  const revokedToken = await revokeRefreshToken(storedToken.id);
-
-  if (!revokedToken) {
-    throw createAppError("No se pudo rotar el refresh token", 500);
-  }
-
   const accessToken = generateAccessToken(storedToken.user_id);
 
   const newRefreshToken = generateRefreshToken(storedToken.user_id);
@@ -126,18 +121,13 @@ export async function refreshUserToken(refreshToken) {
 
   const expiresAt = getTokenExpiration(newRefreshToken);
 
-  /*
-   * IMPORTANTE:
-   *
-   * El nuevo token pertenece a la misma familia.
-   */
-  await createRefreshToken({
+  await rotateRefreshToken({
+    currentTokenId: storedToken.id,
     userId: storedToken.user_id,
     tokenHash: newTokenHash,
     expiresAt,
     tokenFamilyId: storedToken.token_family_id,
   });
-
   return {
     accessToken,
     refreshToken: newRefreshToken,
