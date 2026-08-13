@@ -2,7 +2,11 @@ import bcrypt from "bcrypt";
 
 import { findUserForAuthentication } from "../repositories/user.repository.js";
 
-import { createRefreshToken } from "../repositories/refresh-token.repository.js";
+import {
+  createRefreshToken,
+  findRefreshTokenByHash,
+  revokeRefreshToken,
+} from "../repositories/refresh-token.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
 
@@ -10,6 +14,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
   getTokenExpiration,
+  verifyRefreshToken,
 } from "../utils/jwt.js";
 
 import { hashToken } from "../utils/token.js";
@@ -50,5 +55,57 @@ export async function loginUser({ email, password }) {
       username: user.username,
       email: user.email,
     },
+  };
+}
+
+/* ====================================
+          REFRESCAR SESIÓN
+==================================== */
+export async function refreshUserToken(refreshToken) {
+  const tokenHash = hashToken(refreshToken);
+
+  const storedToken = await findRefreshTokenByHash(tokenHash);
+
+  if (!storedToken) {
+    throw createAppError("Refresh token inválido", 401);
+  }
+
+  if (storedToken.revoked_at) {
+    throw createAppError("Refresh token revocado", 401);
+  }
+
+  if (new Date(storedToken.expires_at) <= new Date()) {
+    throw createAppError("Refresh token expirado", 401);
+  }
+
+  let payload;
+
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    throw createAppError("Refresh token inválido", 401);
+  }
+
+  if (payload.sub !== storedToken.user_id) {
+    throw createAppError("Refresh token inválido", 401);
+  }
+
+  await revokeRefreshToken(storedToken.id);
+
+  const accessToken = generateAccessToken(storedToken.user_id);
+  const newRefreshToken = generateRefreshToken(storedToken.user_id);
+
+  const newTokenHash = hashToken(newRefreshToken);
+  const expiresAt = getTokenExpiration(newRefreshToken);
+
+  await createRefreshToken({
+    userId: storedToken.user_id,
+    tokenHash: newTokenHash,
+    expiresAt,
+  });
+
+  return {
+    accessToken,
+    refreshToken: newRefreshToken,
   };
 }

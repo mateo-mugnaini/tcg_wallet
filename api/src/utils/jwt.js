@@ -44,3 +44,10 @@ export function getTokenExpiration(token) {
 
   return new Date(decoded.exp * 1000);
 }
+
+/* ====================================
+        VERIFICAR REFRESH TOKEN
+==================================== */
+export function verifyRefreshToken(token) {
+  return jwt.verify(token, env.jwt.refreshSecret);
+}
