@@ -4,6 +4,7 @@ import {
   getUser,
   updateUser,
   createUser,
+  deleteUser,
   getUsersController,
   getUserByEmailController,
 } from "../controllers/user.controller.js";
@@ -53,5 +54,10 @@ router.patch(
   validate(updateUserSchema),
   updateUser,
 );
+
+/* ====================================
+             ELIMINAR USUARIO
+==================================== */
+router.delete("/:id", validate(userIdParamsSchema, "params"), deleteUser);
 
 export default router;

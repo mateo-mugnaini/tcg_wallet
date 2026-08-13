@@ -226,3 +226,20 @@ export async function updateUser(id, { username, email, password }) {
 
   return result.rows[0] ?? null;
 }
+
+/* ====================================
+             ELIMINAR USUARIO
+==================================== */
+export async function deleteUser(id) {
+  const result = await pool.query(
+    `
+      DELETE FROM users
+      WHERE id = $1
+      RETURNING
+        ${USER_COLUMNS}
+    `,
+    [id],
+  );
+
+  return result.rows[0] ?? null;
+}

@@ -5,6 +5,7 @@ import {
   countUsers,
   createUser,
   updateUser,
+  deleteUser,
   findUserById,
   findUserByEmail,
   findUserByUsername,
@@ -129,4 +130,17 @@ export async function editUser(id, { username, email, password }) {
     email,
     password: hashedPassword,
   });
+}
+
+/* ====================================
+             ELIMINAR USUARIO
+==================================== */
+export async function removeUser(id) {
+  const existingUser = await findUserById(id);
+
+  if (!existingUser) {
+    throw createAppError("Usuario no encontrado", 404);
+  }
+
+  return deleteUser(id);
 }

@@ -1,9 +1,10 @@
 import {
-  getUserByEmail,
+  editUser,
+  getUsers,
+  removeUser,
   getUserById,
   registerUser,
-  getUsers,
-  editUser,
+  getUserByEmail,
 } from "../services/user.service.js";
 /* ====================================
             CREAR USUARIO
@@ -65,6 +66,22 @@ export async function updateUser(req, res, next) {
     const user = await editUser(req.params.id, req.validated.body);
 
     return res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+             ELIMINAR USUARIO
+==================================== */
+export async function deleteUser(req, res, next) {
+  try {
+    await removeUser(req.params.id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Usuario eliminado correctamente",
+    });
   } catch (error) {
     next(error);
   }
