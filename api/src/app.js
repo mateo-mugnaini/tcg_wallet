@@ -1,0 +1,29 @@
+import express from "express";
+
+import userRoutes from "./routes/user.routes.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
+
+const app = express();
+
+app.use(express.json());
+
+/* ====================================
+              HEALTH CHECK
+==================================== */
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+  });
+});
+
+/* ====================================
+              USER ROUTES
+==================================== */
+app.use("/api/users", userRoutes);
+
+/* ====================================
+            ERROR MIDDLEWARE
+==================================== */
+app.use(errorMiddleware);
+
+export default app;

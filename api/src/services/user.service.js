@@ -1,0 +1,91 @@
+import bcrypt from "bcrypt";
+
+import {
+  findUserByEmail,
+  findUserById,
+  findUserByUsername,
+  findUserForAuthentication,
+  findUsers,
+  countUsers,
+  createUser,
+} from "../repositories/user.repository.js";
+import { createAppError } from "../errors/app.errors.js";
+
+/* ====================================
+          OBTENER USUARIO POR ID
+==================================== */
+export async function getUserById(id) {
+  const user = await findUserById(id);
+  if (!user) {
+    throw createAppError("Usuario no encontrado", 404);
+  } else return user;
+}
+/* ====================================
+        OBTENER USUARIO POR EMAIL
+==================================== */
+export async function getUserByEmail(email) {
+  const user = await findUserByEmail(email);
+
+  if (!user) {
+    throw createAppError("Usuario no encontrado", 404);
+  }
+
+  return user;
+}
+/* ====================================
+           REGISTRAR USUARIO
+==================================== */
+export async function registerUser({ username, email, password }) {
+  const existingUserByEmail = await findUserByEmail(email);
+
+  if (existingUserByEmail) {
+    throw createAppError("El email ya está registrado", 409);
+  }
+
+  const existingUserByUsername = await findUserByUsername(username);
+
+  if (existingUserByUsername) {
+    throw createAppError("El username ya está registrado", 409);
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  return createUser({
+    username,
+    email,
+    password: hashedPassword,
+  });
+}
+
+/* ====================================
+             LISTAR USUARIOS
+==================================== */
+export async function getUsers({ page, limit, search, sortBy, sortOrder }) {
+  const offset = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    findUsers({
+      search,
+      limit,
+      offset,
+      sortBy,
+      sortOrder,
+    }),
+
+    countUsers({
+      search,
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data: users,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
+}
