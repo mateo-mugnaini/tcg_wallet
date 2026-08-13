@@ -6,6 +6,7 @@ import {
   createRefreshToken,
   findRefreshTokenByHash,
   revokeRefreshToken,
+  revokeRefreshTokenFamily,
 } from "../repositories/refresh-token.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
@@ -17,7 +18,7 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt.js";
 
-import { hashToken } from "../utils/token.js";
+import { hashToken, generateTokenFamilyId } from "../utils/token.js";
 
 /* ====================================
               INICIAR SESIÓN
@@ -41,10 +42,16 @@ export async function loginUser({ email, password }) {
   const tokenHash = hashToken(refreshToken);
   const expiresAt = getTokenExpiration(refreshToken);
 
+  /*
+   * Una nueva sesión genera una nueva familia.
+   */
+  const tokenFamilyId = generateTokenFamilyId();
+
   await createRefreshToken({
     userId: user.id,
     tokenHash,
     expiresAt,
+    tokenFamilyId,
   });
 
   return {
@@ -70,8 +77,18 @@ export async function refreshUserToken(refreshToken) {
     throw createAppError("Refresh token inválido", 401);
   }
 
+  /*
+   * Si el token ya fue revocado y alguien intenta
+   * reutilizarlo, consideramos comprometida toda
+   * la familia de tokens.
+   */
   if (storedToken.revoked_at) {
-    throw createAppError("Refresh token revocado", 401);
+    await revokeRefreshTokenFamily(storedToken.token_family_id);
+
+    throw createAppError(
+      "Refresh token reutilizado. Sesión revocada por seguridad",
+      401,
+    );
   }
 
   if (new Date(storedToken.expires_at) <= new Date()) {
@@ -92,19 +109,33 @@ export async function refreshUserToken(refreshToken) {
 
   /*
    * ROTACIÓN DEL REFRESH TOKEN
+   *
+   * El token actual se revoca.
    */
-  await revokeRefreshToken(storedToken.id);
+  const revokedToken = await revokeRefreshToken(storedToken.id);
+
+  if (!revokedToken) {
+    throw createAppError("No se pudo rotar el refresh token", 500);
+  }
 
   const accessToken = generateAccessToken(storedToken.user_id);
+
   const newRefreshToken = generateRefreshToken(storedToken.user_id);
 
   const newTokenHash = hashToken(newRefreshToken);
+
   const expiresAt = getTokenExpiration(newRefreshToken);
 
+  /*
+   * IMPORTANTE:
+   *
+   * El nuevo token pertenece a la misma familia.
+   */
   await createRefreshToken({
     userId: storedToken.user_id,
     tokenHash: newTokenHash,
     expiresAt,
+    tokenFamilyId: storedToken.token_family_id,
   });
 
   return {

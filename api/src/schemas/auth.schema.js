@@ -3,6 +3,7 @@ import { z } from "zod";
 /* ====================================
           SCHEMA INICIAR SESIÓN
 ==================================== */
+
 export const loginSchema = z.object({
   email: z
     .string()
@@ -15,11 +16,4 @@ export const loginSchema = z.object({
     .string()
     .min(8, "La contraseña debe tener al menos 8 caracteres")
     .max(255, "La contraseña no puede superar los 255 caracteres"),
-});
-
-/* ====================================
-          SCHEMA REFRESH TOKEN
-==================================== */
-export const refreshTokenSchema = z.object({
-  refreshToken: z.string().min(1, "El refresh token es obligatorio"),
 });
