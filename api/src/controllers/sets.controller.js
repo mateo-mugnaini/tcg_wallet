@@ -6,7 +6,7 @@ import {
   removeSet,
 } from "../services/sets.service.js";
 
-import { syncPokemonSets } from "../services/sets.sync.service.js";
+import { syncPokemonSets } from "../syncs/sets.sync.service.js";
 
 /* ====================================
           OBTENER SET POR ID

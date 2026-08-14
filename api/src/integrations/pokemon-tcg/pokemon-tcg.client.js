@@ -47,6 +47,7 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
 
       error.status = response.status;
       error.data = errorData;
+      error.endpoint = endpoint;
 
       throw error;
     }
@@ -93,4 +94,30 @@ export async function getPokemonTcgSets({
   }
 
   return pokemonTcgRequest(`/sets?${params.toString()}`);
+}
+
+/* ====================================
+            LISTAR CARDS
+==================================== */
+
+export async function getPokemonTcgCards({
+  page = 1,
+  pageSize = 250,
+  q,
+  orderBy,
+} = {}) {
+  const params = new URLSearchParams();
+
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+
+  if (q) {
+    params.set("q", q);
+  }
+
+  if (orderBy) {
+    params.set("orderBy", orderBy);
+  }
+
+  return pokemonTcgRequest(`/cards?${params.toString()}`);
 }
