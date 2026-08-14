@@ -209,3 +209,31 @@ export async function rotateRefreshToken({
     client.release();
   }
 }
+
+/* ====================================
+    REVOCAR TOKENS DE UN USUARIO
+==================================== */
+export async function revokeAllRefreshTokensByUserId(userId) {
+  const result = await pool.query(
+    `
+      UPDATE refresh_tokens
+      SET
+        revoked_at = NOW(),
+        updated_at = NOW()
+      WHERE user_id = $1
+        AND revoked_at IS NULL
+      RETURNING
+        id,
+        user_id,
+        token_hash,
+        expires_at,
+        revoked_at,
+        created_at,
+        updated_at,
+        token_family_id
+    `,
+    [userId],
+  );
+
+  return result.rows;
+}

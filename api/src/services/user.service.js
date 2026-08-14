@@ -9,11 +9,11 @@ import {
   findUserById,
   findUserByEmail,
   findUserByUsername,
-  findUserForAuthentication,
 } from "../repositories/user.repository.js";
 
-import { createAppError } from "../errors/app.errors.js";
+import { revokeAllRefreshTokensByUserId } from "../repositories/refresh-token.repository.js";
 
+import { createAppError } from "../errors/app.errors.js";
 /* ====================================
           OBTENER USUARIO POR ID
 ==================================== */
@@ -124,11 +124,20 @@ export async function editUser(id, { username, email, password }) {
     email,
   };
 
+  let passwordChanged = false;
+
   if (password !== undefined) {
     updateData.password = await bcrypt.hash(password, 12);
+    passwordChanged = true;
   }
 
-  return updateUser(id, updateData);
+  const updatedUser = await updateUser(id, updateData);
+
+  if (passwordChanged) {
+    await revokeAllRefreshTokensByUserId(id);
+  }
+
+  return updatedUser;
 }
 
 /* ====================================
