@@ -119,17 +119,16 @@ export async function editUser(id, { username, email, password }) {
     }
   }
 
-  let hashedPassword;
-
-  if (password !== undefined) {
-    hashedPassword = await bcrypt.hash(password, 12);
-  }
-
-  return updateUser(id, {
+  const updateData = {
     username,
     email,
-    password: hashedPassword,
-  });
+  };
+
+  if (password !== undefined) {
+    updateData.password = await bcrypt.hash(password, 12);
+  }
+
+  return updateUser(id, updateData);
 }
 
 /* ====================================

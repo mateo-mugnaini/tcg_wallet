@@ -11,7 +11,7 @@ import {
 ==================================== */
 export async function createUser(req, res, next) {
   try {
-    const user = await registerUser(req.body);
+    const user = await registerUser(req.validated.body);
 
     return res.status(201).json(user);
   } catch (error) {
