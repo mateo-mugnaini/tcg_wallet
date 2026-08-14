@@ -1,5 +1,6 @@
 import express from "express";
 
+//* CONTROLLERS
 import {
   getUser,
   updateUser,
@@ -9,8 +10,13 @@ import {
   getUserByEmailController,
 } from "../controllers/user.controller.js";
 
+//* MIDDLEWARES
+import { requireRole } from "../middlewares/role.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireOwnershipOrRole } from "../middlewares/authorization.middleware.js";
 
+//* SCHEMAS
 import {
   createUserSchema,
   updateUserSchema,
@@ -19,24 +25,21 @@ import {
   userEmailParamsSchema,
 } from "../schemas/user.schema.js";
 
-import { authenticate } from "../middlewares/auth.middleware.js";
-import { requireOwnership } from "../middlewares/authorization.middleware.js";
-
 const router = express.Router();
-
 /* ====================================
-            CREAR USUARIO
+           * CREAR USUARIO
 ==================================== */
 
 router.post("/", validate(createUserSchema), createUser);
 
 /* ====================================
-             LISTAR USUARIOS
+           * LISTAR USUARIOS
 ==================================== */
 
 router.get(
   "/",
   authenticate,
+  requireRole("admin"),
   validate(getUsersQuerySchema, "query"),
   getUsersController,
 );
@@ -48,6 +51,7 @@ router.get(
 router.get(
   "/email/:email",
   authenticate,
+  requireRole("admin"),
   validate(userEmailParamsSchema, "params"),
   getUserByEmailController,
 );
@@ -60,7 +64,7 @@ router.get(
   "/:id",
   authenticate,
   validate(userIdParamsSchema, "params"),
-  requireOwnership,
+  requireOwnershipOrRole("admin"),
   getUser,
 );
 
@@ -73,7 +77,7 @@ router.patch(
   authenticate,
   validate(userIdParamsSchema, "params"),
   validate(updateUserSchema),
-  requireOwnership,
+  requireOwnershipOrRole("admin"),
   updateUser,
 );
 
@@ -85,8 +89,7 @@ router.delete(
   "/:id",
   authenticate,
   validate(userIdParamsSchema, "params"),
-  requireOwnership,
+  requireOwnershipOrRole("admin"),
   deleteUser,
 );
-
 export default router;
