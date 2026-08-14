@@ -27,7 +27,7 @@ const PRICE_CURRENCY = "USD";
 
 const MAX_RETRIES = 15;
 
-const RETRY_BASE_DELAY = 500;
+const RETRY_BASE_DELAY = 1500;
 
 /* ====================================
               DELAY

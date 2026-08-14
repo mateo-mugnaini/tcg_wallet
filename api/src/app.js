@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import setRoutes from "./routes/sets.routes.js";
 import cardsRoutes from "./routes/cards.routes.js";
 import cardsPricesRoutes from "./routes/cards-prices.routes.js";
+import syncRoutes from "./routes/sync.pipeline.routes.js";
 
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
@@ -29,12 +30,13 @@ app.get("/api/health", (req, res) => {
                 ROUTES
 ==================================== */
 
+app.use("/api", cardsPricesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/tcgs", tcgRoutes);
 app.use("/api/sets", setRoutes);
 app.use("/api/cards", cardsRoutes);
-app.use("/api", cardsPricesRoutes);
+app.use("/api/sync", syncRoutes);
 
 /* ====================================
             ERROR MIDDLEWARE

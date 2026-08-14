@@ -34,7 +34,7 @@ const SET_DELAY_MS = 1500;
  */
 const MAX_RETRIES = 15;
 
-const RETRY_BASE_DELAY_MS = 1000;
+const RETRY_BASE_DELAY_MS = 1500;
 
 /* ====================================
               UTILIDADES
