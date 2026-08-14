@@ -22,6 +22,8 @@ const envSchema = z.object({
 
   CORS_ORIGIN_DEV: z.string().url(),
   CORS_ORIGIN_PRODUCTION: z.string().url(),
+
+  POKEMON_TCG_API_KEY: z.string().min(1),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -63,7 +65,9 @@ const env = {
     user: parsedEnv.data.DATABASE_USER,
     password: parsedEnv.data.DATABASE_PASSWORD,
   },
-
+  pokemonTcg: {
+    apiKey: parsedEnv.data.POKEMON_TCG_API_KEY,
+  },
   cors: {
     dev: parsedEnv.data.CORS_ORIGIN_DEV,
     production: parsedEnv.data.CORS_ORIGIN_PRODUCTION,

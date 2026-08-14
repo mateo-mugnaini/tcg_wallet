@@ -14,6 +14,7 @@ const TCG_SORT_COLUMNS = {
 /* ====================================
             BUSCAR TCG POR ID
 ==================================== */
+
 export async function findTcgById(id) {
   const result = await pool.query(
     `
@@ -31,6 +32,7 @@ export async function findTcgById(id) {
 /* ====================================
            BUSCAR TCG POR NOMBRE
 ==================================== */
+
 export async function findTcgByName(name) {
   const result = await pool.query(
     `
@@ -48,9 +50,20 @@ export async function findTcgByName(name) {
 /* ====================================
               LISTAR TCGS
 ==================================== */
-export async function findTcgs({ search, limit, offset, sortBy, sortOrder }) {
+
+export async function findTcgs({
+  search,
+  limit = 10,
+  offset = 0,
+  sortBy = "created_at",
+  sortOrder = "DESC",
+}) {
   const values = [];
   const conditions = [];
+
+  /* ====================================
+              FILTRO SEARCH
+  ==================================== */
 
   if (search) {
     values.push(`%${search}%`);
@@ -60,16 +73,34 @@ export async function findTcgs({ search, limit, offset, sortBy, sortOrder }) {
     `);
   }
 
+  /* ====================================
+              PAGINACIÓN
+  ==================================== */
+
   values.push(limit);
   const limitParameter = values.length;
 
   values.push(offset);
   const offsetParameter = values.length;
 
+  /* ====================================
+                WHERE
+  ==================================== */
+
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  const sortColumn = TCG_SORT_COLUMNS[sortBy];
+  /* ====================================
+              ORDENAMIENTO
+  ==================================== */
+
+  const sortColumn = TCG_SORT_COLUMNS[sortBy] ?? TCG_SORT_COLUMNS.created_at;
+
+  const normalizedSortOrder = sortOrder === "ASC" ? "ASC" : "DESC";
+
+  /* ====================================
+                QUERY
+  ==================================== */
 
   const result = await pool.query(
     `
@@ -77,7 +108,7 @@ export async function findTcgs({ search, limit, offset, sortBy, sortOrder }) {
         ${TCG_COLUMNS}
       FROM tcgs
       ${whereClause}
-      ORDER BY ${sortColumn} ${sortOrder}
+      ORDER BY ${sortColumn} ${normalizedSortOrder}
       LIMIT $${limitParameter}
       OFFSET $${offsetParameter}
     `,
@@ -90,6 +121,7 @@ export async function findTcgs({ search, limit, offset, sortBy, sortOrder }) {
 /* ====================================
              CONTAR TCGS
 ==================================== */
+
 export async function countTcgs({ search }) {
   const values = [];
   const conditions = [];
@@ -120,6 +152,7 @@ export async function countTcgs({ search }) {
 /* ====================================
               CREAR TCG
 ==================================== */
+
 export async function createTcg({ name }) {
   const result = await pool.query(
     `
@@ -139,6 +172,7 @@ export async function createTcg({ name }) {
 /* ====================================
             ACTUALIZAR TCG
 ==================================== */
+
 export async function updateTcg(id, { name }) {
   const fields = [];
   const values = [];
@@ -146,6 +180,10 @@ export async function updateTcg(id, { name }) {
   if (name !== undefined) {
     values.push(name);
     fields.push(`name = $${values.length}`);
+  }
+
+  if (fields.length === 0) {
+    return findTcgById(id);
   }
 
   values.push(id);
@@ -170,6 +208,7 @@ export async function updateTcg(id, { name }) {
 /* ====================================
               ELIMINAR TCG
 ==================================== */
+
 export async function deleteTcg(id) {
   const result = await pool.query(
     `

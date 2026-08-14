@@ -2,12 +2,13 @@ import express from "express";
 
 // CONTROLLERS
 import {
-  getTcg,
-  updateTcg,
-  createTcg,
-  deleteTcg,
-  getTcgsController,
-} from "../controllers/tcg.controller.js";
+  createSet,
+  getSet,
+  getSetsController,
+  updateSet,
+  deleteSet,
+  syncPokemonSetsController,
+} from "../controllers/sets.controller.js";
 
 // MIDDLEWARES
 import { requireRole } from "../middlewares/role.middleware.js";
@@ -16,66 +17,77 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 // SCHEMAS
 import {
-  createTcgSchema,
-  updateTcgSchema,
-  tcgIdParamsSchema,
-  getTcgsQuerySchema,
-} from "../schemas/tcg.schema.js";
+  createSetSchema,
+  updateSetSchema,
+  setIdParamsSchema,
+  getSetsQuerySchema,
+} from "../schemas/set.schema.js";
 
 const router = express.Router();
 
 /* ====================================
-              CREAR TCG
+              CREAR SET
 ==================================== */
 
 router.post(
   "/",
   authenticate,
   requireRole("admin"),
-  validate(createTcgSchema),
-  createTcg,
+  validate(createSetSchema),
+  createSet,
 );
 
 /* ====================================
-            LISTAR TCGS
+        SINCRONIZAR POKÉMON SETS
+==================================== */
+
+router.post(
+  "/sync/pokemon",
+  authenticate,
+  requireRole("admin"),
+  syncPokemonSetsController,
+);
+
+/* ====================================
+            LISTAR SETS
 ==================================== */
 
 router.get(
   "/",
   authenticate,
-  validate(getTcgsQuerySchema, "query"),
-  getTcgsController,
+  validate(getSetsQuerySchema, "query"),
+  getSetsController,
 );
 
 /* ====================================
-          OBTENER TCG POR ID
+          OBTENER SET POR ID
 ==================================== */
 
-router.get("/:id", authenticate, validate(tcgIdParamsSchema, "params"), getTcg);
+router.get("/:id", authenticate, validate(setIdParamsSchema, "params"), getSet);
 
 /* ====================================
-            ACTUALIZAR TCG
+            ACTUALIZAR SET
 ==================================== */
 
 router.patch(
   "/:id",
   authenticate,
   requireRole("admin"),
-  validate(tcgIdParamsSchema, "params"),
-  validate(updateTcgSchema),
-  updateTcg,
+  validate(setIdParamsSchema, "params"),
+  validate(updateSetSchema),
+  updateSet,
 );
 
 /* ====================================
-             ELIMINAR TCG
+             ELIMINAR SET
 ==================================== */
 
 router.delete(
   "/:id",
   authenticate,
   requireRole("admin"),
-  validate(tcgIdParamsSchema, "params"),
-  deleteTcg,
+  validate(setIdParamsSchema, "params"),
+  deleteSet,
 );
 
 export default router;

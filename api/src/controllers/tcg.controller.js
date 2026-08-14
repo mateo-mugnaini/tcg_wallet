@@ -1,32 +1,22 @@
 import {
-  editTcg,
-  getTcgs,
-  removeTcg,
   getTcgById,
+  getTcgs,
   registerTcg,
+  editTcg,
+  removeTcg,
 } from "../services/tcg.service.js";
-
-/* ====================================
-               CREAR TCG
-==================================== */
-export async function createTcg(req, res, next) {
-  try {
-    const tcg = await registerTcg(req.validated.body);
-
-    return res.status(201).json(tcg);
-  } catch (error) {
-    next(error);
-  }
-}
 
 /* ====================================
             OBTENER TCG POR ID
 ==================================== */
+
 export async function getTcg(req, res, next) {
   try {
-    const tcg = await getTcgById(req.params.id);
+    const { id } = req.params;
 
-    return res.status(200).json(tcg);
+    const tcg = await getTcgById(id);
+
+    res.status(200).json(tcg);
   } catch (error) {
     next(error);
   }
@@ -35,11 +25,38 @@ export async function getTcg(req, res, next) {
 /* ====================================
               LISTAR TCGS
 ==================================== */
+
 export async function getTcgsController(req, res, next) {
   try {
-    const result = await getTcgs(req.validated.query);
+    const { search, page, limit, sortBy, sortOrder } = req.query;
 
-    return res.status(200).json(result);
+    const result = await getTcgs({
+      search,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+              CREAR TCG
+==================================== */
+
+export async function createTcg(req, res, next) {
+  try {
+    const { name } = req.body;
+
+    const tcg = await registerTcg({
+      name,
+    });
+
+    res.status(201).json(tcg);
   } catch (error) {
     next(error);
   }
@@ -48,27 +65,33 @@ export async function getTcgsController(req, res, next) {
 /* ====================================
             ACTUALIZAR TCG
 ==================================== */
+
 export async function updateTcg(req, res, next) {
   try {
-    const tcg = await editTcg(req.params.id, req.validated.body);
+    const { id } = req.params;
+    const { name } = req.body;
 
-    return res.status(200).json(tcg);
+    const tcg = await editTcg(id, {
+      name,
+    });
+
+    res.status(200).json(tcg);
   } catch (error) {
     next(error);
   }
 }
 
 /* ====================================
-             ELIMINAR TCG
+              ELIMINAR TCG
 ==================================== */
+
 export async function deleteTcg(req, res, next) {
   try {
-    await removeTcg(req.params.id);
+    const { id } = req.params;
 
-    return res.status(200).json({
-      status: "success",
-      message: "TCG eliminado correctamente",
-    });
+    const tcg = await removeTcg(id);
+
+    res.status(200).json(tcg);
   } catch (error) {
     next(error);
   }
