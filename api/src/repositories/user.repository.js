@@ -2,8 +2,9 @@ import pool from "../config/database.js";
 
 const USER_COLUMNS = `
   id,
-  username,
+  role,
   email,
+  username,
   created_at,
   updated_at
 `;
@@ -75,6 +76,7 @@ export async function findUserForAuthentication(email) {
       SELECT
         id,
         username,
+        role,
         email,
         password,
         created_at,

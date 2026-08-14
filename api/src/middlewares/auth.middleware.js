@@ -4,7 +4,7 @@ import { createAppError } from "../errors/app.errors.js";
 /* ====================================
           AUTENTICAR USUARIO
 ==================================== */
-export async function authenticate(req, res, next) {
+export function authenticate(req, res, next) {
   try {
     const authorization = req.headers.authorization;
 
@@ -22,6 +22,7 @@ export async function authenticate(req, res, next) {
 
     req.user = {
       id: payload.sub,
+      role: payload.role,
     };
 
     next();

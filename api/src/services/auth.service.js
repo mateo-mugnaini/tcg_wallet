@@ -1,22 +1,25 @@
 import bcrypt from "bcrypt";
 
-import { findUserForAuthentication } from "../repositories/user.repository.js";
+import {
+  findUserById,
+  findUserForAuthentication,
+} from "../repositories/user.repository.js";
 
 import {
   createRefreshToken,
-  findRefreshTokenByHash,
   revokeRefreshToken,
-  revokeRefreshTokenFamily,
   rotateRefreshToken,
+  findRefreshTokenByHash,
+  revokeRefreshTokenFamily,
 } from "../repositories/refresh-token.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
 
 import {
-  generateAccessToken,
-  generateRefreshToken,
   getTokenExpiration,
   verifyRefreshToken,
+  generateAccessToken,
+  generateRefreshToken,
 } from "../utils/jwt.js";
 
 import { hashToken, generateTokenFamilyId } from "../utils/token.js";
@@ -37,7 +40,7 @@ export async function loginUser({ email, password }) {
     throw createAppError("Credenciales inválidas", 401);
   }
 
-  const accessToken = generateAccessToken(user.id);
+  const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = generateRefreshToken(user.id);
 
   const tokenHash = hashToken(refreshToken);
@@ -113,7 +116,14 @@ export async function refreshUserToken(refreshToken) {
    *
    * El token actual se revoca.
    */
-  const accessToken = generateAccessToken(storedToken.user_id);
+
+  const user = await findUserById(storedToken.user_id);
+
+  if (!user) {
+    throw createAppError("Usuario no encontrado", 401);
+  }
+
+  const accessToken = generateAccessToken(user.id, user.role);
 
   const newRefreshToken = generateRefreshToken(storedToken.user_id);
 

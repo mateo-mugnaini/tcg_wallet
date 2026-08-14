@@ -5,10 +5,11 @@ import env from "../config/env.js";
 /* ====================================
           GENERAR ACCESS TOKEN
 ==================================== */
-export function generateAccessToken(userId) {
+export function generateAccessToken(userId, role) {
   return jwt.sign(
     {
       sub: userId,
+      role,
     },
     env.jwt.accessSecret,
     {
