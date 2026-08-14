@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 
+import tcgRoutes from "./routes/tcg.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
@@ -21,6 +22,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/tcgs", tcgRoutes);
 
 /* ====================================
             ERROR MIDDLEWARE
