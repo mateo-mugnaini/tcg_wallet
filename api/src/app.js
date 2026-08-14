@@ -6,6 +6,7 @@ import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import setRoutes from "./routes/sets.routes.js";
 import cardsRoutes from "./routes/cards.routes.js";
+import cardsPricesRoutes from "./routes/cards-prices.routes.js";
 
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
@@ -17,20 +18,28 @@ app.use(cookieParser());
 /* ====================================
               HEALTH CHECK
 ==================================== */
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
   });
 });
 
+/* ====================================
+                ROUTES
+==================================== */
+
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/tcgs", tcgRoutes);
 app.use("/api/sets", setRoutes);
 app.use("/api/cards", cardsRoutes);
+app.use("/api", cardsPricesRoutes);
+
 /* ====================================
             ERROR MIDDLEWARE
 ==================================== */
+
 app.use(errorMiddleware);
 
 export default app;

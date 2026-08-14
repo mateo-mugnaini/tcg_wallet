@@ -17,24 +17,21 @@ const POKEMON_TCG_NAME = "Pókemon";
 
 const POKEMON_TCG_PAGE_SIZE = 100;
 
+/*
+ * La API debe devolver los Sets
+ * desde el más reciente hacia el
+ * más antiguo.
+ */
+const POKEMON_TCG_ORDER_BY = "-releaseDate";
+
 /* ====================================
-        CONVERTIR FECHA
+        UTILIDADES
 ==================================== */
 
 function normalizeReleaseDate(releaseDate) {
   if (!releaseDate) {
     return null;
   }
-
-  /*
-   * Pokémon TCG API:
-   *
-   * YYYY/MM/DD
-   *
-   * PostgreSQL:
-   *
-   * YYYY-MM-DD
-   */
 
   return releaseDate.replaceAll("/", "-");
 }
@@ -44,11 +41,16 @@ function normalizeReleaseDate(releaseDate) {
 ==================================== */
 
 export async function syncPokemonSets() {
-  /*
-   * ================================
-   * 1. BUSCAR TCG
-   * ================================
-   */
+  const syncStartedAt = Date.now();
+
+  console.log("");
+  console.log("============================================================");
+  console.log("[POKÉMON SET SYNC] STARTING");
+  console.log("============================================================");
+
+  /* ====================================
+          BUSCAR TCG
+  ==================================== */
 
   const pokemonTcg = await findTcgByName(POKEMON_TCG_NAME);
 
@@ -56,167 +58,193 @@ export async function syncPokemonSets() {
     throw createAppError("El TCG Pokémon no existe en la base de datos", 404);
   }
 
-  /*
-   * ================================
-   * 2. OBTENER PRIMERA PÁGINA
-   * ================================
-   */
+  console.log(`[POKÉMON SET SYNC] TCG: ${pokemonTcg.name}`);
 
-  const firstResponse = await getPokemonTcgSets({
-    page: 1,
-    pageSize: POKEMON_TCG_PAGE_SIZE,
-  });
+  /* ====================================
+          CONTADORES
+  ==================================== */
 
-  const totalCount = firstResponse.totalCount ?? 0;
-
-  const firstPageData = firstResponse.data ?? [];
-
-  /*
-   * ================================
-   * 3. CALCULAR PÁGINAS
-   * ================================
-   */
-
-  const totalPages = Math.ceil(totalCount / POKEMON_TCG_PAGE_SIZE);
-
-  /*
-   * ================================
-   * 4. ACUMULAR SETS
-   * ================================
-   */
-
-  const allSets = [...firstPageData];
-
-  /*
-   * ================================
-   * 5. OBTENER PÁGINAS RESTANTES
-   * ================================
-   */
-
-  for (let page = 2; page <= totalPages; page++) {
-    const response = await getPokemonTcgSets({
-      page,
-      pageSize: POKEMON_TCG_PAGE_SIZE,
-    });
-
-    const pageData = response.data ?? [];
-
-    allSets.push(...pageData);
-  }
-
-  /*
-   * ================================
-   * 6. SINCRONIZAR CON POSTGRESQL
-   * ================================
-   */
-
+  let received = 0;
   let created = 0;
   let updated = 0;
   let unchanged = 0;
   let skipped = 0;
 
-  for (const pokemonSet of allSets) {
-    const externalId = pokemonSet.id;
+  let pagesProcessed = 0;
+  let stoppedAtExisting = false;
 
-    /*
-     * Validación básica.
-     */
+  /* ====================================
+          PAGINACIÓN
+  ==================================== */
 
-    if (!externalId || !pokemonSet.name) {
-      skipped++;
+  let page = 1;
 
-      console.warn(
-        "[POKÉMON SYNC] Set ignorado por datos incompletos:",
-        pokemonSet,
-      );
+  while (true) {
+    console.log(
+      `[POKÉMON SET SYNC] Fetching page=${page} | pageSize=${POKEMON_TCG_PAGE_SIZE}`,
+    );
 
-      continue;
+    const response = await getPokemonTcgSets({
+      page,
+      pageSize: POKEMON_TCG_PAGE_SIZE,
+      orderBy: POKEMON_TCG_ORDER_BY,
+    });
+
+    pagesProcessed++;
+
+    const pageData = response.data ?? [];
+
+    if (pageData.length === 0) {
+      break;
     }
 
-    /*
-     * Buscar si ya existe.
-     */
+    for (const pokemonSet of pageData) {
+      received++;
 
-    const existingSet = await findSetByExternalId(pokemonTcg.id, externalId);
+      const externalId = pokemonSet.id;
 
-    /*
-     * Normalizar datos provenientes de API.
-     */
+      /* ====================================
+              VALIDACIÓN
+      ==================================== */
 
-    const setData = {
-      tcgId: pokemonTcg.id,
-      externalId,
-      name: pokemonSet.name,
-      code: pokemonSet.ptcgoCode ?? null,
-      releaseDate: normalizeReleaseDate(pokemonSet.releaseDate),
-    };
+      if (!externalId || !pokemonSet.name) {
+        skipped++;
 
-    /*
-     * ================================
-     * CREAR
-     * ================================
-     */
+        console.warn(
+          `[POKÉMON SET SYNC] SET ${received} | SKIPPED | incomplete data`,
+        );
 
-    if (!existingSet) {
+        continue;
+      }
+
+      /* ====================================
+              BUSCAR SET
+      ==================================== */
+
+      const existingSet = await findSetByExternalId(pokemonTcg.id, externalId);
+
+      /*
+       * ====================================
+       * SET YA CONOCIDO
+       * ====================================
+       *
+       * Como estamos recorriendo desde
+       * el más nuevo hacia el más antiguo,
+       * llegar a un Set existente significa
+       * que todo lo que viene después ya
+       * debería estar sincronizado.
+       */
+
+      if (existingSet) {
+        stoppedAtExisting = true;
+
+        console.log("");
+        console.log(
+          `[POKÉMON SET SYNC] STOP | existing set found: ${existingSet.name} | external_id=${externalId}`,
+        );
+        console.log(
+          "[POKÉMON SET SYNC] Remaining older Sets were not requested.",
+        );
+
+        break;
+      }
+
+      /* ====================================
+              NORMALIZAR
+      ==================================== */
+
+      const setData = {
+        tcgId: pokemonTcg.id,
+        externalId,
+        name: pokemonSet.name,
+        code: pokemonSet.ptcgoCode ?? null,
+        releaseDate: normalizeReleaseDate(pokemonSet.releaseDate),
+      };
+
+      /* ====================================
+              CREAR SET
+      ==================================== */
+
       await upsertSet(setData);
 
       created++;
 
-      continue;
+      console.log(
+        `[POKÉMON SET SYNC] CREATED | ${pokemonSet.name} | external_id=${externalId} | release=${setData.releaseDate ?? "unknown"}`,
+      );
     }
 
     /*
-     * ================================
-     * COMPROBAR CAMBIOS
-     * ================================
+     * Si encontramos un Set conocido,
+     * terminamos completamente el sync.
      */
 
-    const hasChanged =
-      existingSet.name !== setData.name ||
-      existingSet.code !== setData.code ||
-      String(existingSet.release_date ?? "") !==
-        String(setData.releaseDate ?? "");
-
-    /*
-     * ================================
-     * SIN CAMBIOS
-     * ================================
-     */
-
-    if (!hasChanged) {
-      unchanged++;
-
-      continue;
+    if (stoppedAtExisting) {
+      break;
     }
 
     /*
-     * ================================
-     * ACTUALIZAR
-     * ================================
+     * Si la página tiene menos elementos
+     * que el pageSize, ya llegamos al final.
      */
 
-    await upsertSet(setData);
+    if (pageData.length < POKEMON_TCG_PAGE_SIZE) {
+      break;
+    }
 
-    updated++;
+    page++;
   }
 
-  /*
-   * ================================
-   * 7. RESULTADO
-   * ================================
-   */
+  /* ====================================
+          DURACIÓN
+  ==================================== */
+
+  const durationSeconds = Math.round((Date.now() - syncStartedAt) / 1000);
+
+  /* ====================================
+          SUMMARY
+  ==================================== */
 
   const summary = {
-    received: allSets.length,
+    received,
     created,
     updated,
     unchanged,
     skipped,
+    pagesProcessed,
+    stoppedAtExisting,
+    durationSeconds,
   };
 
+  /* ====================================
+          LOG FINAL
+  ==================================== */
+
+  console.log("");
+  console.log("============================================================");
+  console.log("[POKÉMON SET SYNC] COMPLETED");
+  console.log("============================================================");
+
+  console.log(`[POKÉMON SET SYNC] Received: ${summary.received}`);
+
+  console.log(`[POKÉMON SET SYNC] Created: ${summary.created}`);
+
+  console.log(`[POKÉMON SET SYNC] Updated: ${summary.updated}`);
+
+  console.log(`[POKÉMON SET SYNC] Unchanged: ${summary.unchanged}`);
+
+  console.log(`[POKÉMON SET SYNC] Skipped: ${summary.skipped}`);
+
+  console.log(`[POKÉMON SET SYNC] Pages processed: ${summary.pagesProcessed}`);
+
   console.log(
-    `[POKÉMON SYNC] completed | received=${summary.received} | created=${summary.created} | updated=${summary.updated} | unchanged=${summary.unchanged} | skipped=${summary.skipped}`,
+    `[POKÉMON SET SYNC] Stopped at existing: ${summary.stoppedAtExisting}`,
   );
+
+  console.log(`[POKÉMON SET SYNC] Duration: ${summary.durationSeconds}s`);
+
+  console.log("============================================================");
+  console.log("");
 
   return {
     tcg: {
