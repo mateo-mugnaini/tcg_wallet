@@ -1,8 +1,9 @@
 import {
   getCardPrices,
+  getCardPriceStatistics,
   getLatestCardPrice,
   registerCardPrice,
-} from "../services/cards-prices.service.js"
+} from "../services/cards-prices.service.js";
 
 /* ====================================
         LISTAR CARD PRICES
@@ -71,6 +72,29 @@ export async function createCardPriceController(req, res, next) {
 
     return res.status(201).json({
       data: cardPrice,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+/* ====================================
+        ESTADÍSTICAS CARD PRICE
+==================================== */
+
+export async function getCardPriceStatisticsController(req, res, next) {
+  try {
+    const { cardId } = req.params;
+
+    const { source, condition } = req.query;
+
+    const statistics = await getCardPriceStatistics({
+      cardId,
+      source,
+      condition,
+    });
+
+    return res.status(200).json({
+      data: statistics,
     });
   } catch (error) {
     next(error);

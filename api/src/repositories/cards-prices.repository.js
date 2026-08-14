@@ -270,3 +270,36 @@ export async function findCardPrice({ cardId, condition, source }) {
 
   return result.rows[0] ?? null;
 }
+
+/* ====================================
+        ESTADÍSTICAS CARD PRICE
+==================================== */
+
+export async function getCardPriceStats({ cardId, source, condition }) {
+  const values = [cardId];
+  const conditions = [`card_id = $1`];
+
+  if (source) {
+    values.push(source);
+    conditions.push(`source = $${values.length}`);
+  }
+
+  if (condition) {
+    values.push(condition);
+    conditions.push(`condition = $${values.length}`);
+  }
+
+  const query = `
+    SELECT
+      COUNT(*) AS total,
+      MIN(price) AS minimum_price,
+      MAX(price) AS maximum_price,
+      AVG(price) AS average_price
+    FROM card_prices
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows[0];
+}

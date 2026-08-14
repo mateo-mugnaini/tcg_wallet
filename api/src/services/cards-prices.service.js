@@ -3,8 +3,8 @@ import {
   countCardPrices,
   findLatestCardPrice,
   createCardPrice,
+  getCardPriceStats,
 } from "../repositories/cards-prices.repository.js";
-
 import { findCardById } from "../repositories/cards.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
@@ -199,4 +199,52 @@ export async function registerCardPrice({
     currency,
     source,
   });
+}
+
+/* ====================================
+        ESTADÍSTICAS CARD PRICE
+==================================== */
+
+export async function getCardPriceStatistics({ cardId, source, condition }) {
+  /* ====================================
+          COMPROBAR CARD
+  ==================================== */
+
+  const card = await findCardById(cardId);
+
+  if (!card) {
+    throw createAppError("Card no encontrada", 404);
+  }
+
+  /* ====================================
+          OBTENER ESTADÍSTICAS
+  ==================================== */
+
+  const stats = await getCardPriceStats({
+    cardId,
+    source,
+    condition,
+  });
+
+  /* ====================================
+          SIN PRECIOS
+  ==================================== */
+
+  if (Number(stats.total) === 0) {
+    throw createAppError("No existen precios registrados para esta Card", 404);
+  }
+
+  /* ====================================
+          NORMALIZAR RESULTADO
+  ==================================== */
+
+  return {
+    total: Number(stats.total),
+    minimumPrice:
+      stats.minimum_price !== null ? Number(stats.minimum_price) : null,
+    maximumPrice:
+      stats.maximum_price !== null ? Number(stats.maximum_price) : null,
+    averagePrice:
+      stats.average_price !== null ? Number(stats.average_price) : null,
+  };
 }

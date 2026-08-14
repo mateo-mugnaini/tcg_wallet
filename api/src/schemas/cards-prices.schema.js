@@ -1,49 +1,49 @@
-import Joi from "joi";
+import { z } from "zod";
 
 /* ====================================
         CARD ID PARAM
 ==================================== */
 
-export const cardPriceCardIdParamsSchema = Joi.object({
-  cardId: Joi.number().integer().positive().required(),
+export const cardPriceCardIdParamsSchema = z.object({
+  cardId: z.string().uuid(),
 });
 
 /* ====================================
         LISTAR CARD PRICES
 ==================================== */
 
-export const getCardPricesQuerySchema = Joi.object({
-  source: Joi.string().trim().min(1).max(100).optional(),
+export const getCardPricesQuerySchema = z.object({
+  source: z.string().trim().min(1).max(100).optional(),
 
-  condition: Joi.string().trim().min(1).max(100).optional(),
+  condition: z.string().trim().min(1).max(100).optional(),
 
-  page: Joi.number().integer().min(1).default(1),
+  page: z.coerce.number().int().min(1).default(1),
 
-  limit: Joi.number().integer().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 
-  sortOrder: Joi.string().valid("ASC", "DESC", "asc", "desc").default("DESC"),
+  sortOrder: z.enum(["ASC", "DESC", "asc", "desc"]).default("DESC"),
 });
 
 /* ====================================
         ÚLTIMO CARD PRICE
 ==================================== */
 
-export const getLatestCardPriceQuerySchema = Joi.object({
-  source: Joi.string().trim().min(1).max(100).optional(),
+export const getLatestCardPriceQuerySchema = z.object({
+  source: z.string().trim().min(1).max(100).optional(),
 
-  condition: Joi.string().trim().min(1).max(100).optional(),
+  condition: z.string().trim().min(1).max(100).optional(),
 });
 
 /* ====================================
         CREAR CARD PRICE
 ==================================== */
 
-export const createCardPriceSchema = Joi.object({
-  condition: Joi.string().trim().min(1).max(100).required(),
+export const createCardPriceSchema = z.object({
+  condition: z.string().trim().min(1).max(100),
 
-  price: Joi.number().min(0).required(),
+  price: z.coerce.number().min(0),
 
-  currency: Joi.string().trim().min(1).max(10).required(),
+  currency: z.string().trim().min(1).max(10),
 
-  source: Joi.string().trim().min(1).max(100).required(),
+  source: z.string().trim().min(1).max(100),
 });
