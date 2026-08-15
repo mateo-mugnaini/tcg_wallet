@@ -15,7 +15,7 @@
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
 | 04 | Valoración de colección | **En progreso** | Ampliar pruebas de valoración y documentar conversión futura de currency. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
-| 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
+| 06 | Validación Zod completa | **Parcial** | Cubrir cards, sync y responses generales; collection request ya avanzado. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
 | 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
 | 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y proteger syncs. |

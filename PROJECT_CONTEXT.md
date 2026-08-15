@@ -491,7 +491,7 @@ validate.middleware.js hace safeParse sobre body/query/params y guarda el result
 
 validate-response.middleware.js intercepta res.json, valida el objeto y transforma response inválida en AppError 500. Se usa en card prices, graded prices y collection value.
 
-Inconsistencias: todavía no hay schemas de request para cards, collection items ni syncs; tampoco hay response schemas generales para users, TCGs, sets, cards, collection CRUD/stats o grading companies.
+Inconsistencias: todavía no hay schemas de request para cards ni syncs; collection items ya tiene schemas de params, filtros y create/update. Todavía faltan response schemas generales para users, TCGs, sets, cards, collection CRUD/stats y grading companies.
 
 ## 20. Error handling
 
@@ -615,7 +615,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
 | 04 | Valoración de colección | **En progreso**: normal y graded validados; falta definir currency y ampliar cobertura. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
-| 06 | Validación Zod completa | Parcial; faltan cards, collection, sync y responses generales. |
+| 06 | Validación Zod completa | Parcial; collection request avanzado cubierto; faltan cards, sync y responses generales. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
 | 08 | Testing profesional | Pendiente; no hay tests. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies sí, Helmet/CORS no activos. |

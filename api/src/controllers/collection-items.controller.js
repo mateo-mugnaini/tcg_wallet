@@ -30,7 +30,7 @@ export async function getCollectionItemsController(req, res, next) {
       offset = 0,
       sortBy = "created_at",
       sortOrder = "DESC",
-    } = req.query;
+    } = req.validated.query;
 
     const userId = req.user.id;
 
@@ -62,11 +62,13 @@ export async function getCollectionItemsController(req, res, next) {
     const parsedIsGraded =
       isGraded === undefined
         ? undefined
-        : isGraded === "true"
-          ? true
-          : isGraded === "false"
-            ? false
-            : null;
+        : typeof isGraded === "boolean"
+          ? isGraded
+          : isGraded === "true"
+            ? true
+            : isGraded === "false"
+              ? false
+              : null;
 
     if (parsedIsGraded === null) {
       throw createAppError("El parámetro isGraded debe ser true o false", 400);
@@ -136,7 +138,7 @@ export async function getCollectionItemsController(req, res, next) {
 
 export async function getCollectionItemByIdController(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const userId = req.user.id;
 
@@ -174,7 +176,7 @@ export async function createCollectionItemController(req, res, next) {
       isGraded = false,
       gradingCompanyId = null,
       grade = null,
-    } = req.body;
+      } = req.validated.body;
 
     const userId = req.user.id;
 
@@ -219,9 +221,10 @@ export async function createCollectionItemController(req, res, next) {
 
 export async function updateCollectionItemController(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
-    const { quantity, condition, isGraded, gradingCompanyId, grade } = req.body;
+    const { quantity, condition, isGraded, gradingCompanyId, grade } =
+      req.validated.body;
 
     const userId = req.user.id;
 
@@ -258,7 +261,7 @@ export async function updateCollectionItemController(req, res, next) {
 
 export async function deleteCollectionItemController(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const userId = req.user.id;
 

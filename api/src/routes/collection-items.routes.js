@@ -14,7 +14,15 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
-import { collectionValueResponseSchema } from "../schemas/collection-items.schema.js";
+import {
+  collectionItemIdParamsSchema,
+  collectionValueResponseSchema,
+  createCollectionItemSchema,
+  getCollectionItemsQuerySchema,
+  updateCollectionItemSchema,
+} from "../schemas/collection-items.schema.js";
+
+import { validate } from "../middlewares/validate.middleware.js";
 
 const router = Router();
 
@@ -22,7 +30,12 @@ const router = Router();
           LISTAR COLECCIÓN
 ==================================== */
 
-router.get("/", authenticate, getCollectionItemsController);
+router.get(
+  "/",
+  authenticate,
+  validate(getCollectionItemsQuerySchema, "query"),
+  getCollectionItemsController,
+);
 
 /* ====================================
       ESTADÍSTICAS DE COLECCIÓN
@@ -45,24 +58,45 @@ router.get(
         OBTENER ITEM POR ID
 ==================================== */
 
-router.get("/:id", authenticate, getCollectionItemByIdController);
+router.get(
+  "/:id",
+  authenticate,
+  validate(collectionItemIdParamsSchema, "params"),
+  getCollectionItemByIdController,
+);
 
 /* ====================================
         AGREGAR A COLECCIÓN
 ==================================== */
 
-router.post("/", authenticate, createCollectionItemController);
+router.post(
+  "/",
+  authenticate,
+  validate(createCollectionItemSchema, "body"),
+  createCollectionItemController,
+);
 
 /* ====================================
         ACTUALIZAR COLECCIÓN
 ==================================== */
 
-router.put("/:id", authenticate, updateCollectionItemController);
+router.put(
+  "/:id",
+  authenticate,
+  validate(collectionItemIdParamsSchema, "params"),
+  validate(updateCollectionItemSchema, "body"),
+  updateCollectionItemController,
+);
 
 /* ====================================
         ELIMINAR DE COLECCIÓN
 ==================================== */
 
-router.delete("/:id", authenticate, deleteCollectionItemController);
+router.delete(
+  "/:id",
+  authenticate,
+  validate(collectionItemIdParamsSchema, "params"),
+  deleteCollectionItemController,
+);
 
 export default router;
