@@ -7,6 +7,8 @@ import {
   updateCollectionItem,
   deleteCollectionItem,
   countCollectionItems,
+  getCollectionStats as findCollectionStats,
+  getCollectionValue as findCollectionValue,
 } from "../repositories/collection-items.repository.js";
 
 import { findGradingCompanyById } from "../repositories/grading-companies.repository.js";
@@ -156,7 +158,7 @@ export async function addCollectionItem({
           CREAR ITEM
   ==================================== */
 
-  return createCollectionItem({
+  const createdItem = await createCollectionItem({
     userId,
     cardId,
     quantity: normalizedQuantity,
@@ -165,6 +167,8 @@ export async function addCollectionItem({
     gradingCompanyId: grading.gradingCompanyId,
     grade: grading.grade,
   });
+
+  return findCollectionItemById(createdItem.id, userId);
 }
 
 /* ====================================
@@ -176,8 +180,15 @@ export async function getCollectionItems({
   cardId,
   condition,
   isGraded,
+  setId,
+  tcgId,
+  rarity,
+  gradingCompanyId,
+  minGrade,
+  maxGrade,
   limit = 20,
   offset = 0,
+  sortBy = "created_at",
   sortOrder = "DESC",
 }) {
   const items = await findCollectionItems({
@@ -185,8 +196,15 @@ export async function getCollectionItems({
     cardId,
     condition,
     isGraded,
+    setId,
+    tcgId,
+    rarity,
+    gradingCompanyId,
+    minGrade,
+    maxGrade,
     limit,
     offset,
+    sortBy,
     sortOrder,
   });
 
@@ -195,6 +213,12 @@ export async function getCollectionItems({
     cardId,
     condition,
     isGraded,
+    setId,
+    tcgId,
+    rarity,
+    gradingCompanyId,
+    minGrade,
+    maxGrade,
   });
 
   return {
@@ -278,13 +302,15 @@ export async function editCollectionItem({
           ACTUALIZAR
   ==================================== */
 
-  return updateCollectionItem(id, userId, {
+  await updateCollectionItem(id, userId, {
     quantity: normalizedQuantity,
     condition: normalizedCondition,
     isGraded: grading.isGraded,
     gradingCompanyId: grading.gradingCompanyId,
     grade: grading.grade,
   });
+
+  return findCollectionItemById(id, userId);
 }
 
 /* ====================================
@@ -299,4 +325,20 @@ export async function removeCollectionItem({ id, userId }) {
   }
 
   return deleteCollectionItem(id, userId);
+}
+
+/* ====================================
+      ESTADÍSTICAS DE COLECCIÓN
+==================================== */
+
+export async function getCollectionStatsService({ userId }) {
+  return findCollectionStats(userId);
+}
+
+/* ====================================
+      VALOR ESTIMADO DE COLECCIÓN
+==================================== */
+
+export async function getCollectionValueService({ userId }) {
+  return findCollectionValue(userId);
 }

@@ -9,7 +9,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
 
   DATABASE_HOST: z.string().min(1),
-  DATABASE_PORT: z.coerce.number().int().positive().default(5432),
+  DATABASE_PORT: z.coerce.number().int().positive().default(2203),
   DATABASE_NAME: z.string().min(1),
   DATABASE_USER: z.string().min(1),
   DATABASE_PASSWORD: z.string(),

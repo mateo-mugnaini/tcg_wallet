@@ -79,6 +79,27 @@ export async function createGradingCompany({ name }) {
 }
 
 /* ====================================
+      ACTUALIZAR GRADING COMPANY
+==================================== */
+
+export async function updateGradingCompany(id, { name }) {
+  const query = `
+    UPDATE grading_companies
+    SET
+      name = COALESCE($1, name)
+    WHERE id = $2
+    RETURNING
+      id,
+      name,
+      created_at
+  `;
+
+  const result = await pool.query(query, [name, id]);
+
+  return result.rows[0] ?? null;
+}
+
+/* ====================================
       ELIMINAR GRADING COMPANY
 ==================================== */
 
