@@ -118,20 +118,88 @@ export async function revokeRefreshTokenFamily(tokenFamilyId) {
        ROTAR REFRESH TOKEN
 ==================================== */
 export async function rotateRefreshToken({
-  currentTokenId,
-  userId,
   tokenHash,
+  userId,
+  newTokenHash,
   expiresAt,
-  tokenFamilyId,
 }) {
   const client = await pool.connect();
+  let transactionStarted = false;
 
   try {
     await client.query("BEGIN");
+    transactionStarted = true;
 
     /*
-     * 1. Revocar el refresh token actual
+     * El token se busca y bloquea dentro de la misma transacción que hará
+     * la rotación. Dos solicitudes concurrentes no pueden rotar el mismo
+     * registro activo simultáneamente.
      */
+    const storedResult = await client.query(
+      `
+        SELECT
+          id,
+          user_id,
+          token_hash,
+          expires_at,
+          revoked_at,
+          created_at,
+          updated_at,
+          token_family_id
+        FROM refresh_tokens
+        WHERE token_hash = $1
+        FOR UPDATE
+      `,
+      [tokenHash],
+    );
+
+    const storedToken = storedResult.rows[0] ?? null;
+
+    if (!storedToken) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
+      return { status: "not_found" };
+    }
+
+    if (storedToken.user_id !== userId) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
+      return { status: "invalid_user" };
+    }
+
+    /*
+     * Un refresh token ya revocado indica reutilización. La familia se
+     * revoca dentro de esta transacción para que la detección y la respuesta
+     * de seguridad sean atómicas.
+     */
+    if (storedToken.revoked_at) {
+      await client.query(
+        `
+          UPDATE refresh_tokens
+          SET
+            revoked_at = NOW(),
+            updated_at = NOW()
+          WHERE token_family_id = $1
+            AND revoked_at IS NULL
+        `,
+        [storedToken.token_family_id],
+      );
+
+      await client.query("COMMIT");
+      transactionStarted = false;
+
+      return { status: "reused" };
+    }
+
+    if (new Date(storedToken.expires_at) <= new Date()) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
+      return { status: "expired" };
+    }
+
     const revokeResult = await client.query(
       `
         UPDATE refresh_tokens
@@ -150,7 +218,7 @@ export async function rotateRefreshToken({
           updated_at,
           token_family_id
       `,
-      [currentTokenId],
+      [storedToken.id],
     );
 
     if (revokeResult.rows.length === 0) {
@@ -182,15 +250,17 @@ export async function rotateRefreshToken({
           updated_at,
           token_family_id
       `,
-      [userId, tokenHash, expiresAt, tokenFamilyId],
+      [userId, newTokenHash, expiresAt, storedToken.token_family_id],
     );
 
     /*
      * 3. Confirmar ambas operaciones
      */
     await client.query("COMMIT");
+    transactionStarted = false;
 
     return {
+      status: "rotated",
       revokedToken: revokeResult.rows[0],
       newToken: createResult.rows[0],
     };
@@ -199,7 +269,13 @@ export async function rotateRefreshToken({
      * Si algo falla, ninguna de las operaciones
      * anteriores queda aplicada.
      */
-    await client.query("ROLLBACK");
+    if (transactionStarted) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // Conservamos el error original y liberamos el cliente en finally.
+      }
+    }
 
     throw error;
   } finally {
