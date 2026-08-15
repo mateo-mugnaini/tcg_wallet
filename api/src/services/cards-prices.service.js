@@ -2,10 +2,12 @@ import {
   findCardPrices,
   countCardPrices,
   findLatestCardPrice,
+  findLatestCardPrices,
   createCardPrice,
   getCardPriceStats,
-  findLatestCardPrices,
+  getCardPriceAggregations as findCardPriceAggregations,
 } from "../repositories/cards-prices.repository.js";
+
 import { findCardById } from "../repositories/cards.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
@@ -23,6 +25,8 @@ export async function getCardPrices({
   limit = 20,
   sortOrder = "DESC",
 }) {
+  console.log("[SERVICE] getCardPrices - START");
+
   /* ====================================
           NORMALIZAR PAGINACIÓN
   ==================================== */
@@ -52,6 +56,8 @@ export async function getCardPrices({
           COMPROBAR CARD
   ==================================== */
 
+  console.log("[SERVICE] getCardPrices - Checking card");
+
   const card = await findCardById(cardId);
 
   if (!card) {
@@ -67,6 +73,8 @@ export async function getCardPrices({
   /* ====================================
           CONSULTAR DATOS + TOTAL
   ==================================== */
+
+  console.log("[SERVICE] getCardPrices - Querying prices");
 
   const [prices, total] = await Promise.all([
     findCardPrices({
@@ -85,14 +93,27 @@ export async function getCardPrices({
     }),
   ]);
 
+  console.log("[SERVICE] getCardPrices - Queries completed");
+
+  /* ====================================
+          NORMALIZAR PRECIOS
+  ==================================== */
+
+  const normalizedPrices = prices.map((price) => ({
+    ...price,
+    price: Number(price.price),
+  }));
+
   /* ====================================
           CALCULAR TOTAL PÁGINAS
   ==================================== */
 
   const totalPages = total === 0 ? 0 : Math.ceil(total / normalizedLimit);
 
+  console.log("[SERVICE] getCardPrices - END");
+
   return {
-    data: prices,
+    data: normalizedPrices,
 
     pagination: {
       page: normalizedPage,
@@ -108,19 +129,13 @@ export async function getCardPrices({
 ==================================== */
 
 export async function getLatestCardPrice({ cardId, source, condition }) {
-  /* ====================================
-          COMPROBAR CARD
-  ==================================== */
+  console.log("[SERVICE] getLatestCardPrice - START");
 
   const card = await findCardById(cardId);
 
   if (!card) {
     throw createAppError("Card no encontrada", 404);
   }
-
-  /* ====================================
-          BUSCAR ÚLTIMO PRECIO
-  ==================================== */
 
   const price = await findLatestCardPrice({
     cardId,
@@ -131,6 +146,8 @@ export async function getLatestCardPrice({ cardId, source, condition }) {
   if (!price) {
     throw createAppError("No existen precios registrados para esta Card", 404);
   }
+
+  console.log("[SERVICE] getLatestCardPrice - END");
 
   return price;
 }
@@ -146,9 +163,7 @@ export async function registerCardPrice({
   currency,
   source,
 }) {
-  /* ====================================
-          COMPROBAR CARD
-  ==================================== */
+  console.log("[SERVICE] registerCardPrice - START");
 
   const card = await findCardById(cardId);
 
@@ -156,17 +171,9 @@ export async function registerCardPrice({
     throw createAppError("Card no encontrada", 404);
   }
 
-  /* ====================================
-          VALIDAR CONDITION
-  ==================================== */
-
   if (!condition || typeof condition !== "string") {
     throw createAppError("La condición del precio es obligatoria", 400);
   }
-
-  /* ====================================
-          VALIDAR PRICE
-  ==================================== */
 
   const normalizedPrice = Number(price);
 
@@ -174,33 +181,25 @@ export async function registerCardPrice({
     throw createAppError("El precio debe ser un número mayor o igual a 0", 400);
   }
 
-  /* ====================================
-          VALIDAR CURRENCY
-  ==================================== */
-
   if (!currency || typeof currency !== "string") {
     throw createAppError("La moneda es obligatoria", 400);
   }
-
-  /* ====================================
-          VALIDAR SOURCE
-  ==================================== */
 
   if (!source || typeof source !== "string") {
     throw createAppError("La fuente del precio es obligatoria", 400);
   }
 
-  /* ====================================
-          CREAR REGISTRO
-  ==================================== */
-
-  return createCardPrice({
+  const cardPrice = await createCardPrice({
     cardId,
     condition,
     price: normalizedPrice,
     currency,
     source,
   });
+
+  console.log("[SERVICE] registerCardPrice - END");
+
+  return cardPrice;
 }
 
 /* ====================================
@@ -208,9 +207,9 @@ export async function registerCardPrice({
 ==================================== */
 
 export async function getCardPriceStatistics({ cardId, source, condition }) {
-  /* ====================================
-          COMPROBAR CARD
-  ==================================== */
+  console.log("[SERVICE] getCardPriceStatistics - START");
+
+  console.log("[SERVICE] getCardPriceStatistics - Checking card");
 
   const card = await findCardById(cardId);
 
@@ -218,9 +217,9 @@ export async function getCardPriceStatistics({ cardId, source, condition }) {
     throw createAppError("Card no encontrada", 404);
   }
 
-  /* ====================================
-          OBTENER ESTADÍSTICAS
-  ==================================== */
+  console.log("[SERVICE] getCardPriceStatistics - Card found");
+
+  console.log("[SERVICE] getCardPriceStatistics - Querying statistics");
 
   const stats = await getCardPriceStats({
     cardId,
@@ -228,27 +227,28 @@ export async function getCardPriceStatistics({ cardId, source, condition }) {
     condition,
   });
 
-  /* ====================================
-          SIN PRECIOS
-  ==================================== */
+  console.log("[SERVICE] getCardPriceStatistics - Statistics received");
 
   if (Number(stats.total) === 0) {
     throw createAppError("No existen precios registrados para esta Card", 404);
   }
 
-  /* ====================================
-          NORMALIZAR RESULTADO
-  ==================================== */
-
-  return {
+  const result = {
     total: Number(stats.total),
+
     minimumPrice:
       stats.minimum_price !== null ? Number(stats.minimum_price) : null,
+
     maximumPrice:
       stats.maximum_price !== null ? Number(stats.maximum_price) : null,
+
     averagePrice:
       stats.average_price !== null ? Number(stats.average_price) : null,
   };
+
+  console.log("[SERVICE] getCardPriceStatistics - END");
+
+  return result;
 }
 
 /* ====================================
@@ -256,9 +256,9 @@ export async function getCardPriceStatistics({ cardId, source, condition }) {
 ==================================== */
 
 export async function getCardPriceVariation({ cardId, source, condition }) {
-  /* ====================================
-          COMPROBAR CARD
-  ==================================== */
+  console.log("[SERVICE] getCardPriceVariation - START");
+
+  console.log("[SERVICE] getCardPriceVariation - Checking card");
 
   const card = await findCardById(cardId);
 
@@ -266,9 +266,9 @@ export async function getCardPriceVariation({ cardId, source, condition }) {
     throw createAppError("Card no encontrada", 404);
   }
 
-  /* ====================================
-          OBTENER ÚLTIMOS PRECIOS
-  ==================================== */
+  console.log("[SERVICE] getCardPriceVariation - Card found");
+
+  console.log("[SERVICE] getCardPriceVariation - Querying latest prices");
 
   const prices = await findLatestCardPrices({
     cardId,
@@ -276,9 +276,9 @@ export async function getCardPriceVariation({ cardId, source, condition }) {
     condition,
   });
 
-  /* ====================================
-          VALIDAR HISTORIAL
-  ==================================== */
+  console.log(
+    `[SERVICE] getCardPriceVariation - Prices received: ${prices.length}`,
+  );
 
   if (prices.length === 0) {
     throw createAppError("No existen precios registrados para esta Card", 404);
@@ -291,40 +291,20 @@ export async function getCardPriceVariation({ cardId, source, condition }) {
     );
   }
 
-  /* ====================================
-          OBTENER PRECIOS
-  ==================================== */
-
   const currentPrice = Number(prices[0].price);
   const previousPrice = Number(prices[1].price);
-
-  /* ====================================
-          VALIDAR PRECIOS
-  ==================================== */
 
   if (!Number.isFinite(currentPrice) || !Number.isFinite(previousPrice)) {
     throw createAppError("Los precios registrados no son válidos", 500);
   }
 
-  /* ====================================
-          CALCULAR VARIACIÓN ABSOLUTA
-  ==================================== */
-
   const absoluteVariation = currentPrice - previousPrice;
-
-  /* ====================================
-          CALCULAR VARIACIÓN PORCENTUAL
-  ==================================== */
 
   let percentageVariation = null;
 
   if (previousPrice !== 0) {
     percentageVariation = (absoluteVariation / previousPrice) * 100;
   }
-
-  /* ====================================
-          DETERMINAR DIRECCIÓN
-  ==================================== */
 
   let direction = "unchanged";
 
@@ -334,9 +314,7 @@ export async function getCardPriceVariation({ cardId, source, condition }) {
     direction = "down";
   }
 
-  /* ====================================
-              RESULTADO
-  ==================================== */
+  console.log("[SERVICE] getCardPriceVariation - END");
 
   return {
     currentPrice,
@@ -350,4 +328,118 @@ export async function getCardPriceVariation({ cardId, source, condition }) {
     currentRecordedAt: formatTimestamp(prices[0].recorded_at),
     previousRecordedAt: formatTimestamp(prices[1].recorded_at),
   };
+}
+
+/* ====================================
+        AGREGACIONES CARD PRICE
+==================================== */
+
+export async function getCardPriceAggregations({
+  cardId,
+  source,
+  condition,
+  period = "day",
+}) {
+  console.log("====================================");
+  console.log("[SERVICE] getCardPriceAggregations - START");
+  console.log("====================================");
+
+  console.log("[SERVICE] Card ID:", cardId);
+  console.log("[SERVICE] Source:", source);
+  console.log("[SERVICE] Condition:", condition);
+  console.log("[SERVICE] Period:", period);
+
+  /* ====================================
+          COMPROBAR CARD
+  ==================================== */
+
+  console.log("[SERVICE] Checking card...");
+
+  console.time("[SERVICE] findCardById");
+
+  const card = await findCardById(cardId);
+
+  console.timeEnd("[SERVICE] findCardById");
+
+  if (!card) {
+    throw createAppError("Card no encontrada", 404);
+  }
+
+  console.log("[SERVICE] Card found");
+
+  /* ====================================
+          VALIDAR PERÍODO
+  ==================================== */
+
+  console.log("[SERVICE] Validating period...");
+
+  const allowedPeriods = ["day", "week", "month"];
+
+  if (!allowedPeriods.includes(period)) {
+    throw createAppError("El período debe ser day, week o month", 400);
+  }
+
+  console.log("[SERVICE] Period valid");
+
+  /* ====================================
+          OBTENER AGREGACIONES
+  ==================================== */
+
+  console.log("[SERVICE] Querying aggregations...");
+
+  console.time("[SERVICE] findCardPriceAggregations");
+
+  const aggregations = await findCardPriceAggregations({
+    cardId,
+    source,
+    condition,
+    period,
+  });
+
+  console.timeEnd("[SERVICE] findCardPriceAggregations");
+
+  console.log(`[SERVICE] Aggregations received: ${aggregations.length}`);
+
+  /* ====================================
+          SIN DATOS
+  ==================================== */
+
+  if (aggregations.length === 0) {
+    throw createAppError("No existen precios registrados para esta Card", 404);
+  }
+
+  /* ====================================
+          NORMALIZAR RESULTADO
+  ==================================== */
+
+  console.log("[SERVICE] Normalizing aggregations...");
+
+  const result = aggregations.map((aggregation) => ({
+    period: aggregation.period,
+
+    total: Number(aggregation.total),
+
+    minimumPrice:
+      aggregation.minimum_price !== null
+        ? Number(aggregation.minimum_price)
+        : null,
+
+    maximumPrice:
+      aggregation.maximum_price !== null
+        ? Number(aggregation.maximum_price)
+        : null,
+
+    averagePrice:
+      aggregation.average_price !== null
+        ? Number(aggregation.average_price)
+        : null,
+  }));
+
+  console.log("[SERVICE] Aggregations normalized");
+
+  console.log("====================================");
+  console.log("[SERVICE] getCardPriceAggregations - END");
+  console.log("====================================");
+
+  return result;
 }

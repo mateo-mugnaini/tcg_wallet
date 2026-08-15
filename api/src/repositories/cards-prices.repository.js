@@ -353,3 +353,68 @@ export async function findLatestCardPrices({ cardId, source, condition }) {
 
   return result.rows;
 }
+
+/* ====================================
+        AGREGACIONES CARD PRICE
+==================================== */
+
+export async function getCardPriceAggregations({
+  cardId,
+  source,
+  condition,
+  period = "day",
+}) {
+  const values = [cardId];
+  const conditions = [`card_id = $1`];
+
+  /* ====================================
+          FILTRAR POR SOURCE
+  ==================================== */
+
+  if (source) {
+    values.push(source);
+    conditions.push(`source = $${values.length}`);
+  }
+
+  /* ====================================
+          FILTRAR POR CONDITION
+  ==================================== */
+
+  if (condition) {
+    values.push(condition);
+    conditions.push(`condition = $${values.length}`);
+  }
+
+  /* ====================================
+          PERÍODO
+  ==================================== */
+
+  const allowedPeriods = {
+    day: "day",
+    week: "week",
+    month: "month",
+  };
+
+  const safePeriod = allowedPeriods[period] ?? "day";
+
+  /* ====================================
+              QUERY
+  ==================================== */
+
+  const query = `
+    SELECT
+      DATE_TRUNC('${safePeriod}', recorded_at) AS period,
+      COUNT(*) AS total,
+      MIN(price) AS minimum_price,
+      MAX(price) AS maximum_price,
+      AVG(price) AS average_price
+    FROM card_prices
+    WHERE ${conditions.join(" AND ")}
+    GROUP BY DATE_TRUNC('${safePeriod}', recorded_at)
+    ORDER BY period ASC
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
+}

@@ -6,6 +6,7 @@ import {
   createCardPriceController,
   getCardPriceStatisticsController,
   getCardPriceVariationController,
+  getCardPriceAggregationsController,
 } from "../controllers/cards-prices.controller.js";
 
 import { syncPokemonCardPricesController } from "../controllers/cards-prices-sync.controller.js";
@@ -19,6 +20,7 @@ import {
   getCardPricesQuerySchema,
   getLatestCardPriceQuerySchema,
   createCardPriceSchema,
+  getCardPriceAggregationsQuerySchema,
 } from "../schemas/cards-prices.schema.js";
 
 const router = Router();
@@ -69,6 +71,18 @@ router.get(
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getLatestCardPriceQuerySchema, "query"),
   getCardPriceVariationController,
+);
+
+/* ====================================
+        AGREGACIONES CARD PRICE
+==================================== */
+
+router.get(
+  "/cards/:cardId/prices/aggregations",
+  authenticate,
+  validate(cardPriceCardIdParamsSchema, "params"),
+  validate(getCardPriceAggregationsQuerySchema, "query"),
+  getCardPriceAggregationsController,
 );
 
 /* ====================================
