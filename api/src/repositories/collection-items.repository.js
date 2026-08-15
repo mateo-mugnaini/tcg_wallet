@@ -779,7 +779,22 @@ export async function getCollectionValue(userId) {
           GROUP BY tcg_id, tcg_name
           ORDER BY "estimatedValue" DESC
         ) tc
-      ) AS by_tcg;
+      ) AS by_tcg,
+      (
+        SELECT COALESCE(json_agg(gc), '[]'::json)
+        FROM (
+          SELECT
+            grading_company_id AS "gradingCompanyId",
+            grading_company_name AS "gradingCompanyName",
+            SUM(total_item_value)::numeric AS "estimatedValue",
+            SUM(quantity)::integer AS "totalQuantity"
+          FROM evaluated_items
+          WHERE is_graded = true
+            AND grading_company_id IS NOT NULL
+          GROUP BY grading_company_id, grading_company_name
+          ORDER BY "estimatedValue" DESC
+        ) gc
+      ) AS by_grading_company;
   `;
 
   const result = await pool.query(query, [userId]);
@@ -793,6 +808,7 @@ export async function getCollectionValue(userId) {
     top_valued_items: [],
     by_set: [],
     by_tcg: [],
+    by_grading_company: [],
   };
 
   return {
@@ -815,6 +831,10 @@ export async function getCollectionValue(userId) {
       estimatedValue: Number(item.estimatedValue),
     })),
     byTcg: (row.by_tcg || []).map((item) => ({
+      ...item,
+      estimatedValue: Number(item.estimatedValue),
+    })),
+    byGradingCompany: (row.by_grading_company || []).map((item) => ({
       ...item,
       estimatedValue: Number(item.estimatedValue),
     })),

@@ -17,6 +17,7 @@ export async function importGradedCardPrices(prices) {
     price: Number(price.price),
     currency: String(price.currency ?? "").trim(),
     source: String(price.source ?? "").trim(),
+    recordedAt: price.recordedAt ? new Date(price.recordedAt) : null,
   }));
 
   const cardIds = [...new Set(normalizedPrices.map((price) => price.cardId))];
@@ -56,7 +57,9 @@ export async function importGradedCardPrices(prices) {
       !Number.isFinite(price.price) ||
       price.price < 0 ||
       !price.currency ||
-      !price.source,
+      !price.source ||
+      (price.recordedAt !== null &&
+        Number.isNaN(price.recordedAt.getTime())),
   );
 
   if (invalidPrice) {

@@ -21,7 +21,7 @@ El backend implementa:
 - estadísticas y valoración normal/graded de colección;
 - CRUD de grading companies.
 
-El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. La valoración de colección ya selecciona precios graded por card, empresa y grade cuando el item es graded; el sync graded y las pruebas con filas reales todavía están pendientes. No hay migraciones ni suite de tests automatizada en el backend actual.
+El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. La valoración de colección ya selecciona precios graded por card, empresa y grade cuando el item es graded; existe importación batch administrativa y un fixture con filas reales. El sync automático, la valoración positiva de un item graded y la cobertura completa de tests todavía están pendientes. No hay migraciones en el backend actual.
 
 ## 2. Stack real
 
@@ -391,11 +391,11 @@ GET /api/collection-items/value existe. El repository usa:
 4. quantity × latest price.
 5. items evaluated/missing.
 6. top 5 valued items.
-7. agrupación by set y by TCG.
+7. agrupación by set, by TCG y by grading company.
 
 Para items no graded usa el último card_prices por card/condition. Para items graded usa el último graded_card_prices por card/grading_company/grade y no hace fallback silencioso al precio normal. La respuesta incluye contadores separados de items graded evaluados y sin precio, además de información de grading en topValuedItems. La moneda agregada se fija a USD; la política para múltiples monedas sigue pendiente.
 
-Estado: **IMPLEMENTADO EN CÓDIGO; validación de consulta normal realizada; cobertura graded con filas reales pendiente**.
+Estado: **IMPLEMENTADO EN CÓDIGO; validación de consulta normal realizada; cobertura graded de collection value con un item graded pendiente**.
 
 ## 15. Grading Companies
 
@@ -546,12 +546,12 @@ check_schema.js es diagnóstico de solo lectura. Consulta columnas y FKs de grad
 Resultado real de esta revisión:
 
 - Import de src/app.js: OK; verifica carga de módulos, no endpoints ni DB.
-- pnpm.cmd test:run: falló con No test files found.
+- pnpm.cmd test:run: OK; 1 archivo y 4 tests de contratos/import graded.
 - node check_schema.js: falló con ECONNREFUSED en localhost:5432.
 - pnpm.cmd exec eslint src: falló antes de analizar porque falta el paquete globals usado por eslint.config.js.
 - Import directo del pipeline legado: falló por módulos inexistentes.
 
-Conclusión obligatoria: **NO HAY SUITE DE TESTS AUTOMATIZADA EN EL REPOSITORIO**.
+Conclusión: **EXISTE UNA SUITE INICIAL DE TESTS AUTOMATIZADA**, todavía limitada a contratos y validaciones graded; faltan tests de repository, API, ownership, collection y sync.
 
 roadmap.md afirma que Collection CRUD está implementado y probado, pero no hay tests, logs, fixtures ni script reproducible: **PRUEBA MANUAL / PLANIFICADO — NO VERIFICADO EN CÓDIGO**. No puede afirmarse desde este repo que auth, catálogo, prices, collection, grading o sync hayan sido probados contra una DB real.
 

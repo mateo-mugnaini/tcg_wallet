@@ -46,5 +46,13 @@ export const collectionValueResponseSchema = z.object({
         totalQuantity: z.number().int(),
       }),
     ),
+    byGradingCompany: z.array(
+      z.object({
+        gradingCompanyId: z.string().uuid(),
+        gradingCompanyName: z.string(),
+        estimatedValue: z.number(),
+        totalQuantity: z.number().int(),
+      }),
+    ),
   }),
 });

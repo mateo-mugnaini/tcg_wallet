@@ -67,10 +67,10 @@ export async function createGradedCardPrices(gradedCardPrices) {
   const placeholders = [];
 
   gradedCardPrices.forEach((gradedCardPrice, index) => {
-    const baseIndex = index * 6;
+    const baseIndex = index * 7;
 
     placeholders.push(
-      `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5}, $${baseIndex + 6})`,
+      `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5}, $${baseIndex + 6}, COALESCE($${baseIndex + 7}, NOW()))`,
     );
 
     values.push(
@@ -80,6 +80,7 @@ export async function createGradedCardPrices(gradedCardPrices) {
       gradedCardPrice.price,
       gradedCardPrice.currency,
       gradedCardPrice.source,
+      gradedCardPrice.recordedAt ?? null,
     );
   });
 
@@ -91,7 +92,8 @@ export async function createGradedCardPrices(gradedCardPrices) {
         grade,
         price,
         currency,
-        source
+        source,
+        recorded_at
       )
       VALUES ${placeholders.join(", ")}
       RETURNING

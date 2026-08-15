@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "db:seed:graded": "node scripts/seed-graded-card-prices.js",
+    "check:graded-value": "node scripts/check-graded-collection-value.js",
     "test": "vitest",
     "test:run": "vitest run"
   },

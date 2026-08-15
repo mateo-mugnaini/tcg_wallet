@@ -12,12 +12,12 @@
 |---:|---|---|---|
 | 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
 | 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
-| 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y añadir pruebas automatizadas. |
+| 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
 | 04 | Valoración de colección | **En progreso** | Probar valoración con un item graded y definir política de currency. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
 | 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
-| 08 | Testing profesional | **Pendiente** | Crear unit, integration y API tests. |
+| 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
 | 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y proteger syncs. |
 | 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
@@ -181,6 +181,7 @@ Calcula dinámicamente mediante CTEs y `DISTINCT ON` en PostgreSQL:
 * `topValuedItems`: Las 5 cartas más valiosas de la colección (basado en `quantity * latest_price`)
 * `bySet`: Desglose del valor estimado agrupado por Set
 * `byTcg`: Desglose del valor estimado agrupado por TCG
+* `byGradingCompany`: Desglose del valor graded agrupado por empresa de grading
 
 ---
 

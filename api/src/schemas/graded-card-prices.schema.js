@@ -21,7 +21,15 @@ export const createGradedCardPriceSchema = z.object({
 });
 
 export const importGradedCardPricesSchema = z.object({
-  prices: z.array(createGradedCardPriceSchema).min(1).max(1000),
+  prices: z
+    .array(
+      createGradedCardPriceSchema.extend({
+        cardId: z.string().uuid(),
+        recordedAt: z.string().datetime({ offset: true }).optional(),
+      }),
+    )
+    .min(1)
+    .max(1000),
 });
 
 export const gradedCardPricesImportResponseSchema = z.object({
