@@ -21,7 +21,7 @@ El backend implementa:
 - estadísticas y valoración normal de colección;
 - CRUD de grading companies.
 
-El módulo graded_card_prices tiene implementado el primer endpoint de listado, pero latest/stats/variation/aggregations y la valoración graded todavía están pendientes. No hay migraciones ni suite de tests automatizada en el backend actual.
+El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. El sync graded, la valoración graded y las pruebas con filas reales todavía están pendientes. No hay migraciones ni suite de tests automatizada en el backend actual.
 
 ## 2. Stack real
 
@@ -424,9 +424,9 @@ Estado exacto al cierre de esta revisión:
 - routes: existe GET /api/cards/:cardId/graded-prices;
 - schemas: existe graded-card-prices.schema.js para params, query y response;
 - sync: no existe;
-- latest/stats/variation/aggregations: no existen todavía.
+- latest/stats/variation/aggregations: implementados como endpoints de consulta.
 
-Por tanto: **PARCIALMENTE IMPLEMENTADO — listado HTTP terminado; operaciones analíticas y sync pendientes**.
+Por tanto: **PARCIALMENTE IMPLEMENTADO — endpoints de consulta terminados; sync, valoración y pruebas con datos graded pendientes**.
 
 El roadmap prevé, pero no implementa:
 
@@ -599,7 +599,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 - Card Prices: implementado, con histórico/latest/stats/variation/aggregations y sync.
 - Collection Items: CRUD + enriquecimiento + filtros + stats + value implementados.
 - Grading Companies: CRUD y permisos implementados.
-- Graded Card Prices: parcialmente implementado; listado y count presentes, operaciones restantes pendientes.
+- Graded Card Prices: parcialmente implementado; listado/latest/stats/variation/aggregations presentes, sync y pruebas con datos pendientes.
 - Pokémon integration: cliente y syncs implementados; retry/timeout tienen limitaciones.
 - Pipeline: implementado en src/syncs; existe archivo legacy roto.
 
@@ -609,7 +609,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 |---:|---|---|
 | 01 | Collection avanzada | **Completada en código**; tests/DB no verificados. |
 | 02 | Grading Companies | **Completada en código**; tests/DB no verificados. |
-| 03 | Graded Card Prices | **En progreso**: listado implementado; latest/stats/variation/aggregations y sync pendientes. |
+| 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
 | 04 | Valoración de colección | Parcial: normal prices sí; graded no. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
 | 06 | Validación Zod completa | Parcial; faltan cards, collection, sync y responses generales. |
@@ -630,7 +630,7 @@ roadmap.md todavía presenta Collection avanzada como siguiente bloque, pero el 
 
 **Graded Card Prices**
 
-Primera funcionalidad ya implementada:
+Las funcionalidades de consulta ya implementadas son:
 
 ~~~http
 GET /api/cards/:cardId/graded-prices
@@ -645,7 +645,7 @@ GET /api/cards/:cardId/graded-prices/variation
 GET /api/cards/:cardId/graded-prices/aggregations
 ~~~
 
-El modelo verificado relaciona card + grading_company + grade + graded_card_price. El siguiente trabajo es implementar latest, stats, variation y aggregations usando la misma base.
+El modelo verificado relaciona card + grading_company + grade + graded_card_price. El siguiente trabajo es probar con filas reales, definir sync graded y conectar la valoración de collection.
 
 ## 29. Guía para continuar
 

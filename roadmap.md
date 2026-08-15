@@ -12,7 +12,7 @@
 |---:|---|---|---|
 | 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
 | 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
-| 03 | Graded Card Prices | **En progreso** | Completar latest, stats, variation, aggregations y sync. |
+| 03 | Graded Card Prices | **En progreso** | Probar con datos reales y completar sync graded. |
 | 04 | Valoración de colección | **Parcial** | Añadir valoración basada en precios graded. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
 | 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
@@ -930,13 +930,13 @@ Por lo tanto, el siguiente bloque lógico es:
 
 ### Objetivo
 
-Continuar el módulo HTTP graded prices. El primer endpoint ya está implementado:
+Continuar el módulo HTTP graded prices. Los cinco endpoints de consulta ya están implementados:
 
 ```text
 GET /api/cards/:cardId/graded-prices
 ```
 
-Después se añadirán latest, stats, variation y aggregations. La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at.
+La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. El siguiente trabajo es probar con datos reales y completar sync/valoración graded.
 
 ### Contexto histórico
 
