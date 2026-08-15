@@ -13,7 +13,7 @@
 | 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
 | 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
-| 04 | Valoración de colección | **En progreso** | Definir política de currency y ampliar pruebas de valoración. |
+| 04 | Valoración de colección | **En progreso** | Ampliar pruebas de valoración y documentar conversión futura de currency. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
 | 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |

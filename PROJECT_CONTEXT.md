@@ -393,7 +393,7 @@ GET /api/collection-items/value existe. El repository usa:
 6. top 5 valued items.
 7. agrupación by set, by TCG y by grading company.
 
-Para items no graded usa el último card_prices por card/condition. Para items graded usa el último graded_card_prices por card/grading_company/grade y no hace fallback silencioso al precio normal. La respuesta incluye contadores separados de items graded evaluados y sin precio, además de información de grading en topValuedItems. La moneda agregada se fija a USD; la política para múltiples monedas sigue pendiente.
+Para items no graded usa el último card_prices por card/condition. Para items graded usa el último graded_card_prices por card/grading_company/grade y no hace fallback silencioso al precio normal. Solo evalúa precios cuya moneda sea USD, que es la moneda declarada por el resumen; precios en otras monedas quedan como no disponibles para esta valoración. La respuesta incluye contadores separados de items graded evaluados y sin precio, además de información de grading en topValuedItems.
 
 Estado: **IMPLEMENTADO EN CÓDIGO; valoración normal y graded validadas con smoke test aislado; cobertura automatizada amplia pendiente**.
 

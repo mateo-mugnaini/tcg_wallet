@@ -1,5 +1,7 @@
 import pool from "../config/database.js";
 
+const COLLECTION_VALUATION_CURRENCY = "USD";
+
 /* ====================================
         CREAR COLLECTION ITEM
 ==================================== */
@@ -682,8 +684,9 @@ export async function getCollectionValue(userId) {
         ci.grading_company_id,
         gc.name AS grading_company_name,
         CASE
-          WHEN ci.is_graded = true THEN lgp.price
-          ELSE lp.price
+          WHEN ci.is_graded = true AND TRIM(lgp.currency) = $2 THEN lgp.price
+          WHEN ci.is_graded = false AND TRIM(lp.currency) = $2 THEN lp.price
+          ELSE NULL
         END AS unit_price,
         CASE
           WHEN ci.is_graded = true THEN COALESCE(lgp.currency, 'USD')
@@ -692,8 +695,9 @@ export async function getCollectionValue(userId) {
         (
           ci.quantity * COALESCE(
             CASE
-              WHEN ci.is_graded = true THEN lgp.price
-              ELSE lp.price
+              WHEN ci.is_graded = true AND TRIM(lgp.currency) = $2 THEN lgp.price
+              WHEN ci.is_graded = false AND TRIM(lp.currency) = $2 THEN lp.price
+              ELSE NULL
             END,
             0
           )
@@ -797,7 +801,7 @@ export async function getCollectionValue(userId) {
       ) AS by_grading_company;
   `;
 
-  const result = await pool.query(query, [userId]);
+  const result = await pool.query(query, [userId, COLLECTION_VALUATION_CURRENCY]);
 
   const row = result.rows[0] ?? {
     total_estimated_value: 0,
