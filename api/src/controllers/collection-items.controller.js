@@ -5,6 +5,7 @@ import {
   editCollectionItem,
   removeCollectionItem,
   getCollectionStatsService,
+  getCollectionValueService,
 } from "../services/collection-items.service.js";
 
 import { createAppError } from "../errors/app.errors.js";
@@ -295,6 +296,24 @@ export async function getCollectionStatsController(req, res, next) {
 
     res.status(200).json({
       data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+      VALOR ESTIMADO DE COLECCIÓN
+==================================== */
+
+export async function getCollectionValueController(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    const value = await getCollectionValueService({ userId });
+
+    res.status(200).json({
+      data: value,
     });
   } catch (error) {
     next(error);

@@ -7,6 +7,7 @@ import {
   updateCollectionItemController,
   deleteCollectionItemController,
   getCollectionStatsController,
+  getCollectionValueController,
 } from "../controllers/collection-items.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
@@ -24,6 +25,12 @@ router.get("/", authenticate, getCollectionItemsController);
 ==================================== */
 
 router.get("/stats", authenticate, getCollectionStatsController);
+
+/* ====================================
+      VALOR ESTIMADO DE COLECCIÓN
+==================================== */
+
+router.get("/value", authenticate, getCollectionValueController);
 
 /* ====================================
         OBTENER ITEM POR ID

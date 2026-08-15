@@ -645,3 +645,132 @@ export async function getCollectionStats(userId) {
     })),
   };
 }
+
+/* ====================================
+      VALOR ESTIMADO DE COLECCIÓN
+==================================== */
+
+export async function getCollectionValue(userId) {
+  const query = `
+    WITH latest_prices AS (
+      SELECT DISTINCT ON (card_id, condition)
+        card_id,
+        condition,
+        price,
+        currency
+      FROM card_prices
+      ORDER BY card_id, condition, recorded_at DESC
+    ),
+    evaluated_items AS (
+      SELECT
+        ci.id AS item_id,
+        ci.card_id,
+        ci.quantity,
+        ci.condition,
+        ci.is_graded,
+        ci.grade,
+        lp.price AS unit_price,
+        COALESCE(lp.currency, 'USD') AS currency,
+        (ci.quantity * COALESCE(lp.price, 0)) AS total_item_value,
+        c.name AS card_name,
+        c.card_number,
+        c.image_url,
+        s.id AS set_id,
+        s.name AS set_name,
+        s.code AS set_code,
+        t.id AS tcg_id,
+        t.name AS tcg_name
+      FROM collection_items ci
+      INNER JOIN cards c ON ci.card_id = c.id
+      INNER JOIN sets s ON c.set_id = s.id
+      INNER JOIN tcgs t ON s.tcg_id = t.id
+      LEFT JOIN latest_prices lp ON ci.card_id = lp.card_id AND ci.condition = lp.condition
+      WHERE ci.user_id = $1
+    )
+    SELECT
+      (SELECT COALESCE(SUM(total_item_value), 0) FROM evaluated_items) AS total_estimated_value,
+      (SELECT COUNT(*) FROM evaluated_items WHERE unit_price IS NOT NULL) AS items_evaluated_count,
+      (SELECT COUNT(*) FROM evaluated_items WHERE unit_price IS NULL) AS items_missing_price_count,
+      (
+        SELECT COALESCE(json_agg(t), '[]'::json)
+        FROM (
+          SELECT
+            item_id AS id,
+            card_id AS "cardId",
+            card_name AS "cardName",
+            card_number AS "cardNumber",
+            image_url AS "imageUrl",
+            set_name AS "setName",
+            tcg_name AS "tcgName",
+            quantity,
+            condition,
+            unit_price::numeric AS "unitPrice",
+            total_item_value::numeric AS "totalItemValue"
+          FROM evaluated_items
+          WHERE unit_price IS NOT NULL
+          ORDER BY total_item_value DESC
+          LIMIT 5
+        ) t
+      ) AS top_valued_items,
+      (
+        SELECT COALESCE(json_agg(s), '[]'::json)
+        FROM (
+          SELECT
+            set_id AS "setId",
+            set_name AS "setName",
+            set_code AS "setCode",
+            SUM(total_item_value)::numeric AS "estimatedValue",
+            SUM(quantity)::integer AS "totalQuantity"
+          FROM evaluated_items
+          GROUP BY set_id, set_name, set_code
+          ORDER BY "estimatedValue" DESC
+        ) s
+      ) AS by_set,
+      (
+        SELECT COALESCE(json_agg(tc), '[]'::json)
+        FROM (
+          SELECT
+            tcg_id AS "tcgId",
+            tcg_name AS "tcgName",
+            SUM(total_item_value)::numeric AS "estimatedValue",
+            SUM(quantity)::integer AS "totalQuantity"
+          FROM evaluated_items
+          GROUP BY tcg_id, tcg_name
+          ORDER BY "estimatedValue" DESC
+        ) tc
+      ) AS by_tcg;
+  `;
+
+  const result = await pool.query(query, [userId]);
+
+  const row = result.rows[0] ?? {
+    total_estimated_value: 0,
+    items_evaluated_count: 0,
+    items_missing_price_count: 0,
+    top_valued_items: [],
+    by_set: [],
+    by_tcg: [],
+  };
+
+  return {
+    summary: {
+      totalEstimatedValue: Number(row.total_estimated_value),
+      currency: "USD",
+      itemsEvaluatedCount: Number(row.items_evaluated_count),
+      itemsMissingPriceCount: Number(row.items_missing_price_count),
+    },
+    topValuedItems: (row.top_valued_items || []).map((item) => ({
+      ...item,
+      unitPrice: Number(item.unitPrice),
+      totalItemValue: Number(item.totalItemValue),
+    })),
+    bySet: (row.by_set || []).map((item) => ({
+      ...item,
+      estimatedValue: Number(item.estimatedValue),
+    })),
+    byTcg: (row.by_tcg || []).map((item) => ({
+      ...item,
+      estimatedValue: Number(item.estimatedValue),
+    })),
+  };
+}

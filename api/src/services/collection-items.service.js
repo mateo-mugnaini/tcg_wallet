@@ -8,6 +8,7 @@ import {
   deleteCollectionItem,
   countCollectionItems,
   getCollectionStats as findCollectionStats,
+  getCollectionValue as findCollectionValue,
 } from "../repositories/collection-items.repository.js";
 
 import { findGradingCompanyById } from "../repositories/grading-companies.repository.js";
@@ -332,4 +333,12 @@ export async function removeCollectionItem({ id, userId }) {
 
 export async function getCollectionStatsService({ userId }) {
   return findCollectionStats(userId);
+}
+
+/* ====================================
+      VALOR ESTIMADO DE COLECCIÓN
+==================================== */
+
+export async function getCollectionValueService({ userId }) {
+  return findCollectionValue(userId);
 }

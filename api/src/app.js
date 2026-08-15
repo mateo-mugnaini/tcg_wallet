@@ -8,6 +8,7 @@ import setRoutes from "./routes/sets.routes.js";
 import cardsRoutes from "./routes/cards.routes.js";
 import cardsPricesRoutes from "./routes/cards-prices.routes.js";
 import collectionItemsRoutes from "./routes/collection-items.routes.js";
+import gradingCompaniesRoutes from "./routes/grading-companies.routes.js";
 import syncRoutes from "./routes/sync.pipeline.routes.js";
 
 import { errorMiddleware } from "./middlewares/error.middleware.js";
@@ -38,6 +39,7 @@ app.use("/api/tcgs", tcgRoutes);
 app.use("/api/sets", setRoutes);
 app.use("/api/cards", cardsRoutes);
 app.use("/api/collection-items", collectionItemsRoutes);
+app.use("/api/grading-companies", gradingCompaniesRoutes);
 app.use("/api/sync", syncRoutes);
 
 /* ====================================

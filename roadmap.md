@@ -127,29 +127,15 @@ Proporciona agregaciones globales y desgloses:
 * `byTcg`: Desglose por juego de cartas (TCG)
 * `byGradingCompany`: Desglose por empresa de grading (PSA, Beckett, CGC)
 
-### 1.5. Valor estimado de colección
+### 1.5. Valor estimado de colección — ✅ COMPLETADO
 
-Utilizar:
+Endpoint implementado: `GET /api/collection-items/value`
 
-```text
-collection_items
-        ↓
-cards
-        ↓
-card_prices
-```
-
-para calcular un valor aproximado de la colección.
-
-Posteriormente:
-
-```text
-collection_items
-        ↓
-graded_card_prices
-```
-
-para cartas graded.
+Calcula dinámicamente mediante CTEs y `DISTINCT ON` en PostgreSQL:
+* `summary`: `totalEstimatedValue`, `currency`, `itemsEvaluatedCount`, `itemsMissingPriceCount`
+* `topValuedItems`: Las 5 cartas más valiosas de la colección (basado en `quantity * latest_price`)
+* `bySet`: Desglose del valor estimado agrupado por Set
+* `byTcg`: Desglose del valor estimado agrupado por TCG
 
 ---
 
@@ -163,19 +149,15 @@ La base de datos ya dispone de:
 
 Pero todavía falta explotar completamente este modelo.
 
-## 2.1. CRUD de grading companies
+## 2.1. CRUD de grading companies — ✅ COMPLETADO
 
-Implementar:
+Endpoints implementados:
 
-```text
-POST   /api/grading-companies
-GET    /api/grading-companies
-GET    /api/grading-companies/:id
-PATCH  /api/grading-companies/:id
-DELETE /api/grading-companies/:id
-```
-
-Con restricciones apropiadas para `admin`.
+* `GET    /api/grading-companies` (autenticado)
+* `GET    /api/grading-companies/:id` (autenticado)
+* `POST   /api/grading-companies` (admin)
+* `PATCH  /api/grading-companies/:id` (admin)
+* `DELETE /api/grading-companies/:id` (admin)
 
 ## 2.2. Precios graded
 
