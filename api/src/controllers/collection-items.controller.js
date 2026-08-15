@@ -4,6 +4,7 @@ import {
   getCollectionItemById,
   editCollectionItem,
   removeCollectionItem,
+  getCollectionStatsService,
 } from "../services/collection-items.service.js";
 
 import { createAppError } from "../errors/app.errors.js";
@@ -18,8 +19,15 @@ export async function getCollectionItemsController(req, res, next) {
       cardId,
       condition,
       isGraded,
+      setId,
+      tcgId,
+      rarity,
+      gradingCompanyId,
+      minGrade,
+      maxGrade,
       limit = 20,
       offset = 0,
+      sortBy = "created_at",
       sortOrder = "DESC",
     } = req.query;
 
@@ -64,6 +72,26 @@ export async function getCollectionItemsController(req, res, next) {
     }
 
     /* ====================================
+          MIN / MAX GRADE
+    ==================================== */
+
+    let parsedMinGrade;
+    if (minGrade !== undefined) {
+      parsedMinGrade = Number(minGrade);
+      if (!Number.isFinite(parsedMinGrade) || parsedMinGrade < 0 || parsedMinGrade > 10) {
+        throw createAppError("El parámetro minGrade debe ser un número entre 0 y 10", 400);
+      }
+    }
+
+    let parsedMaxGrade;
+    if (maxGrade !== undefined) {
+      parsedMaxGrade = Number(maxGrade);
+      if (!Number.isFinite(parsedMaxGrade) || parsedMaxGrade < 0 || parsedMaxGrade > 10) {
+        throw createAppError("El parámetro maxGrade debe ser un número entre 0 y 10", 400);
+      }
+    }
+
+    /* ====================================
               SERVICE
     ==================================== */
 
@@ -72,8 +100,15 @@ export async function getCollectionItemsController(req, res, next) {
       cardId,
       condition,
       isGraded: parsedIsGraded,
+      setId,
+      tcgId,
+      rarity,
+      gradingCompanyId,
+      minGrade: parsedMinGrade,
+      maxGrade: parsedMaxGrade,
       limit: parsedLimit,
       offset: parsedOffset,
+      sortBy,
       sortOrder,
     });
 
@@ -242,6 +277,24 @@ export async function deleteCollectionItemController(req, res, next) {
     res.status(200).json({
       message: "Carta eliminada de la colección",
       data: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+      ESTADÍSTICAS DE COLECCIÓN
+==================================== */
+
+export async function getCollectionStatsController(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    const stats = await getCollectionStatsService({ userId });
+
+    res.status(200).json({
+      data: stats,
     });
   } catch (error) {
     next(error);

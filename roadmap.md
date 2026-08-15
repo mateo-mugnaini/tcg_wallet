@@ -1,0 +1,946 @@
+# Roadmap de Desarrollo Pendiente — TCG Wallet API
+
+> **Proyecto:** TCG Wallet API
+> **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización y colección personal implementados.
+
+---
+
+# 1. Estado actual
+
+El backend ya cuenta con una base funcional bastante completa:
+
+* Autenticación con Access Token + Refresh Token.
+* Rotación de Refresh Tokens.
+* Token Families.
+* Detección de reutilización de Refresh Tokens.
+* Revocación de sesiones.
+* Roles `user` / `admin`.
+* Gestión de usuarios.
+* Gestión de TCGs.
+* Gestión de Sets.
+* Sincronización de Sets desde Pokémon TCG API.
+* Gestión de Cards.
+* Sincronización de Cards desde Pokémon TCG API.
+* Histórico de precios.
+* Último precio.
+* Estadísticas de precios.
+* Variaciones de precio.
+* Agregaciones temporales.
+* Sincronización masiva de precios.
+* Colección personal.
+* Soporte para cartas graded.
+* CRUD completo de `collection_items`.
+* Pipeline completo de sincronización.
+* Middleware de autenticación, autorización, roles y validación.
+* Manejo centralizado de errores.
+
+Por lo tanto, **la siguiente etapa ya no consiste en construir el CRUD básico del backend**, sino en llevarlo hacia una API más completa, consistente, testeable y preparada para producción.
+
+---
+
+# 2. Fase 1 — Collection avanzada
+
+## Estado
+
+El CRUD principal de `collection_items` ya está implementado y probado:
+
+* `GET /api/collection-items`
+* `GET /api/collection-items/:id`
+* `POST /api/collection-items`
+* `PUT /api/collection-items/:id`
+* `DELETE /api/collection-items/:id`
+
+También está implementado:
+
+* `quantity`
+* `condition`
+* `is_graded`
+* `grading_company_id`
+* `grade`
+* validación de grading
+* control de propiedad mediante `user_id`
+
+## Pendiente
+
+### 1.1. Mejorar consulta de colección — ✅ COMPLETADO
+
+Agregar información relacionada mediante `JOIN` (`cards`, `sets`, `tcgs`, `grading_companies`).
+
+Respuesta enriquecida implementada mediante `json_build_object` en PostgreSQL:
+
+```json
+{
+  "card": {
+    "id": "...",
+    "name": "...",
+    "image_url": "..."
+  },
+  "set": {
+    "id": "...",
+    "name": "..."
+  },
+  "tcg": {
+    "id": "...",
+    "name": "..."
+  },
+  "grading_company": {
+    "id": "...",
+    "name": "PSA"
+  }
+}
+```
+
+### 1.2. Filtros avanzados — ✅ COMPLETADO
+
+Soportados en `GET /api/collection-items`:
+
+* `cardId`
+* `setId`
+* `tcgId`
+* `rarity`
+* `condition`
+* `isGraded`
+* `gradingCompanyId`
+* `minGrade`
+* `maxGrade`
+
+### 1.3. Ordenamiento — ✅ COMPLETADO
+
+Permite ordenar mediante whitelist segura (`SORT_COLUMNS`):
+
+* `created_at`
+* `updated_at`
+* `quantity`
+* `grade` (con `NULLS LAST`)
+* `name` / `card_name`
+
+### 1.4. Estadísticas de colección — ✅ COMPLETADO
+
+Endpoint implementado: `GET /api/collection-items/stats`
+
+Proporciona agregaciones globales y desgloses:
+
+* `summary`: `totalDistinctCards`, `totalQuantity`, `gradedQuantity`, `ungradedQuantity`
+* `byCondition`: Desglose por condición (Near Mint, Lightly Played, etc.)
+* `bySet`: Desglose por Set de cartas
+* `byTcg`: Desglose por juego de cartas (TCG)
+* `byGradingCompany`: Desglose por empresa de grading (PSA, Beckett, CGC)
+
+### 1.5. Valor estimado de colección
+
+Utilizar:
+
+```text
+collection_items
+        ↓
+cards
+        ↓
+card_prices
+```
+
+para calcular un valor aproximado de la colección.
+
+Posteriormente:
+
+```text
+collection_items
+        ↓
+graded_card_prices
+```
+
+para cartas graded.
+
+---
+
+# 3. Fase 2 — Grading profesional
+
+La base de datos ya dispone de:
+
+* `grading_companies`
+* `graded_card_prices`
+* `collection_items`
+
+Pero todavía falta explotar completamente este modelo.
+
+## 2.1. CRUD de grading companies
+
+Implementar:
+
+```text
+POST   /api/grading-companies
+GET    /api/grading-companies
+GET    /api/grading-companies/:id
+PATCH  /api/grading-companies/:id
+DELETE /api/grading-companies/:id
+```
+
+Con restricciones apropiadas para `admin`.
+
+## 2.2. Precios graded
+
+Implementar consulta de:
+
+```text
+GET /api/cards/:cardId/graded-prices
+```
+
+Y posteriormente:
+
+```text
+GET /api/cards/:cardId/graded-prices/latest
+GET /api/cards/:cardId/graded-prices/stats
+GET /api/cards/:cardId/graded-prices/variation
+GET /api/cards/:cardId/graded-prices/aggregations
+```
+
+## 2.3. Valor de cartas graded
+
+Relacionar:
+
+```text
+card
++
+grading_company
++
+grade
++
+graded_card_price
+```
+
+para obtener una valoración específica.
+
+---
+
+# 4. Fase 3 — Mejorar el catálogo
+
+El catálogo actualmente funciona, pero todavía puede evolucionar.
+
+## 3.1. Búsqueda avanzada de Cards
+
+Agregar filtros:
+
+* nombre
+* Set
+* TCG
+* rarity
+* card number
+* external ID
+
+Ejemplo:
+
+```text
+GET /api/cards?search=Charizard&setId=...
+```
+
+## 3.2. Ordenamiento seguro
+
+Whitelist de campos:
+
+```text
+name
+card_number
+created_at
+updated_at
+```
+
+## 3.3. Información enriquecida
+
+Permitir obtener una Card incluyendo:
+
+* Set
+* TCG
+* precios actuales
+* colección del usuario
+* imagen
+
+Esto permitirá posteriormente construir una pantalla de detalle de carta mucho más útil.
+
+---
+
+# 5. Fase 4 — Sistema de precios profesional
+
+El sistema de `card_prices` ya tiene una base importante.
+
+Actualmente existen:
+
+* histórico
+* latest
+* stats
+* variation
+* aggregations
+* sincronización automática
+
+## Pendiente
+
+### 5.1. Comparación entre condiciones
+
+Ejemplo:
+
+```text
+Near Mint
+Lightly Played
+Moderately Played
+Heavily Played
+Damaged
+```
+
+Obtener comparación de precios.
+
+### 5.2. Comparación entre fuentes
+
+Preparar el modelo para múltiples fuentes:
+
+```text
+pokemon-tcg
+tcgplayer
+cardmarket
+```
+
+### 5.3. Tendencias
+
+Crear análisis:
+
+* subida
+* bajada
+* estabilidad
+* porcentaje de cambio
+* evolución temporal
+
+### 5.4. Optimización del Price Sync
+
+Esto queda explícitamente como **pendiente posterior**.
+
+Actualmente la sincronización funciona correctamente, pero puede tardar bastante.
+
+Posteriormente:
+
+* procesamiento por lotes
+* inserts masivos
+* concurrencia controlada
+* reducción de queries
+* cache
+* procesamiento paralelo por Sets
+* rate limiting inteligente
+* retry con exponential backoff + jitter
+
+**No es prioridad inmediata.**
+
+---
+
+# 6. Fase 5 — Validación y contratos API
+
+Aunque ya existe Zod, hay que llevarlo a una utilización consistente.
+
+## 6.1. Request schemas
+
+Crear schemas separados para:
+
+```text
+body
+query
+params
+```
+
+para cada módulo.
+
+Ejemplo:
+
+```text
+collection-items
+cards
+prices
+users
+sets
+tcgs
+grading-companies
+```
+
+## 6.2. Response schemas
+
+Validar también respuestas.
+
+Objetivo:
+
+```text
+Controller
+    ↓
+Service
+    ↓
+Repository
+    ↓
+Database
+    ↓
+Response Schema
+```
+
+Esto evita que una modificación accidental del repository cambie el contrato público de la API.
+
+## 6.3. Normalización
+
+Centralizar:
+
+* pagination
+* sort
+* filtros
+* UUID validation
+* fechas
+* enums
+* condiciones de cartas
+* grades
+
+---
+
+# 7. Fase 6 — Arquitectura y separación de responsabilidades
+
+Actualmente existen partes donde la validación está duplicada entre:
+
+```text
+Controller
+Service
+Repository
+```
+
+Esto debe limpiarse progresivamente.
+
+Objetivo:
+
+```text
+Route
+  ↓
+Middleware
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+PostgreSQL
+```
+
+## Controller
+
+Responsable de:
+
+* recibir HTTP
+* extraer params/query/body
+* llamar al service
+* devolver HTTP response
+
+## Service
+
+Responsable de:
+
+* reglas de negocio
+* validaciones de negocio
+* coordinación entre repositories
+* decisiones de flujo
+
+## Repository
+
+Responsable de:
+
+* SQL
+* PostgreSQL
+* queries
+* persistencia
+
+## Middleware
+
+Responsable de:
+
+* autenticación
+* autorización
+* roles
+* validación Zod
+
+---
+
+# 8. Fase 7 — Testing profesional
+
+Esta es una de las etapas más importantes pendientes.
+
+## 8.1. Unit Tests
+
+Probar:
+
+* Services
+* validaciones
+* helpers
+* retry logic
+* price calculations
+* collection logic
+
+## 8.2. Repository Tests
+
+Probar contra PostgreSQL:
+
+* SELECT
+* INSERT
+* UPDATE
+* DELETE
+* filtros
+* paginación
+* ordenamiento
+* relaciones
+
+## 8.3. Controller/API Tests
+
+Utilizar:
+
+```text
+Supertest
+```
+
+para probar endpoints reales.
+
+Ejemplos:
+
+```text
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/collection-items
+GET  /api/collection-items
+PUT  /api/collection-items/:id
+DELETE /api/collection-items/:id
+```
+
+## 8.4. Authentication Tests
+
+Probar:
+
+* access token válido
+* access token inválido
+* token expirado
+* refresh válido
+* refresh expirado
+* refresh revocado
+* reuse detection
+* token family revocation
+
+## 8.5. Authorization Tests
+
+Probar:
+
+* user accediendo a recurso propio
+* user intentando acceder a recurso ajeno
+* user intentando acceder a endpoint admin
+* admin accediendo correctamente
+
+---
+
+# 9. Fase 8 — Seguridad avanzada
+
+La seguridad básica ya está implementada.
+
+Pendiente:
+
+## 9.1. Rate limiting específico
+
+Separar límites para:
+
+```text
+/auth/login
+/auth/refresh
+/users
+/sync
+```
+
+## 9.2. Protección contra abuso
+
+Especialmente:
+
+```text
+POST /api/sync
+POST /api/cards/sync/pokemon
+POST /api/sync/cards/prices
+```
+
+## 9.3. Cookies y Refresh Tokens
+
+Revisar:
+
+* `httpOnly`
+* `secure`
+* `sameSite`
+* expiración
+* rotación
+* revocación
+
+según entorno:
+
+```text
+development
+production
+```
+
+## 9.4. CORS
+
+Configurar explícitamente:
+
+```text
+allowed origins
+methods
+headers
+credentials
+```
+
+---
+
+# 10. Fase 9 — Observabilidad
+
+Actualmente existe logging mediante `console.log`.
+
+Debe evolucionar a un sistema estructurado.
+
+## 10.1. Logger
+
+Implementar un logger profesional:
+
+```text
+info
+warn
+error
+debug
+```
+
+## 10.2. Request logging
+
+Registrar:
+
+```text
+method
+path
+status
+duration
+request id
+user id
+```
+
+## 10.3. Error logging
+
+Registrar errores con:
+
+```text
+error code
+stack
+request id
+user id
+endpoint
+```
+
+sin exponer información sensible al cliente.
+
+---
+
+# 11. Fase 10 — API Documentation
+
+Implementar documentación formal.
+
+Objetivo:
+
+```text
+OpenAPI / Swagger
+```
+
+Documentar:
+
+* endpoints
+* request body
+* query params
+* path params
+* responses
+* errores
+* autenticación
+* ejemplos
+
+Especialmente:
+
+```text
+Bearer Authentication
+```
+
+---
+
+# 12. Fase 11 — Base de datos
+
+## 12.1. Índices
+
+Revisar índices necesarios para:
+
+```text
+collection_items
+cards
+sets
+card_prices
+graded_card_prices
+refresh_tokens
+```
+
+Especialmente columnas utilizadas frecuentemente en:
+
+```text
+WHERE
+JOIN
+ORDER BY
+```
+
+## 12.2. Constraints
+
+Revisar:
+
+* foreign keys
+* unique constraints
+* check constraints
+* nullable fields
+
+La tabla `collection_items` ya tiene correctamente:
+
+```text
+quantity > 0
+grade 0-10
+is_graded ↔ grading data
+```
+
+## 12.3. Migraciones
+
+Incorporar un sistema formal de migrations para evitar modificaciones manuales de PostgreSQL.
+
+---
+
+# 13. Fase 12 — Transacciones
+
+Introducir transacciones PostgreSQL donde una operación implique múltiples modificaciones.
+
+Especialmente:
+
+### Refresh Token Rotation
+
+```text
+revoke old token
++
+create new token
+```
+
+### Collection
+
+Cuando en el futuro una operación afecte:
+
+```text
+collection_items
++
+prices
++
+statistics
+```
+
+### Synchronization
+
+Para operaciones que requieran consistencia entre múltiples tablas.
+
+---
+
+# 14. Fase 13 — Jobs y tareas automáticas
+
+Actualmente la sincronización se ejecuta mediante endpoints.
+
+Posteriormente sería conveniente separar:
+
+```text
+HTTP API
+```
+
+de:
+
+```text
+background jobs
+```
+
+Por ejemplo:
+
+```text
+Sync Sets
+Sync Cards
+Sync Prices
+```
+
+mediante un scheduler/queue.
+
+Esto evitará mantener una request HTTP abierta durante sincronizaciones largas.
+
+---
+
+# 15. Fase 14 — Production Readiness
+
+Antes del deployment:
+
+* variables de entorno separadas
+* configuración production
+* CORS
+* HTTPS
+* logging
+* health checks
+* graceful shutdown
+* PostgreSQL pool tuning
+* manejo de SIGTERM/SIGINT
+* Docker
+* Docker Compose
+* CI/CD
+* migrations automáticas
+* backups
+* monitoring
+
+---
+
+# 16. Fase 15 — Frontend
+
+Una vez estabilizada la API, comenzar el frontend.
+
+Objetivo:
+
+```text
+TCG Wallet
+    ↓
+Frontend
+    ↓
+REST API
+    ↓
+PostgreSQL
+```
+
+Funcionalidades principales:
+
+## Dashboard
+
+* valor estimado de colección
+* cantidad de cartas
+* cartas graded
+* evolución del valor
+
+## Catálogo
+
+* búsqueda
+* filtros
+* Sets
+* Cards
+* precios
+
+## Carta
+
+* información
+* imagen
+* histórico
+* estadísticas
+* variación
+* precio actual
+
+## Colección
+
+* cartas del usuario
+* cantidad
+* condición
+* grading
+* valoración
+
+## Autenticación
+
+* login
+* registro
+* logout
+* refresh automático
+* sesiones
+
+---
+
+# 17. Orden recomendado de implementación
+
+La prioridad recomendada queda así:
+
+```text
+01. Collection avanzada
+        ↓
+02. Grading Companies
+        ↓
+03. Graded Card Prices
+        ↓
+04. Valoración de colección
+        ↓
+05. Catálogo avanzado
+        ↓
+06. Validación Zod completa
+        ↓
+07. Limpieza Controller / Service / Repository
+        ↓
+08. Testing profesional
+        ↓
+09. Seguridad avanzada
+        ↓
+10. Índices y optimización DB
+        ↓
+11. Transacciones
+        ↓
+12. Logging / Observabilidad
+        ↓
+13. Swagger / OpenAPI
+        ↓
+14. Background Jobs
+        ↓
+15. Production Readiness
+        ↓
+16. Frontend
+```
+
+---
+
+# 18. Siguiente módulo
+
+El CRUD de `collection_items` está **terminado y probado**.
+
+Por lo tanto, el siguiente bloque lógico es:
+
+## Módulo siguiente — Collection avanzada
+
+### Objetivo
+
+Transformar:
+
+```text
+GET /api/collection-items
+```
+
+de una consulta que devuelve únicamente IDs a una consulta enriquecida con información relacionada.
+
+Primera evolución:
+
+```text
+collection_items
+        ↓
+cards
+        ↓
+sets
+        ↓
+tcgs
+```
+
+y para cartas graded:
+
+```text
+collection_items
+        ↓
+grading_companies
+```
+
+Después podremos construir sobre esa base:
+
+```text
+filtros
++
+ordenamiento
++
+estadísticas
++
+valoración
+```
+
+La optimización del `POKÉMON PRICE SYNC` queda fuera de esta prioridad y se retomará posteriormente.
