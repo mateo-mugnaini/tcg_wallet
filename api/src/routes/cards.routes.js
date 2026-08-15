@@ -58,6 +58,7 @@ router.get(
 router.post(
   "/",
   authenticate,
+  requireRole("admin"),
   validate(createCardSchema, "body"),
   validateResponse(cardDataResponseSchema),
   createCardController,
@@ -70,6 +71,7 @@ router.post(
 router.put(
   "/:id",
   authenticate,
+  requireRole("admin"),
   validate(cardIdParamsSchema, "params"),
   validate(updateCardSchema, "body"),
   validateResponse(cardDataResponseSchema),
@@ -83,6 +85,7 @@ router.put(
 router.delete(
   "/:id",
   authenticate,
+  requireRole("admin"),
   validate(cardIdParamsSchema, "params"),
   validateResponse(cardDataResponseSchema),
   deleteCardController,

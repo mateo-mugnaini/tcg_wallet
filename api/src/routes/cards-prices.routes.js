@@ -108,6 +108,7 @@ router.get(
 router.post(
   "/cards/:cardId/graded-prices",
   authenticate,
+  requireRole("admin"),
   validate(gradedCardPriceCardIdParamsSchema, "params"),
   validate(createGradedCardPriceSchema, "body"),
   validateResponse(latestGradedCardPriceResponseSchema),
@@ -186,6 +187,7 @@ router.get(
 router.post(
   "/cards/:cardId/prices",
   authenticate,
+  requireRole("admin"),
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(createCardPriceSchema, "body"),
   validateResponse(latestCardPriceResponseSchema),
