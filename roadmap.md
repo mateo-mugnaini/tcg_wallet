@@ -1,8 +1,53 @@
-# Roadmap de Desarrollo Pendiente — TCG Wallet API
+# Roadmap de Desarrollo y Estado Real — TCG Wallet API
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización y colección personal implementados.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La cobertura de tests y el esquema activo de PostgreSQL no están verificados.
+
+> **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
+
+## Estado actualizado al 2026-08-15
+
+| Nº | Área | Estado | Siguiente acción |
+|---:|---|---|---|
+| 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
+| 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
+| 03 | Graded Card Prices | **En progreso** | Completar latest, stats, variation, aggregations y sync. |
+| 04 | Valoración de colección | **Parcial** | Añadir valoración basada en precios graded. |
+| 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
+| 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
+| 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
+| 08 | Testing profesional | **Pendiente** | Crear unit, integration y API tests. |
+| 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y proteger syncs. |
+| 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
+| 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
+| 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |
+| 13 | Swagger/OpenAPI | **Pendiente** | Publicar contrato de la API. |
+| 14 | Background Jobs | **Pendiente** | Extraer sincronizaciones del ciclo HTTP. |
+| 15 | Production Readiness | **Pendiente** | Deploy, shutdown, backups, CI/CD y monitoring. |
+| 16 | Frontend | **Fuera del backend actual** | Iniciar después de estabilizar la API. |
+
+### Orden ejecutable actualizado
+
+```text
+0. Baseline técnico y acceso reproducible a PostgreSQL
+1. Graded Card Prices
+2. Valoración graded de la colección
+3. Catálogo avanzado
+4. Zod y contratos completos
+5. Limpieza de capas y eliminación de legacy
+6. Testing profesional
+7. Seguridad avanzada
+8. Índices, constraints y optimización DB
+9. Transacciones restantes
+10. Logging y observabilidad
+11. Swagger/OpenAPI
+12. Background Jobs
+13. Production Readiness
+14. Frontend
+```
+
+La numeración histórica de las fases se conserva más abajo para no perder contexto, pero el estado y el orden de ejecución válidos son los de esta sección y `ROADMAP_IMPLEMENTATION_PLAN.md`.
 
 ---
 
@@ -43,7 +88,7 @@ Por lo tanto, **la siguiente etapa ya no consiste en construir el CRUD básico d
 
 ## Estado
 
-El CRUD principal de `collection_items` ya está implementado y probado:
+El CRUD principal de `collection_items` está implementado en código. No existe evidencia automatizada reproducible en el repositorio que permita afirmar que está probado contra una base activa:
 
 * `GET /api/collection-items`
 * `GET /api/collection-items/:id`
@@ -141,10 +186,10 @@ Calcula dinámicamente mediante CTEs y `DISTINCT ON` en PostgreSQL:
 
 # 3. Fase 2 — Grading profesional
 
-La base de datos ya dispone de:
+El código y el roadmap mencionan:
 
 * `grading_companies`
-* `graded_card_prices`
+* `graded_card_prices` — tabla y FKs verificadas en la base activa; constraints adicionales e índices pendientes de auditoría.
 * `collection_items`
 
 Pero todavía falta explotar completamente este modelo.
@@ -877,13 +922,27 @@ La prioridad recomendada queda así:
 
 # 18. Siguiente módulo
 
-El CRUD de `collection_items` está **terminado y probado**.
+El CRUD de `collection_items` está implementado en código. La existencia de pruebas automatizadas reproducibles no está verificada en el repositorio.
 
 Por lo tanto, el siguiente bloque lógico es:
 
-## Módulo siguiente — Collection avanzada
+## Módulo siguiente — Graded Card Prices
 
 ### Objetivo
+
+Continuar el módulo HTTP graded prices. El primer endpoint ya está implementado:
+
+```text
+GET /api/cards/:cardId/graded-prices
+```
+
+Después se añadirán latest, stats, variation y aggregations. La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at.
+
+### Contexto histórico
+
+La sección siguiente conserva la descripción original de Collection avanzada, pero ya está completada en código. La prioridad actual es Graded Card Prices.
+
+### Objetivo histórico ya completado
 
 Transformar:
 

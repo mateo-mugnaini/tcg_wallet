@@ -31,7 +31,28 @@ import {
   cardPricesSyncResponseSchema,
 } from "../schemas/cards-prices.schema.js";
 
+import {
+  gradedCardPriceCardIdParamsSchema,
+  getGradedCardPricesQuerySchema,
+  gradedCardPricesListResponseSchema,
+} from "../schemas/graded-card-prices.schema.js";
+
+import { getGradedCardPricesController } from "../controllers/graded-card-prices.controller.js";
+
 const router = Router();
+
+/* ====================================
+      LISTAR PRECIOS GRADED
+==================================== */
+
+router.get(
+  "/cards/:cardId/graded-prices",
+  authenticate,
+  validate(gradedCardPriceCardIdParamsSchema, "params"),
+  validate(getGradedCardPricesQuerySchema, "query"),
+  validateResponse(gradedCardPricesListResponseSchema),
+  getGradedCardPricesController,
+);
 
 /* ====================================
         LISTAR HISTÓRICO DE PRECIOS
