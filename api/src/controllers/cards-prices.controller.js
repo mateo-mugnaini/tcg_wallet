@@ -3,6 +3,7 @@ import {
   getCardPriceStatistics,
   getLatestCardPrice,
   registerCardPrice,
+  getCardPriceVariation,
   getCardPriceAggregations,
 } from "../services/cards-prices.service.js";
 
@@ -12,9 +13,9 @@ import {
 
 export async function getCardPricesController(req, res, next) {
   try {
-    const { cardId } = req.params;
+    const { cardId } = req.validated.params;
 
-    const { source, condition, page, limit, sortOrder } = req.query;
+    const { source, condition, page, limit, sortOrder } = req.validated.query;
 
     const result = await getCardPrices({
       cardId,
@@ -37,9 +38,9 @@ export async function getCardPricesController(req, res, next) {
 
 export async function getLatestCardPriceController(req, res, next) {
   try {
-    const { cardId } = req.params;
+    const { cardId } = req.validated.params;
 
-    const { source, condition } = req.query;
+    const { source, condition } = req.validated.query;
 
     const price = await getLatestCardPrice({
       cardId,
@@ -61,7 +62,9 @@ export async function getLatestCardPriceController(req, res, next) {
 
 export async function createCardPriceController(req, res, next) {
   try {
-    const { cardId, condition, price, currency, source } = req.body;
+    const { cardId } = req.validated.params;
+
+    const { condition, price, currency, source } = req.validated.body;
 
     const cardPrice = await registerCardPrice({
       cardId,
@@ -78,15 +81,16 @@ export async function createCardPriceController(req, res, next) {
     next(error);
   }
 }
+
 /* ====================================
         ESTADÍSTICAS CARD PRICE
 ==================================== */
 
 export async function getCardPriceStatisticsController(req, res, next) {
   try {
-    const { cardId } = req.params;
+    const { cardId } = req.validated.params;
 
-    const { source, condition } = req.query;
+    const { source, condition } = req.validated.query;
 
     const statistics = await getCardPriceStatistics({
       cardId,
@@ -101,15 +105,16 @@ export async function getCardPriceStatisticsController(req, res, next) {
     next(error);
   }
 }
+
 /* ====================================
         VARIACIÓN CARD PRICE
 ==================================== */
 
 export async function getCardPriceVariationController(req, res, next) {
   try {
-    const { cardId } = req.params;
+    const { cardId } = req.validated.params;
 
-    const { source, condition } = req.query;
+    const { source, condition } = req.validated.query;
 
     const variation = await getCardPriceVariation({
       cardId,
@@ -131,9 +136,9 @@ export async function getCardPriceVariationController(req, res, next) {
 
 export async function getCardPriceAggregationsController(req, res, next) {
   try {
-    const { cardId } = req.params;
+    const { cardId } = req.validated.params;
 
-    const { source, condition, period } = req.query;
+    const { source, condition, period } = req.validated.query;
 
     const aggregations = await getCardPriceAggregations({
       cardId,

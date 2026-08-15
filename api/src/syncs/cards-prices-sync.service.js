@@ -1,8 +1,8 @@
-import { findCardByExternalId } from "../repositories/cards.repository.js";
+import { findCardsByExternalIds } from "../repositories/cards.repository.js";
 
 import {
   createCardPrice,
-  findCardPrice,
+  findLatestCardPricesByCardIds,
 } from "../repositories/cards-prices.repository.js";
 
 import { findSets } from "../repositories/sets.repository.js";
@@ -40,6 +40,24 @@ function delay(ms) {
 }
 
 /* ====================================
+        DETERMINAR RETRY
+==================================== */
+
+function shouldRetryPokemonTcgError(error) {
+  if (error?.code === "POKEMON_TCG_API_UNAVAILABLE") {
+    return true;
+  }
+
+  if (error?.code === "POKEMON_TCG_API_ERROR") {
+    const externalStatus = error?.details?.externalStatus;
+
+    return [429, 500, 502, 503, 504].includes(externalStatus);
+  }
+
+  return false;
+}
+
+/* ====================================
         REQUEST CON RETRY
 ==================================== */
 
@@ -52,9 +70,13 @@ async function getPokemonTcgCardsWithRetry(options) {
     } catch (error) {
       lastError = error;
 
+      if (!shouldRetryPokemonTcgError(error)) {
+        throw error;
+      }
+
       if (attempt === MAX_RETRIES) {
         console.error(
-          `[POKÉMON PRICE SYNC] API request failed after ${MAX_RETRIES} retries`,
+          `[POKÉMON PRICE SYNC] API request failed after ${MAX_RETRIES} attempts`,
         );
 
         throw error;
@@ -63,7 +85,7 @@ async function getPokemonTcgCardsWithRetry(options) {
       const waitTime = RETRY_BASE_DELAY * attempt;
 
       console.warn(
-        `[POKÉMON PRICE SYNC] API error ${error.status ?? "unknown"} | retry=${attempt}/${MAX_RETRIES} | waiting=${waitTime}ms`,
+        `[POKÉMON PRICE SYNC] API error ${error.code ?? "unknown"} | attempt=${attempt}/${MAX_RETRIES} | waiting=${waitTime}ms`,
       );
 
       await delay(waitTime);
@@ -152,18 +174,13 @@ export async function syncPokemonCardPrices() {
       continue;
     }
 
-    let setReceived = 0;
-    let setPricesCreated = 0;
-    let setPricesSkipped = 0;
-    let setSkippedCards = 0;
-
     console.log("");
     console.log(
       `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} | ${set.name} | external_id=${set.external_id}`,
     );
 
     /* ====================================
-          PRIMERA PÁGINA
+          OBTENER PRIMERA PÁGINA
     ==================================== */
 
     const firstResponse = await getPokemonTcgCardsWithRetry({
@@ -183,30 +200,10 @@ export async function syncPokemonCardPrices() {
     );
 
     /* ====================================
-          PROCESAR PRIMERA PÁGINA
+          OBTENER TODAS LAS CARDS DEL SET
     ==================================== */
 
-    for (const pokemonCard of firstPageData) {
-      const result = await syncPokemonCardPrice(pokemonCard, set.id);
-
-      received++;
-      setReceived++;
-
-      if (result.cardSkipped) {
-        skippedCards++;
-        setSkippedCards++;
-      }
-
-      pricesCreated += result.pricesCreated;
-      setPricesCreated += result.pricesCreated;
-
-      pricesSkipped += result.pricesSkipped;
-      setPricesSkipped += result.pricesSkipped;
-    }
-
-    /* ====================================
-          PÁGINAS RESTANTES
-    ==================================== */
+    const pokemonCards = [...firstPageData];
 
     for (let page = 2; page <= totalPages; page++) {
       const response = await getPokemonTcgCardsWithRetry({
@@ -215,26 +212,180 @@ export async function syncPokemonCardPrices() {
         q: `set.id:${set.external_id}`,
       });
 
-      const pageData = response.data ?? [];
+      pokemonCards.push(...(response.data ?? []));
+    }
 
-      for (const pokemonCard of pageData) {
-        const result = await syncPokemonCardPrice(pokemonCard, set.id);
+    received += pokemonCards.length;
 
-        received++;
-        setReceived++;
+    /* ====================================
+          BUSCAR CARDS LOCALES EN BLOQUE
+    ==================================== */
 
-        if (result.cardSkipped) {
-          skippedCards++;
-          setSkippedCards++;
+    const externalIds = pokemonCards
+      .map((pokemonCard) => pokemonCard.id)
+      .filter(Boolean);
+
+    const cards = await findCardsByExternalIds({
+      setId: set.id,
+      externalIds,
+    });
+
+    /* ====================================
+          INDEXAR CARDS
+    ==================================== */
+
+    const cardsByExternalId = new Map(
+      cards.map((card) => [card.external_id, card]),
+    );
+
+    /* ====================================
+          CONTADORES DEL SET
+    ==================================== */
+
+    let setPricesCreated = 0;
+    let setPricesSkipped = 0;
+    let setSkippedCards = 0;
+
+    /* ====================================
+          OBTENER ÚLTIMOS PRECIOS EN BLOQUE
+    ==================================== */
+
+    const cardIds = cards.map((card) => card.id);
+
+    const latestPrices = await findLatestCardPricesByCardIds({
+      cardIds,
+      source: PRICE_SOURCE,
+    });
+
+    /* ====================================
+          INDEXAR ÚLTIMOS PRECIOS
+    ==================================== */
+
+    const latestPriceMap = new Map();
+
+    for (const price of latestPrices) {
+      const key = `${price.card_id}:${price.condition}`;
+
+      latestPriceMap.set(key, price);
+    }
+
+    /* ====================================
+          PROCESAR CARDS
+    ==================================== */
+
+    for (const pokemonCard of pokemonCards) {
+      /* ====================================
+              VALIDAR CARD
+      ==================================== */
+
+      if (!pokemonCard.id || !pokemonCard.name) {
+        skippedCards++;
+        setSkippedCards++;
+        continue;
+      }
+
+      /* ====================================
+              BUSCAR CARD EN MEMORIA
+      ==================================== */
+
+      const card = cardsByExternalId.get(pokemonCard.id);
+
+      if (!card) {
+        skippedCards++;
+        setSkippedCards++;
+        continue;
+      }
+
+      /* ====================================
+              OBTENER PRECIOS
+      ==================================== */
+
+      const prices = pokemonCard.tcgplayer?.prices;
+
+      if (!prices || typeof prices !== "object") {
+        setPricesSkipped++;
+        continue;
+      }
+
+      /* ====================================
+              PROCESAR CONDITIONS
+      ==================================== */
+
+      for (const [condition, priceData] of Object.entries(prices)) {
+        /* ====================================
+              VALIDAR PRICE DATA
+        ==================================== */
+
+        if (!priceData || typeof priceData !== "object") {
+          setPricesSkipped++;
+          continue;
         }
 
-        pricesCreated += result.pricesCreated;
-        setPricesCreated += result.pricesCreated;
+        /* ====================================
+              MARKET PRICE
+        ==================================== */
 
-        pricesSkipped += result.pricesSkipped;
-        setPricesSkipped += result.pricesSkipped;
+        const marketPrice = priceData.market;
+
+        if (marketPrice === undefined || marketPrice === null) {
+          setPricesSkipped++;
+          continue;
+        }
+
+        const numericPrice = Number(marketPrice);
+
+        if (!Number.isFinite(numericPrice)) {
+          setPricesSkipped++;
+          continue;
+        }
+
+        /* ====================================
+              BUSCAR ÚLTIMO PRECIO EN MEMORIA
+        ==================================== */
+
+        const key = `${card.id}:${condition}`;
+
+        const latestPrice = latestPriceMap.get(key);
+
+        /* ====================================
+              PRECIO SIN CAMBIOS
+        ==================================== */
+
+        if (latestPrice && Number(latestPrice.price) === numericPrice) {
+          setPricesSkipped++;
+          continue;
+        }
+
+        /* ====================================
+              CREAR NUEVO PRECIO
+        ==================================== */
+
+        await createCardPrice({
+          cardId: card.id,
+          condition,
+          price: numericPrice,
+          currency: PRICE_CURRENCY,
+          source: PRICE_SOURCE,
+        });
+
+        setPricesCreated++;
+
+        /* ====================================
+              ACTUALIZAR CACHE LOCAL
+        ==================================== */
+
+        latestPriceMap.set(key, {
+          card_id: card.id,
+          condition,
+          price: numericPrice,
+          currency: PRICE_CURRENCY,
+          source: PRICE_SOURCE,
+        });
       }
     }
+
+    pricesCreated += setPricesCreated;
+    pricesSkipped += setPricesSkipped;
 
     setsProcessed++;
 
@@ -243,7 +394,7 @@ export async function syncPokemonCardPrices() {
     ==================================== */
 
     console.log(
-      `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} COMPLETED | cards=${setReceived} | pricesCreated=${setPricesCreated} | pricesSkipped=${setPricesSkipped} | cardsMissing=${setSkippedCards}`,
+      `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} COMPLETED | cards=${pokemonCards.length} | pricesCreated=${setPricesCreated} | pricesSkipped=${setPricesSkipped} | cardsMissing=${setSkippedCards}`,
     );
   }
 
@@ -302,134 +453,5 @@ export async function syncPokemonCardPrices() {
     },
 
     summary,
-  };
-}
-
-/* ====================================
-        SINCRONIZAR PRECIO CARD
-==================================== */
-
-async function syncPokemonCardPrice(pokemonCard, setId) {
-  const externalId = pokemonCard.id;
-
-  /* ====================================
-          VALIDACIÓN
-  ==================================== */
-
-  if (!externalId || !pokemonCard.name) {
-    return {
-      cardSkipped: true,
-      pricesCreated: 0,
-      pricesSkipped: 0,
-    };
-  }
-
-  /* ====================================
-          BUSCAR CARD
-  ==================================== */
-
-  const card = await findCardByExternalId(setId, externalId);
-
-  /*
-   * La Card debería existir porque
-   * el Card Sync se ejecutó antes.
-   */
-
-  if (!card) {
-    return {
-      cardSkipped: true,
-      pricesCreated: 0,
-      pricesSkipped: 0,
-    };
-  }
-
-  /* ====================================
-          OBTENER PRECIOS
-  ==================================== */
-
-  const prices = pokemonCard.tcgplayer?.prices;
-
-  if (!prices || typeof prices !== "object") {
-    return {
-      cardSkipped: false,
-      pricesCreated: 0,
-      pricesSkipped: 1,
-    };
-  }
-
-  let pricesCreated = 0;
-  let pricesSkipped = 0;
-
-  /* ====================================
-          CONDITIONS
-  ==================================== */
-
-  for (const [condition, priceData] of Object.entries(prices)) {
-    /* ====================================
-          VALIDAR PRICE DATA
-    ==================================== */
-
-    if (!priceData || typeof priceData !== "object") {
-      pricesSkipped++;
-      continue;
-    }
-
-    /* ====================================
-          MARKET PRICE
-    ==================================== */
-
-    const marketPrice = priceData.market;
-
-    if (marketPrice === undefined || marketPrice === null) {
-      pricesSkipped++;
-      continue;
-    }
-
-    const numericPrice = Number(marketPrice);
-
-    if (!Number.isFinite(numericPrice)) {
-      pricesSkipped++;
-      continue;
-    }
-
-    /* ====================================
-          BUSCAR PRECIO EXISTENTE
-    ==================================== */
-
-    const existingPrice = await findCardPrice({
-      cardId: card.id,
-      condition,
-      source: PRICE_SOURCE,
-    });
-
-    /* ====================================
-          YA EXISTE
-    ==================================== */
-
-    if (existingPrice) {
-      pricesSkipped++;
-
-      continue;
-    }
-
-    /* ====================================
-          CREAR
-    ==================================== */
-
-    await createCardPrice({
-      cardId: card.id,
-      condition,
-      price: numericPrice,
-      currency: PRICE_CURRENCY,
-      source: PRICE_SOURCE,
-    });
-
-    pricesCreated++;
-  }
-
-  return {
-    cardSkipped: false,
-    pricesCreated,
-    pricesSkipped,
   };
 }

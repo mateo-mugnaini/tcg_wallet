@@ -243,35 +243,6 @@ export async function createCardPrice({
 }
 
 /* ====================================
-      BUSCAR CARD PRICE EXISTENTE
-==================================== */
-
-export async function findCardPrice({ cardId, condition, source }) {
-  const query = `
-    SELECT
-      id,
-      card_id,
-      condition,
-      price,
-      currency,
-      source,
-      recorded_at
-    FROM card_prices
-    WHERE card_id = $1
-      AND condition = $2
-      AND source = $3
-    ORDER BY recorded_at DESC
-    LIMIT 1
-  `;
-
-  const values = [cardId, condition, source];
-
-  const result = await pool.query(query, values);
-
-  return result.rows[0] ?? null;
-}
-
-/* ====================================
         ESTADÍSTICAS CARD PRICE
 ==================================== */
 
@@ -412,6 +383,134 @@ export async function getCardPriceAggregations({
     WHERE ${conditions.join(" AND ")}
     GROUP BY DATE_TRUNC('${safePeriod}', recorded_at)
     ORDER BY period ASC
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
+}
+
+/* ====================================
+    BUSCAR PRECIOS DE VARIAS CARDS
+==================================== */
+
+export async function findCardPricesByCardIds({ cardIds, source }) {
+  if (!cardIds || cardIds.length === 0) {
+    return [];
+  }
+
+  const values = [cardIds];
+  const conditions = ["card_id = ANY($1::uuid[])"];
+
+  if (source) {
+    values.push(source);
+    conditions.push(`source = $${values.length}`);
+  }
+
+  const query = `
+    SELECT
+      id,
+      card_id,
+      condition,
+      price,
+      currency,
+      source,
+      recorded_at
+    FROM card_prices
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
+}
+
+/* ====================================
+      CREAR CARD PRICES EN LOTE
+==================================== */
+
+export async function createCardPrices(cardPrices) {
+  if (!cardPrices || cardPrices.length === 0) {
+    return [];
+  }
+
+  const values = [];
+  const placeholders = [];
+
+  cardPrices.forEach((cardPrice, index) => {
+    const baseIndex = index * 5;
+
+    placeholders.push(
+      `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5})`,
+    );
+
+    values.push(
+      cardPrice.cardId,
+      cardPrice.condition,
+      cardPrice.price,
+      cardPrice.currency,
+      cardPrice.source,
+    );
+  });
+
+  const query = `
+    INSERT INTO card_prices (
+      card_id,
+      condition,
+      price,
+      currency,
+      source
+    )
+    VALUES ${placeholders.join(", ")}
+    RETURNING
+      id,
+      card_id,
+      condition,
+      price,
+      currency,
+      source,
+      recorded_at
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
+}
+
+/* ====================================
+    ÚLTIMOS PRECIOS POR CARDS
+==================================== */
+
+export async function findLatestCardPricesByCardIds({ cardIds, source }) {
+  if (!Array.isArray(cardIds) || cardIds.length === 0) {
+    return [];
+  }
+
+  const values = [cardIds];
+
+  let sourceCondition = "";
+
+  if (source) {
+    values.push(source);
+    sourceCondition = `AND source = $${values.length}`;
+  }
+
+  const query = `
+    SELECT DISTINCT ON (card_id, condition)
+      id,
+      card_id,
+      condition,
+      price,
+      currency,
+      source,
+      recorded_at
+    FROM card_prices
+    WHERE card_id = ANY($1)
+      ${sourceCondition}
+    ORDER BY
+      card_id,
+      condition,
+      recorded_at DESC
   `;
 
   const result = await pool.query(query, values);

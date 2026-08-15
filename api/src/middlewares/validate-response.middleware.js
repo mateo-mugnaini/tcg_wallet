@@ -11,16 +11,36 @@ export function validateResponse(schema) {
     res.json = (data) => {
       const result = schema.safeParse(data);
 
-      if (!result.success) {
-        return next(
-          createAppError(
-            "La respuesta generada por el servidor no cumple con el contrato esperado",
-            500,
-          ),
-        );
+      /* ====================================
+            RESPONSE VÁLIDA
+      ==================================== */
+
+      if (result.success) {
+        return originalJson(result.data);
       }
 
-      return originalJson(result.data);
+      /* ====================================
+            RESPONSE INVÁLIDA
+      ==================================== */
+
+      console.error("");
+      console.error("====================================");
+      console.error("[RESPONSE VALIDATION ERROR]");
+      console.error("====================================");
+      console.error("Method:", req.method);
+      console.error("Path:", req.originalUrl);
+      console.error("Status:", res.statusCode);
+      console.error("Zod issues:");
+      console.error(result.error.issues);
+      console.error("====================================");
+      console.error("");
+
+      return next(
+        createAppError(
+          "La respuesta generada por el servidor no cumple con el contrato esperado",
+          500,
+        ),
+      );
     };
 
     next();

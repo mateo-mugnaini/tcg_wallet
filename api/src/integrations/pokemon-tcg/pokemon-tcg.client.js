@@ -1,4 +1,5 @@
 import env from "../../config/env.js";
+import { createAppError } from "../../errors/app.errors.js";
 
 const POKEMON_TCG_API_URL = "https://api.pokemontcg.io/v2";
 
@@ -22,6 +23,10 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
       body: options.body,
     });
 
+    /* ====================================
+          ERROR HTTP
+    ==================================== */
+
     if (!response.ok) {
       let errorData = null;
       let rawResponse = null;
@@ -40,25 +45,71 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
         // No se pudo leer el body.
       }
 
-      const error = new Error(
+      const message =
         errorData?.error?.message ||
-          `Pokémon TCG API error: ${response.status}`,
+        `Pokémon TCG API error: ${response.status}`;
+
+      /* ====================================
+            DETERMINAR SI ES REINTENTABLE
+      ==================================== */
+
+      const retryableStatuses = [429, 500, 502, 503, 504];
+
+      const retryable = retryableStatuses.includes(response.status);
+
+      throw createAppError(message, 502, "POKEMON_TCG_API_ERROR", {
+        externalStatus: response.status,
+        endpoint,
+        data: errorData,
+        rawResponse,
+        retryable,
+      });
+    }
+
+    /* ====================================
+          PARSEAR RESPONSE
+    ==================================== */
+
+    try {
+      return await response.json();
+    } catch (error) {
+      throw createAppError(
+        "Pokémon TCG API devolvió una respuesta inválida",
+        502,
+        "POKEMON_TCG_API_INVALID_RESPONSE",
+        {
+          endpoint,
+          originalError: error?.message,
+          retryable: false,
+        },
       );
-
-      error.status = response.status;
-      error.data = errorData;
-      error.endpoint = endpoint;
-
-      throw error;
     }
-
-    return await response.json();
   } catch (error) {
-    if (error.status) {
+    /* ====================================
+          ERROR YA NORMALIZADO
+    ==================================== */
+
+    if (
+      error?.code === "POKEMON_TCG_API_ERROR" ||
+      error?.code === "POKEMON_TCG_API_INVALID_RESPONSE"
+    ) {
       throw error;
     }
 
-    throw error;
+    /* ====================================
+          ERROR DE RED / FETCH
+    ==================================== */
+
+    throw createAppError(
+      "No se pudo comunicar con Pokémon TCG API",
+      503,
+      "POKEMON_TCG_API_UNAVAILABLE",
+      {
+        endpoint,
+        originalError: error?.message,
+        retryable: true,
+      },
+    );
   }
 }
 

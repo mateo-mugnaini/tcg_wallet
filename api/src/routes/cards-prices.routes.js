@@ -15,12 +15,20 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 import { validate } from "../middlewares/validate.middleware.js";
 
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
+
 import {
   cardPriceCardIdParamsSchema,
   getCardPricesQuerySchema,
   getLatestCardPriceQuerySchema,
   createCardPriceSchema,
   getCardPriceAggregationsQuerySchema,
+  cardPricesListResponseSchema,
+  latestCardPriceResponseSchema,
+  cardPriceStatisticsResponseSchema,
+  cardPriceVariationResponseSchema,
+  cardPriceAggregationsResponseSchema,
+  cardPricesSyncResponseSchema,
 } from "../schemas/cards-prices.schema.js";
 
 const router = Router();
@@ -34,6 +42,7 @@ router.get(
   authenticate,
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getCardPricesQuerySchema, "query"),
+  validateResponse(cardPricesListResponseSchema),
   getCardPricesController,
 );
 
@@ -46,6 +55,7 @@ router.get(
   authenticate,
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getLatestCardPriceQuerySchema, "query"),
+  validateResponse(latestCardPriceResponseSchema),
   getLatestCardPriceController,
 );
 
@@ -58,6 +68,7 @@ router.get(
   authenticate,
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getLatestCardPriceQuerySchema, "query"),
+  validateResponse(cardPriceStatisticsResponseSchema),
   getCardPriceStatisticsController,
 );
 
@@ -70,6 +81,7 @@ router.get(
   authenticate,
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getLatestCardPriceQuerySchema, "query"),
+  validateResponse(cardPriceVariationResponseSchema),
   getCardPriceVariationController,
 );
 
@@ -82,6 +94,7 @@ router.get(
   authenticate,
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getCardPriceAggregationsQuerySchema, "query"),
+  validateResponse(cardPriceAggregationsResponseSchema),
   getCardPriceAggregationsController,
 );
 
@@ -93,18 +106,15 @@ router.post(
   "/cards/:cardId/prices",
   authenticate,
   validate(cardPriceCardIdParamsSchema, "params"),
-  validate(createCardPriceSchema),
+  validate(createCardPriceSchema, "body"),
+  validateResponse(latestCardPriceResponseSchema),
   createCardPriceController,
 );
 
-/* ====================================
-        SYNC CARD PRICES
-==================================== */
-
-router.post(
+/* ==================================== SYNC CARD PRICES ==================================== */ router.post(
   "/sync/cards/prices",
   authenticate,
+  validateResponse(cardPricesSyncResponseSchema),
   syncPokemonCardPricesController,
 );
-
 export default router;

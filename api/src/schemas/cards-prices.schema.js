@@ -148,3 +148,17 @@ export const cardPriceAggregationSchema = z.object({
 export const cardPriceAggregationsResponseSchema = z.object({
   data: z.array(cardPriceAggregationSchema),
 });
+
+/* ==================================== CARD PRICES SYNC RESPONSE ==================================== */ export const cardPricesSyncResponseSchema =
+  z.object({
+    tcg: z.object({ id: z.string().uuid(), name: z.string() }),
+    summary: z.object({
+      setsProcessed: z.number().int().min(0),
+      skippedSets: z.number().int().min(0),
+      received: z.number().int().min(0),
+      pricesCreated: z.number().int().min(0),
+      pricesSkipped: z.number().int().min(0),
+      skippedCards: z.number().int().min(0),
+      durationSeconds: z.number().int().min(0),
+    }),
+  });
