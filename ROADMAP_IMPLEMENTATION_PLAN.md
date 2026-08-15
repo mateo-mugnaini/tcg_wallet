@@ -14,7 +14,8 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
 - Validación adicional: `pnpm test:run` OK con 1 archivo y 4 tests de contratos/import graded.
-- Siguiente tarea: conectar un proveedor real al importador batch, probar la valoración con un item graded y ampliar las pruebas automatizadas.
+- Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
+- Siguiente tarea: conectar un proveedor real al importador batch y ampliar las pruebas automatizadas.
 
 ## 1. Estado inicial
 

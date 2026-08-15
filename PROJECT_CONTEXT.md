@@ -21,7 +21,7 @@ El backend implementa:
 - estadísticas y valoración normal/graded de colección;
 - CRUD de grading companies.
 
-El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. La valoración de colección ya selecciona precios graded por card, empresa y grade cuando el item es graded; existe importación batch administrativa y un fixture con filas reales. El sync automático, la valoración positiva de un item graded y la cobertura completa de tests todavía están pendientes. No hay migraciones en el backend actual.
+El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. La valoración de colección ya selecciona precios graded por card, empresa y grade cuando el item es graded; existe importación batch administrativa, fixture con filas reales y smoke test positivo de valoración. El sync automático y la cobertura completa de tests todavía están pendientes. No hay migraciones en el backend actual.
 
 ## 2. Stack real
 
@@ -395,7 +395,7 @@ GET /api/collection-items/value existe. El repository usa:
 
 Para items no graded usa el último card_prices por card/condition. Para items graded usa el último graded_card_prices por card/grading_company/grade y no hace fallback silencioso al precio normal. La respuesta incluye contadores separados de items graded evaluados y sin precio, además de información de grading en topValuedItems. La moneda agregada se fija a USD; la política para múltiples monedas sigue pendiente.
 
-Estado: **IMPLEMENTADO EN CÓDIGO; validación de consulta normal realizada; cobertura graded de collection value con un item graded pendiente**.
+Estado: **IMPLEMENTADO EN CÓDIGO; valoración normal y graded validadas con smoke test aislado; cobertura automatizada amplia pendiente**.
 
 ## 15. Grading Companies
 
@@ -426,7 +426,7 @@ Estado exacto al cierre de esta revisión:
 - sync automático: no existe; hay importador batch administrativo en POST /api/sync/graded-prices y fixture opt-in en scripts/seed-graded-card-prices.js;
 - latest/stats/variation/aggregations: implementados como endpoints de consulta.
 
-Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual, importación batch, fixture opt-in y conexión inicial con valoración terminados; proveedor de sync automático y pruebas automatizadas pendientes**.
+Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual, importación batch, fixture y valoración graded terminados; proveedor de sync automático y pruebas automatizadas amplias pendientes**.
 
 Endpoints disponibles:
 
@@ -553,7 +553,7 @@ Resultado real de esta revisión:
 
 Conclusión: **EXISTE UNA SUITE INICIAL DE TESTS AUTOMATIZADA**, todavía limitada a contratos y validaciones graded; faltan tests de repository, API, ownership, collection y sync.
 
-roadmap.md afirma que Collection CRUD está implementado y probado, pero no hay tests, logs, fixtures ni script reproducible: **PRUEBA MANUAL / PLANIFICADO — NO VERIFICADO EN CÓDIGO**. No puede afirmarse desde este repo que auth, catálogo, prices, collection, grading o sync hayan sido probados contra una DB real.
+roadmap.md afirma que Collection CRUD está implementado y probado, pero la evidencia automatizada actual se limita a contratos graded y un smoke test aislado de valoración: **COBERTURA PARCIAL — RESTO NO VERIFICADO AUTOMÁTICAMENTE**. No puede afirmarse desde este repo que auth, catálogo, prices, collection CRUD o sync tengan cobertura completa contra una DB real.
 
 ## 24. Discrepancias detectadas
 
@@ -568,7 +568,7 @@ roadmap.md afirma que Collection CRUD está implementado y probado, pero no hay 
 | Counters de sets | Upsert incrementa created; no se ve update/unchanged efectivo. | Summary puede ser engañoso. | Estado actual documentado. |
 | JWT errors | auth middleware propaga error nativo. | Un token inválido puede acabar como 500. | Mapping 401 pendiente. |
 | Validación desigual | Cards/collection no tienen schemas; prices sí. | Contratos inconsistentes. | Zod completa pendiente. |
-| Graded prices parcial | Hay consultas HTTP, registro manual y fixture, pero no sync automático. | La integración todavía no tiene suite automatizada ni proveedor de sync definido. | En progreso. |
+| Graded prices parcial | Hay consultas HTTP, registro manual, importación batch y fixture, pero no sync automático. | Falta proveedor real y cobertura automatizada de repository/API. | En progreso. |
 
 ## 25. Decisiones técnicas observadas
 
@@ -613,7 +613,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 01 | Collection avanzada | **Completada en código**; tests/DB no verificados. |
 | 02 | Grading Companies | **Completada en código**; tests/DB no verificados. |
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
-| 04 | Valoración de colección | **En progreso**: normal y graded conectados; falta probar un item graded y definir currency. |
+| 04 | Valoración de colección | **En progreso**: normal y graded validados; falta definir currency y ampliar cobertura. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
 | 06 | Validación Zod completa | Parcial; faltan cards, collection, sync y responses generales. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
@@ -648,7 +648,7 @@ GET /api/cards/:cardId/graded-prices/variation
 GET /api/cards/:cardId/graded-prices/aggregations
 ~~~
 
-El modelo verificado relaciona card + grading_company + grade + graded_card_price. La valoración ya está conectada para seleccionar el último precio graded por esa combinación y tiene response schema Zod. El siguiente trabajo es probar con filas reales y definir el sync graded.
+El modelo verificado relaciona card + grading_company + grade + graded_card_price. La valoración ya está conectada para seleccionar el último precio graded por esa combinación, tiene response schema Zod y fue validada con `pnpm check:graded-value`. El siguiente trabajo es definir el sync graded automático.
 
 ## 29. Guía para continuar
 
