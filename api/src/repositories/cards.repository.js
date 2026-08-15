@@ -368,3 +368,20 @@ export async function findCardsByExternalIds({ setId, externalIds }) {
 
   return result.rows;
 }
+
+export async function findCardsByIds(cardIds) {
+  if (!Array.isArray(cardIds) || cardIds.length === 0) {
+    return [];
+  }
+
+  const result = await pool.query(
+    `
+      SELECT id
+      FROM cards
+      WHERE id = ANY($1::uuid[])
+    `,
+    [cardIds],
+  );
+
+  return result.rows;
+}

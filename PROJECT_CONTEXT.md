@@ -421,12 +421,12 @@ Estado exacto al cierre de esta revisión:
 - repository: existe graded-card-prices.repository.js para listado, latest, stats, variation y aggregations;
 - service: existe graded-card-prices.service.js para existencia de card, empresa de grading, registro, filtros, paginación, normalización y las cinco consultas;
 - controller: existe graded-card-prices.controller.js;
-- routes: existen los cinco endpoints GET y el POST /api/cards/:cardId/graded-prices;
+- routes: existen los cinco endpoints GET, el POST /api/cards/:cardId/graded-prices y el importador administrativo POST /api/sync/graded-prices;
 - schemas: existe graded-card-prices.schema.js para params, query, body y response;
-- sync: no existe; hay fixture opt-in en scripts/seed-graded-card-prices.js;
+- sync automático: no existe; hay importador batch administrativo en POST /api/sync/graded-prices y fixture opt-in en scripts/seed-graded-card-prices.js;
 - latest/stats/variation/aggregations: implementados como endpoints de consulta.
 
-Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual, fixture opt-in y conexión inicial con valoración terminados; sync y pruebas con datos graded pendientes**.
+Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual, importación batch, fixture opt-in y conexión inicial con valoración terminados; proveedor de sync automático y pruebas automatizadas pendientes**.
 
 Endpoints disponibles:
 
@@ -568,7 +568,7 @@ roadmap.md afirma que Collection CRUD está implementado y probado, pero no hay 
 | Counters de sets | Upsert incrementa created; no se ve update/unchanged efectivo. | Summary puede ser engañoso. | Estado actual documentado. |
 | JWT errors | auth middleware propaga error nativo. | Un token inválido puede acabar como 500. | Mapping 401 pendiente. |
 | Validación desigual | Cards/collection no tienen schemas; prices sí. | Contratos inconsistentes. | Zod completa pendiente. |
-| Graded prices parcial | Hay consultas HTTP, pero no sync ni fixture reproducible con datos. | La integración no está validada con filas graded reales. | En progreso. |
+| Graded prices parcial | Hay consultas HTTP, registro manual y fixture, pero no sync automático. | La integración todavía no tiene suite automatizada ni proveedor de sync definido. | En progreso. |
 
 ## 25. Decisiones técnicas observadas
 
@@ -613,7 +613,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 01 | Collection avanzada | **Completada en código**; tests/DB no verificados. |
 | 02 | Grading Companies | **Completada en código**; tests/DB no verificados. |
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
-| 04 | Valoración de colección | **En progreso**: normal y graded conectados; sync y fixture graded pendientes. |
+| 04 | Valoración de colección | **En progreso**: normal y graded conectados; falta probar un item graded y definir currency. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
 | 06 | Validación Zod completa | Parcial; faltan cards, collection, sync y responses generales. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |

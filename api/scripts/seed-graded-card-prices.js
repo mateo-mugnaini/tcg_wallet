@@ -12,6 +12,7 @@ const pool = new Pool({
 });
 
 const FIXTURE_SOURCE = "development-fixture";
+const FIXTURE_GRADING_COMPANY_NAME = "Development Fixture Grading";
 const FIXTURE_GRADE = 9;
 
 try {
@@ -27,20 +28,37 @@ try {
       LIMIT 1
     `);
 
-    const gradingCompanyResult = await client.query(`
-      SELECT id, name
-      FROM grading_companies
-      ORDER BY name ASC, id ASC
-      LIMIT 1
-    `);
-
     const card = cardResult.rows[0];
-    const gradingCompany = gradingCompanyResult.rows[0];
 
-    if (!card || !gradingCompany) {
-      throw new Error(
-        "Se necesita al menos una card y una grading company para crear el fixture",
+    if (!card) {
+      throw new Error("Se necesita al menos una card para crear el fixture");
+    }
+
+    const gradingCompanyResult = await client.query(
+      `
+        SELECT id, name
+        FROM grading_companies
+        WHERE name = $1
+        LIMIT 1
+      `,
+      [FIXTURE_GRADING_COMPANY_NAME],
+    );
+
+    let gradingCompany = gradingCompanyResult.rows[0];
+    let gradingCompanyCreated = false;
+
+    if (!gradingCompany) {
+      const createdCompanyResult = await client.query(
+        `
+          INSERT INTO grading_companies (name)
+          VALUES ($1)
+          RETURNING id, name
+        `,
+        [FIXTURE_GRADING_COMPANY_NAME],
       );
+
+      gradingCompany = createdCompanyResult.rows[0];
+      gradingCompanyCreated = true;
     }
 
     const existingResult = await client.query(
@@ -93,6 +111,7 @@ try {
           cardId: card.id,
           gradingCompanyId: gradingCompany.id,
           gradingCompanyName: gradingCompany.name,
+          gradingCompanyCreated,
           grade: FIXTURE_GRADE,
           rowsCreated: existingResult.rows.length === 0 ? 2 : 0,
           rowsAlreadyPresent: existingResult.rows.length,

@@ -57,6 +57,23 @@ export async function findGradingCompanyByName(name) {
   return result.rows[0] ?? null;
 }
 
+export async function findGradingCompaniesByIds(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return [];
+  }
+
+  const result = await pool.query(
+    `
+      SELECT id, name
+      FROM grading_companies
+      WHERE id = ANY($1::uuid[])
+    `,
+    [ids],
+  );
+
+  return result.rows;
+}
+
 /* ====================================
         CREAR GRADING COMPANY
 ==================================== */

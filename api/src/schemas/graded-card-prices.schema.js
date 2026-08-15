@@ -20,6 +20,17 @@ export const createGradedCardPriceSchema = z.object({
   source: z.string().trim().min(1).max(100),
 });
 
+export const importGradedCardPricesSchema = z.object({
+  prices: z.array(createGradedCardPriceSchema).min(1).max(1000),
+});
+
+export const gradedCardPricesImportResponseSchema = z.object({
+  summary: z.object({
+    received: z.number().int().min(0),
+    created: z.number().int().min(0),
+  }),
+});
+
 export const getLatestGradedCardPriceQuerySchema = z.object({
   gradingCompanyId: z.string().uuid().optional(),
   grade: z.coerce.number().min(0).max(10).optional(),

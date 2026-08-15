@@ -12,8 +12,8 @@
 |---:|---|---|---|
 | 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
 | 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
-| 03 | Graded Card Prices | **En progreso** | Probar registro manual con datos reales y completar sync graded. |
-| 04 | Valoración de colección | **En progreso** | Añadir fixture graded y política de currency. |
+| 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y añadir pruebas automatizadas. |
+| 04 | Valoración de colección | **En progreso** | Probar valoración con un item graded y definir política de currency. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
 | 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
@@ -942,7 +942,7 @@ Continuar el módulo HTTP graded prices. Los cinco endpoints de consulta ya est�
 GET /api/cards/:cardId/graded-prices
 ```
 
-La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El comando opt-in `pnpm db:seed:graded` prepara dos capturas históricas reproducibles. El siguiente trabajo es ejecutar el fixture en desarrollo, probar el registro con datos reales y completar el sync graded.
+La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El comando opt-in `pnpm db:seed:graded` fue ejecutado y validó las cinco consultas graded con dos capturas históricas. También existe el importador administrativo `POST /api/sync/graded-prices`, preparado para recibir lotes validados. El siguiente trabajo es conectar un proveedor real y probar la valoración con un item graded.
 
 ### Contexto histórico
 

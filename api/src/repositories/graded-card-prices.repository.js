@@ -58,6 +58,58 @@ export async function createGradedCardPrice({
   return result.rows[0];
 }
 
+export async function createGradedCardPrices(gradedCardPrices) {
+  if (!Array.isArray(gradedCardPrices) || gradedCardPrices.length === 0) {
+    return [];
+  }
+
+  const values = [];
+  const placeholders = [];
+
+  gradedCardPrices.forEach((gradedCardPrice, index) => {
+    const baseIndex = index * 6;
+
+    placeholders.push(
+      `($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5}, $${baseIndex + 6})`,
+    );
+
+    values.push(
+      gradedCardPrice.cardId,
+      gradedCardPrice.gradingCompanyId,
+      gradedCardPrice.grade,
+      gradedCardPrice.price,
+      gradedCardPrice.currency,
+      gradedCardPrice.source,
+    );
+  });
+
+  const result = await pool.query(
+    `
+      INSERT INTO graded_card_prices (
+        card_id,
+        grading_company_id,
+        grade,
+        price,
+        currency,
+        source
+      )
+      VALUES ${placeholders.join(", ")}
+      RETURNING
+        id,
+        card_id,
+        grading_company_id,
+        grade,
+        price,
+        currency,
+        source,
+        recorded_at
+    `,
+    values,
+  );
+
+  return result.rows;
+}
+
 export async function findGradedCardPrices({
   cardId,
   gradingCompanyId,
