@@ -1,7 +1,7 @@
 import { findCardsByExternalIds } from "../repositories/cards.repository.js";
 
 import {
-  createCardPrice,
+  createCardPrices,
   findLatestCardPricesByCardIds,
 } from "../repositories/cards-prices.repository.js";
 
@@ -28,6 +28,8 @@ const PRICE_CURRENCY = "USD";
 const MAX_RETRIES = 15;
 
 const RETRY_BASE_DELAY = 1500;
+
+const PRICE_INSERT_BATCH_SIZE = 500;
 
 /* ====================================
               DELAY
@@ -93,6 +95,32 @@ async function getPokemonTcgCardsWithRetry(options) {
   }
 
   throw lastError;
+}
+
+/* ====================================
+        CREAR PRECIOS EN BATCH
+==================================== */
+
+async function createCardPricesInBatches(cardPrices) {
+  if (!Array.isArray(cardPrices) || cardPrices.length === 0) {
+    return 0;
+  }
+
+  let created = 0;
+
+  for (
+    let index = 0;
+    index < cardPrices.length;
+    index += PRICE_INSERT_BATCH_SIZE
+  ) {
+    const batch = cardPrices.slice(index, index + PRICE_INSERT_BATCH_SIZE);
+
+    const insertedPrices = await createCardPrices(batch);
+
+    created += insertedPrices.length;
+  }
+
+  return created;
 }
 
 /* ====================================
@@ -270,6 +298,12 @@ export async function syncPokemonCardPrices() {
     }
 
     /* ====================================
+          ACUMULAR PRECIOS NUEVOS
+    ==================================== */
+
+    const pricesToCreate = [];
+
+    /* ====================================
           PROCESAR CARDS
     ==================================== */
 
@@ -357,18 +391,16 @@ export async function syncPokemonCardPrices() {
         }
 
         /* ====================================
-              CREAR NUEVO PRECIO
+              ACUMULAR PRECIO PARA BATCH
         ==================================== */
 
-        await createCardPrice({
+        pricesToCreate.push({
           cardId: card.id,
           condition,
           price: numericPrice,
           currency: PRICE_CURRENCY,
           source: PRICE_SOURCE,
         });
-
-        setPricesCreated++;
 
         /* ====================================
               ACTUALIZAR CACHE LOCAL
@@ -383,6 +415,18 @@ export async function syncPokemonCardPrices() {
         });
       }
     }
+
+    /* ====================================
+          INSERTAR PRECIOS EN BATCH
+    ==================================== */
+
+    if (pricesToCreate.length > 0) {
+      setPricesCreated = await createCardPricesInBatches(pricesToCreate);
+    }
+
+    /* ====================================
+          ACUMULAR CONTADORES
+    ==================================== */
 
     pricesCreated += setPricesCreated;
     pricesSkipped += setPricesSkipped;
