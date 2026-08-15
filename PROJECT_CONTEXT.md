@@ -483,6 +483,7 @@ Schemas reales:
 - tcg.schema.js: create, update, params y list.
 - set.schema.js: create, update, params y list.
 - cards-prices.schema.js: params, queries, create y response schemas.
+- cards.schema.js: params, query, create y update de cards.
 - graded-card-prices.schema.js: params, queries y response schemas.
 - collection-items.schema.js: response schema para collection value.
 - grading-companies.schema.js: create, update y params.
@@ -491,7 +492,7 @@ validate.middleware.js hace safeParse sobre body/query/params y guarda el result
 
 validate-response.middleware.js intercepta res.json, valida el objeto y transforma response inválida en AppError 500. Se usa en card prices, graded prices y collection value.
 
-Inconsistencias: todavía no hay schemas de request para cards ni syncs; collection items ya tiene schemas de params, filtros y create/update. Todavía faltan response schemas generales para users, TCGs, sets, cards, collection CRUD/stats y grading companies.
+Inconsistencias: todavía no hay schemas de request para syncs; cards y collection items ya tienen schemas de params, filtros y create/update. Todavía faltan response schemas generales para users, TCGs, sets, cards, collection CRUD/stats y grading companies.
 
 ## 20. Error handling
 
@@ -592,7 +593,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 
 ## 26. Estado de módulos
 
-“Implementado” significa que existe y está conectado; no implica prueba automatizada ni verificación de DB activa.
+“Finalizado” significa que el alcance funcional documentado existe y está conectado; no implica que toda la cobertura de calidad o auditoría de DB esté completa.
 
 - Auth: implementado.
 - Users: implementado.
@@ -600,8 +601,8 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 - Sets: implementado y sync presente.
 - Cards: implementado y sync presente; validación Zod incompleta.
 - Card Prices: implementado, con histórico/latest/stats/variation/aggregations y sync.
-- Collection Items: CRUD + enriquecimiento + filtros + stats + value implementados.
-- Grading Companies: CRUD y permisos implementados.
+- Collection Items: **finalizado** en alcance funcional; CRUD + enriquecimiento + filtros + stats + value implementados.
+- Grading Companies: **finalizado** en alcance funcional; CRUD y permisos implementados.
 - Graded Card Prices: parcialmente implementado; listado/latest/stats/variation/aggregations presentes, sync y pruebas con datos pendientes.
 - Pokémon integration: cliente y syncs implementados; retry/timeout tienen limitaciones.
 - Pipeline: implementado en src/syncs; existe archivo legacy roto.
@@ -610,14 +611,14 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 
 | Nº | Área | Estado real |
 |---:|---|---|
-| 01 | Collection avanzada | **Completada en código**; tests/DB no verificados. |
-| 02 | Grading Companies | **Completada en código**; tests/DB no verificados. |
+| 01 | Collection avanzada | **Finalizado** en alcance funcional; tests de integración y responses generales pendientes. |
+| 02 | Grading Companies | **Finalizado** en alcance funcional; tests y auditoría completa de DB pendientes. |
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
-| 04 | Valoración de colección | **En progreso**: normal y graded validados; falta definir currency y ampliar cobertura. |
+| 04 | Valoración de colección | **Finalizado** en alcance funcional: normal/graded, USD, desglose por grading y smoke test validados. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
-| 06 | Validación Zod completa | Parcial; collection request avanzado cubierto; faltan cards, sync y responses generales. |
+| 06 | Validación Zod completa | Parcial; cards y collection request cubiertos; faltan sync y responses generales. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
-| 08 | Testing profesional | Pendiente; no hay tests. |
+| 08 | Testing profesional | En progreso inicial; hay 8 tests de contratos graded y collection. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies sí, Helmet/CORS no activos. |
 | 10 | Índices y optimización DB | No verificable sin DDL/DB activa. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |

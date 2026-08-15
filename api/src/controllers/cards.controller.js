@@ -12,7 +12,8 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
   next,
 ) {
   try {
-    const { setId, search, page, limit, sortBy, sortOrder } = req.query;
+    const { setId, search, page, limit, sortBy, sortOrder } =
+      req.validated.query;
     const result = await getCards({
       setId,
       search,
@@ -32,7 +33,7 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
   next,
 ) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
     const card = await getCardById(id);
     return res.status(200).json({ data: card });
   } catch (error) {
@@ -45,7 +46,8 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
   next,
 ) {
   try {
-    const { setId, externalId, name, cardNumber, rarity, imageUrl } = req.body;
+    const { setId, externalId, name, cardNumber, rarity, imageUrl } =
+      req.validated.body;
     const card = await registerCard({
       setId,
       externalId,
@@ -65,8 +67,9 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
   next,
 ) {
   try {
-    const { id } = req.params;
-    const { setId, externalId, name, cardNumber, rarity, imageUrl } = req.body;
+    const { id } = req.validated.params;
+    const { setId, externalId, name, cardNumber, rarity, imageUrl } =
+      req.validated.body;
     const card = await editCard(id, {
       setId,
       externalId,
@@ -86,7 +89,7 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
   next,
 ) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
     const card = await removeCard(id);
     return res.status(200).json({ data: card });
   } catch (error) {

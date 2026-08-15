@@ -2,7 +2,7 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La cobertura de tests y el esquema activo de PostgreSQL no están verificados.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. Existe una suite inicial de 8 tests; la cobertura completa y el esquema activo de PostgreSQL aún no están verificados.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
@@ -10,12 +10,12 @@
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
-| 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
-| 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
+| 01 | Collection avanzada | **Finalizado** | Ampliar cobertura de tests y response schemas generales. |
+| 02 | Grading Companies | **Finalizado** | Añadir tests y completar auditoría de FKs como tarea de calidad. |
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
-| 04 | Valoración de colección | **En progreso** | Ampliar pruebas de valoración y documentar conversión futura de currency. |
+| 04 | Valoración de colección | **Finalizado** | Ampliar tests y documentar conversión multicurrency futura. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
-| 06 | Validación Zod completa | **Parcial** | Cubrir cards, sync y responses generales; collection request ya avanzado. |
+| 06 | Validación Zod completa | **Parcial** | Cubrir sync y responses generales; cards y collection request ya avanzados. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
 | 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
 | 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y proteger syncs. |

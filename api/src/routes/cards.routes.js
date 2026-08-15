@@ -10,6 +10,14 @@ import {
 } from "../controllers/cards.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
+
+import {
+  cardIdParamsSchema,
+  createCardSchema,
+  getCardsQuerySchema,
+  updateCardSchema,
+} from "../schemas/cards.schema.js";
 
 const router = Router();
 
@@ -17,31 +25,57 @@ const router = Router();
               LISTAR CARDS
 ==================================== */
 
-router.get("/", authenticate, getCardsController);
+router.get(
+  "/",
+  authenticate,
+  validate(getCardsQuerySchema, "query"),
+  getCardsController,
+);
 
 /* ====================================
           OBTENER CARD POR ID
 ==================================== */
 
-router.get("/:id", authenticate, getCardByIdController);
+router.get(
+  "/:id",
+  authenticate,
+  validate(cardIdParamsSchema, "params"),
+  getCardByIdController,
+);
 
 /* ====================================
               CREAR CARD
 ==================================== */
 
-router.post("/", authenticate, createCardController);
+router.post(
+  "/",
+  authenticate,
+  validate(createCardSchema, "body"),
+  createCardController,
+);
 
 /* ====================================
            ACTUALIZAR CARD
 ==================================== */
 
-router.put("/:id", authenticate, updateCardController);
+router.put(
+  "/:id",
+  authenticate,
+  validate(cardIdParamsSchema, "params"),
+  validate(updateCardSchema, "body"),
+  updateCardController,
+);
 
 /* ====================================
             ELIMINAR CARD
 ==================================== */
 
-router.delete("/:id", authenticate, deleteCardController);
+router.delete(
+  "/:id",
+  authenticate,
+  validate(cardIdParamsSchema, "params"),
+  deleteCardController,
+);
 
 /* ====================================
         SINCRONIZAR POKÉMON
