@@ -13,7 +13,7 @@
 | 01 | Collection avanzada | **Implementada en código** | Añadir pruebas y contratos Zod. |
 | 02 | Grading Companies | **Implementada en código** | Añadir pruebas y verificar FKs activas. |
 | 03 | Graded Card Prices | **En progreso** | Probar con datos reales y completar sync graded. |
-| 04 | Valoración de colección | **Parcial** | Añadir valoración basada en precios graded. |
+| 04 | Valoración de colección | **En progreso** | Añadir fixture graded y política de currency. |
 | 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
 | 06 | Validación Zod completa | **Parcial** | Cubrir cards, collection, sync y responses generales. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
@@ -177,7 +177,7 @@ Proporciona agregaciones globales y desgloses:
 Endpoint implementado: `GET /api/collection-items/value`
 
 Calcula dinámicamente mediante CTEs y `DISTINCT ON` en PostgreSQL:
-* `summary`: `totalEstimatedValue`, `currency`, `itemsEvaluatedCount`, `itemsMissingPriceCount`
+* `summary`: `totalEstimatedValue`, `currency`, `itemsEvaluatedCount`, `itemsMissingPriceCount`, `gradedItemsEvaluatedCount`, `gradedItemsMissingPriceCount`
 * `topValuedItems`: Las 5 cartas más valiosas de la colección (basado en `quantity * latest_price`)
 * `bySet`: Desglose del valor estimado agrupado por Set
 * `byTcg`: Desglose del valor estimado agrupado por TCG
@@ -936,7 +936,7 @@ Continuar el módulo HTTP graded prices. Los cinco endpoints de consulta ya est�
 GET /api/cards/:cardId/graded-prices
 ```
 
-La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. El siguiente trabajo es probar con datos reales y completar sync/valoración graded.
+La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El siguiente trabajo es probar con datos reales y completar el sync graded.
 
 ### Contexto histórico
 

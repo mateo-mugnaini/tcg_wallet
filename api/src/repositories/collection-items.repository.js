@@ -661,6 +661,16 @@ export async function getCollectionValue(userId) {
       FROM card_prices
       ORDER BY card_id, condition, recorded_at DESC
     ),
+    latest_graded_prices AS (
+      SELECT DISTINCT ON (card_id, grading_company_id, grade)
+        card_id,
+        grading_company_id,
+        grade,
+        price,
+        currency
+      FROM graded_card_prices
+      ORDER BY card_id, grading_company_id, grade, recorded_at DESC
+    ),
     evaluated_items AS (
       SELECT
         ci.id AS item_id,
@@ -669,9 +679,25 @@ export async function getCollectionValue(userId) {
         ci.condition,
         ci.is_graded,
         ci.grade,
-        lp.price AS unit_price,
-        COALESCE(lp.currency, 'USD') AS currency,
-        (ci.quantity * COALESCE(lp.price, 0)) AS total_item_value,
+        ci.grading_company_id,
+        gc.name AS grading_company_name,
+        CASE
+          WHEN ci.is_graded = true THEN lgp.price
+          ELSE lp.price
+        END AS unit_price,
+        CASE
+          WHEN ci.is_graded = true THEN COALESCE(lgp.currency, 'USD')
+          ELSE COALESCE(lp.currency, 'USD')
+        END AS currency,
+        (
+          ci.quantity * COALESCE(
+            CASE
+              WHEN ci.is_graded = true THEN lgp.price
+              ELSE lp.price
+            END,
+            0
+          )
+        ) AS total_item_value,
         c.name AS card_name,
         c.card_number,
         c.image_url,
@@ -684,13 +710,24 @@ export async function getCollectionValue(userId) {
       INNER JOIN cards c ON ci.card_id = c.id
       INNER JOIN sets s ON c.set_id = s.id
       INNER JOIN tcgs t ON s.tcg_id = t.id
-      LEFT JOIN latest_prices lp ON ci.card_id = lp.card_id AND ci.condition = lp.condition
+      LEFT JOIN latest_prices lp
+        ON ci.is_graded = false
+        AND ci.card_id = lp.card_id
+        AND ci.condition = lp.condition
+      LEFT JOIN latest_graded_prices lgp
+        ON ci.is_graded = true
+        AND ci.card_id = lgp.card_id
+        AND ci.grading_company_id = lgp.grading_company_id
+        AND ci.grade = lgp.grade
+      LEFT JOIN grading_companies gc ON ci.grading_company_id = gc.id
       WHERE ci.user_id = $1
     )
     SELECT
       (SELECT COALESCE(SUM(total_item_value), 0) FROM evaluated_items) AS total_estimated_value,
       (SELECT COUNT(*) FROM evaluated_items WHERE unit_price IS NOT NULL) AS items_evaluated_count,
       (SELECT COUNT(*) FROM evaluated_items WHERE unit_price IS NULL) AS items_missing_price_count,
+      (SELECT COUNT(*) FROM evaluated_items WHERE is_graded = true AND unit_price IS NOT NULL) AS graded_items_evaluated_count,
+      (SELECT COUNT(*) FROM evaluated_items WHERE is_graded = true AND unit_price IS NULL) AS graded_items_missing_price_count,
       (
         SELECT COALESCE(json_agg(t), '[]'::json)
         FROM (
@@ -704,6 +741,10 @@ export async function getCollectionValue(userId) {
             tcg_name AS "tcgName",
             quantity,
             condition,
+            is_graded AS "isGraded",
+            grading_company_id AS "gradingCompanyId",
+            grading_company_name AS "gradingCompanyName",
+            grade,
             unit_price::numeric AS "unitPrice",
             total_item_value::numeric AS "totalItemValue"
           FROM evaluated_items
@@ -747,6 +788,8 @@ export async function getCollectionValue(userId) {
     total_estimated_value: 0,
     items_evaluated_count: 0,
     items_missing_price_count: 0,
+    graded_items_evaluated_count: 0,
+    graded_items_missing_price_count: 0,
     top_valued_items: [],
     by_set: [],
     by_tcg: [],
@@ -758,9 +801,12 @@ export async function getCollectionValue(userId) {
       currency: "USD",
       itemsEvaluatedCount: Number(row.items_evaluated_count),
       itemsMissingPriceCount: Number(row.items_missing_price_count),
+      gradedItemsEvaluatedCount: Number(row.graded_items_evaluated_count),
+      gradedItemsMissingPriceCount: Number(row.graded_items_missing_price_count),
     },
     topValuedItems: (row.top_valued_items || []).map((item) => ({
       ...item,
+      grade: item.grade === null ? null : Number(item.grade),
       unitPrice: Number(item.unitPrice),
       totalItemValue: Number(item.totalItemValue),
     })),

@@ -12,6 +12,10 @@ import {
 
 import { authenticate } from "../middlewares/auth.middleware.js";
 
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
+
+import { collectionValueResponseSchema } from "../schemas/collection-items.schema.js";
+
 const router = Router();
 
 /* ====================================
@@ -30,7 +34,12 @@ router.get("/stats", authenticate, getCollectionStatsController);
       VALOR ESTIMADO DE COLECCIÓN
 ==================================== */
 
-router.get("/value", authenticate, getCollectionValueController);
+router.get(
+  "/value",
+  authenticate,
+  validateResponse(collectionValueResponseSchema),
+  getCollectionValueController,
+);
 
 /* ====================================
         OBTENER ITEM POR ID

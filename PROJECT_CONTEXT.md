@@ -18,10 +18,10 @@ El backend implementa:
 - precios normales históricos, latest, estadísticas, variación y agregaciones;
 - sincronización de sets, cards y precios desde Pokémon TCG API;
 - collection items con soporte de grading;
-- estadísticas y valoración normal de colección;
+- estadísticas y valoración normal/graded de colección;
 - CRUD de grading companies.
 
-El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. El sync graded, la valoración graded y las pruebas con filas reales todavía están pendientes. No hay migraciones ni suite de tests automatizada en el backend actual.
+El módulo graded_card_prices tiene implementados sus cinco endpoints de consulta: listado, latest, stats, variation y aggregations. La valoración de colección ya selecciona precios graded por card, empresa y grade cuando el item es graded; el sync graded y las pruebas con filas reales todavía están pendientes. No hay migraciones ni suite de tests automatizada en el backend actual.
 
 ## 2. Stack real
 
@@ -393,9 +393,9 @@ GET /api/collection-items/value existe. El repository usa:
 6. top 5 valued items.
 7. agrupación by set y by TCG.
 
-La moneda se fija a USD. No usa graded_card_prices: un item graded se valora con el precio normal de card/condition.
+Para items no graded usa el último card_prices por card/condition. Para items graded usa el último graded_card_prices por card/grading_company/grade y no hace fallback silencioso al precio normal. La respuesta incluye contadores separados de items graded evaluados y sin precio, además de información de grading en topValuedItems. La moneda agregada se fija a USD; la política para múltiples monedas sigue pendiente.
 
-Estado: **IMPLEMENTADO EN CÓDIGO; TESTS Y BASE ACTIVA NO VERIFICADOS**.
+Estado: **IMPLEMENTADO EN CÓDIGO; validación de consulta normal realizada; cobertura graded con filas reales pendiente**.
 
 ## 15. Grading Companies
 
@@ -409,7 +409,7 @@ Archivos: grading-companies.routes.js, controller, service, repository y schema.
 | PATCH | /api/grading-companies/:id | Admin |
 | DELETE | /api/grading-companies/:id | Admin |
 
-Nombre: trim, 1–50 caracteres, duplicados rechazados. ID: UUID. El repository selecciona id, name y created_at. Error PostgreSQL 23503 al borrar se transforma en 409. La relación con collection está usada por SQL. La asociación con graded prices está **PLANIFICADA / NO VERIFICADA EN CÓDIGO**.
+Nombre: trim, 1–50 caracteres, duplicados rechazados. ID: UUID. El repository selecciona id, name y created_at. Error PostgreSQL 23503 al borrar se transforma en 409. La relación con collection y graded prices está usada por SQL.
 
 Estado: **IMPLEMENTADO EN CÓDIGO; TESTS Y BASE ACTIVA NO VERIFICADOS**.
 
@@ -418,15 +418,15 @@ Estado: **IMPLEMENTADO EN CÓDIGO; TESTS Y BASE ACTIVA NO VERIFICADOS**.
 Estado exacto al cierre de esta revisión:
 
 - tabla: verificada en la base activa; schema y FKs documentados en la sección PostgreSQL;
-- repository: existe graded-card-prices.repository.js para listado y count;
-- service: existe graded-card-prices.service.js para existencia de card, filtros, paginación y normalización;
+- repository: existe graded-card-prices.repository.js para listado, latest, stats, variation y aggregations;
+- service: existe graded-card-prices.service.js para existencia de card, filtros, paginación, normalización y las cinco consultas;
 - controller: existe graded-card-prices.controller.js;
-- routes: existe GET /api/cards/:cardId/graded-prices;
+- routes: existen los cinco endpoints GET /api/cards/:cardId/graded-prices*;
 - schemas: existe graded-card-prices.schema.js para params, query y response;
 - sync: no existe;
 - latest/stats/variation/aggregations: implementados como endpoints de consulta.
 
-Por tanto: **PARCIALMENTE IMPLEMENTADO — endpoints de consulta terminados; sync, valoración y pruebas con datos graded pendientes**.
+Por tanto: **PARCIALMENTE IMPLEMENTADO — endpoints de consulta y conexión inicial con valoración terminados; sync y pruebas con datos graded pendientes**.
 
 El roadmap prevé, pero no implementa:
 
@@ -482,13 +482,15 @@ Schemas reales:
 - tcg.schema.js: create, update, params y list.
 - set.schema.js: create, update, params y list.
 - cards-prices.schema.js: params, queries, create y response schemas.
+- graded-card-prices.schema.js: params, queries y response schemas.
+- collection-items.schema.js: response schema para collection value.
 - grading-companies.schema.js: create, update y params.
 
 validate.middleware.js hace safeParse sobre body/query/params y guarda el resultado en req.validated. En error responde 400 con status, message y errors.
 
-validate-response.middleware.js intercepta res.json, valida el objeto y transforma response inválida en AppError 500. Solo se usa en card prices.
+validate-response.middleware.js intercepta res.json, valida el objeto y transforma response inválida en AppError 500. Se usa en card prices, graded prices y collection value.
 
-Inconsistencias: no hay schemas para cards, collection items, syncs ni graded prices; no hay response schemas generales para users, TCGs, sets, cards, collection o grading companies.
+Inconsistencias: todavía no hay schemas de request para cards, collection items ni syncs; tampoco hay response schemas generales para users, TCGs, sets, cards, collection CRUD/stats o grading companies.
 
 ## 20. Error handling
 
@@ -565,7 +567,7 @@ roadmap.md afirma que Collection CRUD está implementado y probado, pero no hay 
 | Counters de sets | Upsert incrementa created; no se ve update/unchanged efectivo. | Summary puede ser engañoso. | Estado actual documentado. |
 | JWT errors | auth middleware propaga error nativo. | Un token inválido puede acabar como 500. | Mapping 401 pendiente. |
 | Validación desigual | Cards/collection no tienen schemas; prices sí. | Contratos inconsistentes. | Zod completa pendiente. |
-| Graded prices ausente | Solo diagnóstico/roadmap, sin módulo HTTP. | No se pueden consultar precios graded. | Próximo módulo. |
+| Graded prices parcial | Hay consultas HTTP, pero no sync ni fixture reproducible con datos. | La integración no está validada con filas graded reales. | En progreso. |
 
 ## 25. Decisiones técnicas observadas
 
@@ -610,7 +612,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 01 | Collection avanzada | **Completada en código**; tests/DB no verificados. |
 | 02 | Grading Companies | **Completada en código**; tests/DB no verificados. |
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
-| 04 | Valoración de colección | Parcial: normal prices sí; graded no. |
+| 04 | Valoración de colección | **En progreso**: normal y graded conectados; sync y fixture graded pendientes. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
 | 06 | Validación Zod completa | Parcial; faltan cards, collection, sync y responses generales. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
@@ -645,7 +647,7 @@ GET /api/cards/:cardId/graded-prices/variation
 GET /api/cards/:cardId/graded-prices/aggregations
 ~~~
 
-El modelo verificado relaciona card + grading_company + grade + graded_card_price. El siguiente trabajo es probar con filas reales, definir sync graded y conectar la valoración de collection.
+El modelo verificado relaciona card + grading_company + grade + graded_card_price. La valoración ya está conectada para seleccionar el último precio graded por esa combinación y tiene response schema Zod. El siguiente trabajo es probar con filas reales y definir el sync graded.
 
 ## 29. Guía para continuar
 
