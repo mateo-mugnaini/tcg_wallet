@@ -1,5 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import helmet from "helmet";
 
 import tcgRoutes from "./routes/tcg.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -11,11 +13,14 @@ import collectionItemsRoutes from "./routes/collection-items.routes.js";
 import gradingCompaniesRoutes from "./routes/grading-companies.routes.js";
 import syncRoutes from "./routes/sync.pipeline.routes.js";
 
+import { corsOptions, helmetOptions } from "./config/security.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 const app = express();
 
-app.use(express.json());
+app.use(helmet(helmetOptions));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
 /* ====================================

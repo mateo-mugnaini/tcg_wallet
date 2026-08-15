@@ -9,8 +9,10 @@ const corsOrigin =
 
 export const corsOptions = {
   origin: corsOrigin,
-  methods: ["GET", "POST", "PATCH", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 /* ====================================

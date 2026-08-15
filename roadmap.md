@@ -18,7 +18,7 @@
 | 06 | Validación Zod completa | **En progreso** | Cubrir auth, users y responses generales restantes; cards, TCGs, sets, collection, grading y sync ya avanzados. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
 | 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
-| 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y definir rate limits específicos. |
+| 09 | Seguridad avanzada | **Parcial** | Completar timeout de fetch, locks de sincronización y estrategia distribuida de rate limits. |
 | 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |
@@ -566,11 +566,9 @@ Probar:
 
 # 9. Fase 8 — Seguridad avanzada
 
-La seguridad básica ya está implementada.
+La seguridad básica y el hardening HTTP inicial ya están implementados. La fase permanece parcial por los timeouts de integraciones externas, locks de sincronización y configuración de producción.
 
-Pendiente:
-
-## 9.1. Rate limiting específico
+## 9.1. Rate limiting específico — ✅ IMPLEMENTADO
 
 Separar límites para:
 
@@ -581,7 +579,9 @@ Separar límites para:
 /sync
 ```
 
-## 9.2. Protección contra abuso
+Se aplicaron límites para login, refresh, usuarios, registro y sincronizaciones. La estrategia actual usa memoria local por instancia; una arquitectura distribuida requiere un store compartido.
+
+## 9.2. Protección contra abuso — ✅ LÍMITES IMPLEMENTADOS / LOCK PENDIENTE
 
 Especialmente:
 
@@ -591,7 +591,9 @@ POST /api/cards/sync/pokemon
 POST /api/sync/cards/prices
 ```
 
-## 9.3. Cookies y Refresh Tokens
+Los endpoints costosos requieren rol admin y tienen rate limit específico. Todavía falta impedir ejecuciones concurrentes mediante lock distribuido o job exclusivo.
+
+## 9.3. Cookies y Refresh Tokens — ✅ IMPLEMENTADO EN CÓDIGO
 
 Revisar:
 
@@ -609,7 +611,9 @@ development
 production
 ```
 
-## 9.4. CORS
+La revisión de despliegue HTTPS, CSRF y revocación al eliminar usuarios permanece como tarea de production readiness.
+
+## 9.4. CORS — ✅ IMPLEMENTADO
 
 Configurar explícitamente:
 
@@ -619,6 +623,8 @@ methods
 headers
 credentials
 ```
+
+La configuración se monta en la aplicación con origin por entorno, métodos explícitos, headers permitidos y credenciales habilitadas para la cookie de refresh.
 
 ---
 

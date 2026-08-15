@@ -15,6 +15,10 @@ import { requireRole } from "../middlewares/role.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireOwnershipOrRole } from "../middlewares/authorization.middleware.js";
+import {
+  registrationRateLimiter,
+  userRateLimiter,
+} from "../middlewares/rate-limit.middleware.js";
 
 //* SCHEMAS
 import {
@@ -31,12 +35,16 @@ import {
 import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
 const router = express.Router();
+
+router.use(userRateLimiter);
+
 /* ====================================
            * CREAR USUARIO
 ==================================== */
 
 router.post(
   "/",
+  registrationRateLimiter,
   validate(createUserSchema),
   validateResponse(userResponseSchema),
   createUser,

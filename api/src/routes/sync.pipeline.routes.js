@@ -5,6 +5,7 @@ import { importGradedCardPricesController } from "../controllers/graded-card-pri
 
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
+import { syncRateLimiter } from "../middlewares/rate-limit.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { validateResponse } from "../middlewares/validate-response.middleware.js";
 import {
@@ -23,6 +24,7 @@ router.post(
   "/",
   authenticate,
   requireRole("admin"),
+  syncRateLimiter,
   validateResponse(syncPipelineResponseSchema),
   runSyncPipelineController,
 );
@@ -31,6 +33,7 @@ router.post(
   "/graded-prices",
   authenticate,
   requireRole("admin"),
+  syncRateLimiter,
   validate(importGradedCardPricesSchema, "body"),
   validateResponse(gradedCardPricesImportResponseSchema),
   importGradedCardPricesController,
