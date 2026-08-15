@@ -419,16 +419,16 @@ Estado exacto al cierre de esta revisión:
 
 - tabla: verificada en la base activa; schema y FKs documentados en la sección PostgreSQL;
 - repository: existe graded-card-prices.repository.js para listado, latest, stats, variation y aggregations;
-- service: existe graded-card-prices.service.js para existencia de card, filtros, paginación, normalización y las cinco consultas;
+- service: existe graded-card-prices.service.js para existencia de card, empresa de grading, registro, filtros, paginación, normalización y las cinco consultas;
 - controller: existe graded-card-prices.controller.js;
-- routes: existen los cinco endpoints GET /api/cards/:cardId/graded-prices*;
-- schemas: existe graded-card-prices.schema.js para params, query y response;
+- routes: existen los cinco endpoints GET y el POST /api/cards/:cardId/graded-prices;
+- schemas: existe graded-card-prices.schema.js para params, query, body y response;
 - sync: no existe;
 - latest/stats/variation/aggregations: implementados como endpoints de consulta.
 
-Por tanto: **PARCIALMENTE IMPLEMENTADO — endpoints de consulta y conexión inicial con valoración terminados; sync y pruebas con datos graded pendientes**.
+Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual y conexión inicial con valoración terminados; sync y pruebas con datos graded pendientes**.
 
-El roadmap prevé, pero no implementa:
+Endpoints disponibles:
 
 ~~~http
 GET /api/cards/:cardId/graded-prices
@@ -436,6 +436,7 @@ GET /api/cards/:cardId/graded-prices/latest
 GET /api/cards/:cardId/graded-prices/stats
 GET /api/cards/:cardId/graded-prices/variation
 GET /api/cards/:cardId/graded-prices/aggregations
+POST /api/cards/:cardId/graded-prices
 ~~~
 
 La implementación actual no debe ampliarse con nuevos campos sin conservar estos nombres verificados.

@@ -12,6 +12,14 @@ export const getGradedCardPricesQuerySchema = z.object({
   sortOrder: z.enum(["ASC", "DESC", "asc", "desc"]).default("DESC"),
 });
 
+export const createGradedCardPriceSchema = z.object({
+  gradingCompanyId: z.string().uuid(),
+  grade: z.coerce.number().min(0).max(10),
+  price: z.coerce.number().min(0),
+  currency: z.string().trim().min(1).max(10),
+  source: z.string().trim().min(1).max(100),
+});
+
 export const getLatestGradedCardPriceQuerySchema = z.object({
   gradingCompanyId: z.string().uuid().optional(),
   grade: z.coerce.number().min(0).max(10).optional(),

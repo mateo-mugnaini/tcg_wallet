@@ -23,6 +23,41 @@ function buildFilters({ cardId, gradingCompanyId, grade }) {
   return { values, conditions };
 }
 
+export async function createGradedCardPrice({
+  cardId,
+  gradingCompanyId,
+  grade,
+  price,
+  currency,
+  source,
+}) {
+  const result = await pool.query(
+    `
+      INSERT INTO graded_card_prices (
+        card_id,
+        grading_company_id,
+        grade,
+        price,
+        currency,
+        source
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING
+        id,
+        card_id,
+        grading_company_id,
+        grade,
+        price,
+        currency,
+        source,
+        recorded_at
+    `,
+    [cardId, gradingCompanyId, grade, price, currency, source],
+  );
+
+  return result.rows[0];
+}
+
 export async function findGradedCardPrices({
   cardId,
   gradingCompanyId,

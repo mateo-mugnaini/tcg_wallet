@@ -34,6 +34,7 @@ import {
 import {
   gradedCardPriceCardIdParamsSchema,
   getGradedCardPricesQuerySchema,
+  createGradedCardPriceSchema,
   getLatestGradedCardPriceQuerySchema,
   getGradedCardPriceAggregationsQuerySchema,
   gradedCardPricesListResponseSchema,
@@ -44,6 +45,7 @@ import {
 } from "../schemas/graded-card-prices.schema.js";
 
 import {
+  createGradedCardPriceController,
   getGradedCardPricesController,
   getLatestGradedCardPriceController,
   getGradedCardPriceStatisticsController,
@@ -100,6 +102,15 @@ router.get(
   validate(getGradedCardPriceAggregationsQuerySchema, "query"),
   validateResponse(gradedCardPriceAggregationsResponseSchema),
   getGradedCardPriceAggregationsController,
+);
+
+router.post(
+  "/cards/:cardId/graded-prices",
+  authenticate,
+  validate(gradedCardPriceCardIdParamsSchema, "params"),
+  validate(createGradedCardPriceSchema, "body"),
+  validateResponse(latestGradedCardPriceResponseSchema),
+  createGradedCardPriceController,
 );
 
 /* ====================================

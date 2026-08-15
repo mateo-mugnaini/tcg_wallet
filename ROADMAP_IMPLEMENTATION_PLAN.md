@@ -7,7 +7,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 ## Estado de ejecución actual
 
 - Fase 0: parcialmente completada. PostgreSQL está configurado en el puerto 2203 y el schema de graded_card_prices ya fue verificado en la base activa. La auditoría completa de tablas, índices y constraints sigue pendiente.
-- Fase 1: en progreso. Ya existen los cinco endpoints de consulta graded prices con repository, service, controller, routes y schemas Zod; sync y fixture con datos reales siguen pendientes.
+- Fase 1: en progreso. Ya existen los cinco endpoints de consulta y el registro manual de graded prices con repository, service, controller, routes y schemas Zod; sync y fixture con datos reales siguen pendientes.
 - Fase 2: en progreso. `GET /api/collection-items/value` ya separa precios normales y graded; para graded usa card, grading company y grade, sin fallback al precio normal.
 - Validación realizada: app import OK; card inexistente devuelve 404; card existente sin precios graded devuelve lista vacía con paginación válida; la response pasa el schema Zod.
 - Datos actuales: 20.479 cards y 0 registros en graded_card_prices, por lo que todavía falta probar una response con una fila real.

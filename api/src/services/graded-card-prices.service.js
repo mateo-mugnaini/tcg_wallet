@@ -1,6 +1,8 @@
 import { findCardById } from "../repositories/cards.repository.js";
+import { findGradingCompanyById } from "../repositories/grading-companies.repository.js";
 
 import {
+  createGradedCardPrice,
   findGradedCardPrices,
   countGradedCardPrices,
   findLatestGradedCardPrice,
@@ -27,6 +29,58 @@ async function ensureCardExists(cardId) {
   if (!card) {
     throw createAppError("Card no encontrada", 404);
   }
+}
+
+export async function registerGradedCardPrice({
+  cardId,
+  gradingCompanyId,
+  grade,
+  price,
+  currency,
+  source,
+}) {
+  await ensureCardExists(cardId);
+
+  const gradingCompany = await findGradingCompanyById(gradingCompanyId);
+
+  if (!gradingCompany) {
+    throw createAppError("La empresa de grading no existe", 404);
+  }
+
+  const normalizedGrade = Number(grade);
+  const normalizedPrice = Number(price);
+
+  if (!Number.isFinite(normalizedGrade) || normalizedGrade < 0 || normalizedGrade > 10) {
+    throw createAppError("El grade debe ser un número entre 0 y 10", 400);
+  }
+
+  if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
+    throw createAppError("El precio debe ser un número mayor o igual a 0", 400);
+  }
+
+  const normalizedCurrency = String(currency ?? "").trim();
+  const normalizedSource = String(source ?? "").trim();
+
+  if (!normalizedCurrency) {
+    throw createAppError("La moneda es obligatoria", 400);
+  }
+
+  if (!normalizedSource) {
+    throw createAppError("La fuente del precio es obligatoria", 400);
+  }
+
+  const gradedCardPrice = await createGradedCardPrice({
+    cardId,
+    gradingCompanyId,
+    grade: normalizedGrade,
+    price: normalizedPrice,
+    currency: normalizedCurrency,
+    source: normalizedSource,
+  });
+
+  return {
+    data: normalizeGradedCardPrice(gradedCardPrice),
+  };
 }
 
 export async function getGradedCardPrices({

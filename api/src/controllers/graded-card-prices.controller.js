@@ -1,10 +1,37 @@
 import {
+  registerGradedCardPrice,
   getGradedCardPrices,
   getLatestGradedCardPrice,
   getGradedCardPriceStatistics,
   getGradedCardPriceVariation,
   getGradedCardPriceAggregations,
 } from "../services/graded-card-prices.service.js";
+
+export async function createGradedCardPriceController(req, res, next) {
+  try {
+    const { cardId } = req.validated.params;
+    const {
+      gradingCompanyId,
+      grade,
+      price,
+      currency,
+      source,
+    } = req.validated.body;
+
+    const result = await registerGradedCardPrice({
+      cardId,
+      gradingCompanyId,
+      grade,
+      price,
+      currency,
+      source,
+    });
+
+    return res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
 
 function getFilters(req) {
   const { cardId } = req.validated.params;
