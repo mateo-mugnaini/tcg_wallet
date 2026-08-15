@@ -1,0 +1,249 @@
+import {
+  addCollectionItem,
+  getCollectionItems,
+  getCollectionItemById,
+  editCollectionItem,
+  removeCollectionItem,
+} from "../services/collection-items.service.js";
+
+import { createAppError } from "../errors/app.errors.js";
+
+/* ====================================
+        LISTAR COLECCIÓN
+==================================== */
+
+export async function getCollectionItemsController(req, res, next) {
+  try {
+    const {
+      cardId,
+      condition,
+      isGraded,
+      limit = 20,
+      offset = 0,
+      sortOrder = "DESC",
+    } = req.query;
+
+    const userId = req.user.id;
+
+    /* ====================================
+          PAGINACIÓN
+    ==================================== */
+
+    const parsedLimit = Number(limit);
+    const parsedOffset = Number(offset);
+
+    if (!Number.isInteger(parsedLimit) || parsedLimit <= 0) {
+      throw createAppError(
+        "El parámetro limit debe ser un entero mayor que 0",
+        400,
+      );
+    }
+
+    if (!Number.isInteger(parsedOffset) || parsedOffset < 0) {
+      throw createAppError(
+        "El parámetro offset debe ser un entero mayor o igual que 0",
+        400,
+      );
+    }
+
+    /* ====================================
+          IS GRADED
+    ==================================== */
+
+    const parsedIsGraded =
+      isGraded === undefined
+        ? undefined
+        : isGraded === "true"
+          ? true
+          : isGraded === "false"
+            ? false
+            : null;
+
+    if (parsedIsGraded === null) {
+      throw createAppError("El parámetro isGraded debe ser true o false", 400);
+    }
+
+    /* ====================================
+              SERVICE
+    ==================================== */
+
+    const result = await getCollectionItems({
+      userId,
+      cardId,
+      condition,
+      isGraded: parsedIsGraded,
+      limit: parsedLimit,
+      offset: parsedOffset,
+      sortOrder,
+    });
+
+    /* ====================================
+              RESPONSE
+    ==================================== */
+
+    res.status(200).json({
+      data: result.items,
+      pagination: {
+        total: result.total,
+        limit: result.limit,
+        offset: result.offset,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+      OBTENER ITEM POR ID
+==================================== */
+
+export async function getCollectionItemByIdController(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const userId = req.user.id;
+
+    /* ====================================
+              SERVICE
+    ==================================== */
+
+    const item = await getCollectionItemById({
+      id,
+      userId,
+    });
+
+    /* ====================================
+              RESPONSE
+    ==================================== */
+
+    res.status(200).json({
+      data: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+        AGREGAR A COLECCIÓN
+==================================== */
+
+export async function createCollectionItemController(req, res, next) {
+  try {
+    const {
+      cardId,
+      quantity,
+      condition,
+      isGraded = false,
+      gradingCompanyId = null,
+      grade = null,
+    } = req.body;
+
+    const userId = req.user.id;
+
+    /* ====================================
+              VALIDACIÓN BÁSICA
+    ==================================== */
+
+    if (!cardId) {
+      throw createAppError("cardId es obligatorio", 400);
+    }
+
+    /* ====================================
+              SERVICE
+    ==================================== */
+
+    const item = await addCollectionItem({
+      userId,
+      cardId,
+      quantity,
+      condition,
+      isGraded,
+      gradingCompanyId,
+      grade,
+    });
+
+    /* ====================================
+              RESPONSE
+    ==================================== */
+
+    res.status(201).json({
+      message: "Carta agregada a la colección",
+      data: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+      ACTUALIZAR COLECCIÓN
+==================================== */
+
+export async function updateCollectionItemController(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const { quantity, condition, isGraded, gradingCompanyId, grade } = req.body;
+
+    const userId = req.user.id;
+
+    /* ====================================
+              SERVICE
+    ==================================== */
+
+    const item = await editCollectionItem({
+      id,
+      userId,
+      quantity,
+      condition,
+      isGraded,
+      gradingCompanyId,
+      grade,
+    });
+
+    /* ====================================
+              RESPONSE
+    ==================================== */
+
+    res.status(200).json({
+      message: "Colección actualizada correctamente",
+      data: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ====================================
+        ELIMINAR DE COLECCIÓN
+==================================== */
+
+export async function deleteCollectionItemController(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const userId = req.user.id;
+
+    /* ====================================
+              SERVICE
+    ==================================== */
+
+    const item = await removeCollectionItem({
+      id,
+      userId,
+    });
+
+    /* ====================================
+              RESPONSE
+    ==================================== */
+
+    res.status(200).json({
+      message: "Carta eliminada de la colección",
+      data: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
