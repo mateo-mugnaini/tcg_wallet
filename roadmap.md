@@ -18,7 +18,7 @@
 | 06 | Validación Zod completa | **En progreso** | Cubrir auth, users y responses generales restantes; cards, TCGs, sets, collection, grading y sync ya avanzados. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
 | 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
-| 09 | Seguridad avanzada | **Parcial** | Completar timeout de fetch, locks de sincronización y estrategia distribuida de rate limits. |
+| 09 | Seguridad avanzada | **Parcial** | Completar lock distribuido, PostgreSQL SSL/timeouts y estrategia distribuida de rate limits. |
 | 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |
@@ -566,7 +566,7 @@ Probar:
 
 # 9. Fase 8 — Seguridad avanzada
 
-La seguridad básica y el hardening HTTP inicial ya están implementados. La fase permanece parcial por los timeouts de integraciones externas, locks de sincronización y configuración de producción.
+La seguridad básica, el hardening HTTP inicial y los timeouts/locks por proceso ya están implementados. La fase permanece parcial por el lock distribuido y la configuración de producción.
 
 ## 9.1. Rate limiting específico — ✅ IMPLEMENTADO
 
@@ -591,7 +591,7 @@ POST /api/cards/sync/pokemon
 POST /api/sync/cards/prices
 ```
 
-Los endpoints costosos requieren rol admin y tienen rate limit específico. Todavía falta impedir ejecuciones concurrentes mediante lock distribuido o job exclusivo.
+Los endpoints costosos requieren rol admin, tienen rate limit específico y comparten un lock por proceso. Todavía falta coordinar el lock entre múltiples instancias mediante PostgreSQL, Redis o jobs.
 
 ## 9.3. Cookies y Refresh Tokens — ✅ IMPLEMENTADO EN CÓDIGO
 

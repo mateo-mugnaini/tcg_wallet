@@ -2,12 +2,17 @@ import env from "../../config/env.js";
 import { createAppError } from "../../errors/app.errors.js";
 
 const POKEMON_TCG_API_URL = "https://api.pokemontcg.io/v2";
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
 /* ====================================
         CLIENTE POKÉMON TCG API
 ==================================== */
 
 export async function pokemonTcgRequest(endpoint, options = {}) {
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   const url = `${POKEMON_TCG_API_URL}${endpoint}`;
 
   const headers = {
@@ -21,6 +26,7 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
       method: options.method ?? "GET",
       headers,
       body: options.body,
+      signal: controller.signal,
     });
 
     /* ====================================
@@ -41,7 +47,11 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
             // La respuesta no es JSON.
           }
         }
-      } catch {
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          throw error;
+        }
+
         // No se pudo leer el body.
       }
 
@@ -73,6 +83,10 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
     try {
       return await response.json();
     } catch (error) {
+      if (error?.name === "AbortError") {
+        throw error;
+      }
+
       throw createAppError(
         "Pokémon TCG API devolvió una respuesta inválida",
         502,
@@ -91,9 +105,23 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
 
     if (
       error?.code === "POKEMON_TCG_API_ERROR" ||
-      error?.code === "POKEMON_TCG_API_INVALID_RESPONSE"
+      error?.code === "POKEMON_TCG_API_INVALID_RESPONSE" ||
+      error?.code === "POKEMON_TCG_API_TIMEOUT"
     ) {
       throw error;
+    }
+
+    if (error?.name === "AbortError") {
+      throw createAppError(
+        "Pokémon TCG API agotó el tiempo de espera",
+        504,
+        "POKEMON_TCG_API_TIMEOUT",
+        {
+          endpoint,
+          timeoutMs,
+          retryable: true,
+        },
+      );
     }
 
     /* ====================================
@@ -110,6 +138,8 @@ export async function pokemonTcgRequest(endpoint, options = {}) {
         retryable: true,
       },
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

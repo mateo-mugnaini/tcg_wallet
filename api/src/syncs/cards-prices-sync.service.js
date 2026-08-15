@@ -28,6 +28,7 @@ const PRICE_CURRENCY = "USD";
 const MAX_RETRIES = 15;
 
 const RETRY_BASE_DELAY = 1500;
+const RETRY_MAX_DELAY = 30_000;
 
 const PRICE_INSERT_BATCH_SIZE = 500;
 
@@ -47,6 +48,10 @@ function delay(ms) {
 
 function shouldRetryPokemonTcgError(error) {
   if (error?.code === "POKEMON_TCG_API_UNAVAILABLE") {
+    return true;
+  }
+
+  if (error?.code === "POKEMON_TCG_API_TIMEOUT") {
     return true;
   }
 
@@ -84,7 +89,7 @@ async function getPokemonTcgCardsWithRetry(options) {
         throw error;
       }
 
-      const waitTime = RETRY_BASE_DELAY * attempt;
+      const waitTime = Math.min(RETRY_BASE_DELAY * attempt, RETRY_MAX_DELAY);
 
       console.warn(
         `[POKÉMON PRICE SYNC] API error ${error.code ?? "unknown"} | attempt=${attempt}/${MAX_RETRIES} | waiting=${waitTime}ms`,

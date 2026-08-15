@@ -14,6 +14,7 @@ import { syncPokemonCardPricesController } from "../controllers/cards-prices-syn
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
 import { syncRateLimiter } from "../middlewares/rate-limit.middleware.js";
+import { syncExecutionLock } from "../middlewares/sync-lock.middleware.js";
 
 import { validate } from "../middlewares/validate.middleware.js";
 
@@ -200,6 +201,7 @@ router.post(
   authenticate,
   requireRole("admin"),
   syncRateLimiter,
+  syncExecutionLock,
   validateResponse(pokemonCardPricesSyncResponseSchema),
   syncPokemonCardPricesController,
 );

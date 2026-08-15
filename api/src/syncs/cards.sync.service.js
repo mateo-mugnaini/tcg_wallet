@@ -46,8 +46,19 @@ function sleep(ms) {
   });
 }
 
-function isRetryableStatus(status) {
-  return [500, 502, 503, 504].includes(status);
+function isRetryableError(error) {
+  if (
+    error?.code === "POKEMON_TCG_API_UNAVAILABLE" ||
+    error?.code === "POKEMON_TCG_API_TIMEOUT"
+  ) {
+    return true;
+  }
+
+  if (error?.code === "POKEMON_TCG_API_ERROR") {
+    return [429, 500, 502, 503, 504].includes(error.details?.externalStatus);
+  }
+
+  return [500, 502, 503, 504].includes(error?.statusCode ?? error?.status);
 }
 
 async function getPokemonTcgCardsWithRetry(options) {
@@ -61,7 +72,7 @@ async function getPokemonTcgCardsWithRetry(options) {
     } catch (error) {
       attempt++;
 
-      if (!isRetryableStatus(error.status)) {
+      if (!isRetryableError(error)) {
         throw error;
       }
 
@@ -73,7 +84,10 @@ async function getPokemonTcgCardsWithRetry(options) {
         throw error;
       }
 
-      const retryDelay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      const retryDelay = Math.min(
+        RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1),
+        30_000,
+      );
 
       console.warn(
         `[POKÉMON CARD SYNC] API error ${error.status} | retry=${attempt}/${MAX_RETRIES} | waiting=${retryDelay}ms`,

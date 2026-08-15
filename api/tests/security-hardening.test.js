@@ -57,14 +57,14 @@ describe("security hardening configuration", () => {
     expect(userRouter.stack.some((layer) => !layer.route)).toBe(true);
     expect(getRoute(userRouter, "/", "post").stack).toHaveLength(4);
     expect(getRoute(cardsRouter, "/sync/pokemon", "post").stack).toHaveLength(
-      5,
+      6,
     );
     expect(
       getRoute(cardsPricesRouter, "/sync/cards/prices", "post").stack,
-    ).toHaveLength(5);
-    expect(getRoute(syncPipelineRouter, "/", "post").stack).toHaveLength(5);
+    ).toHaveLength(6);
+    expect(getRoute(syncPipelineRouter, "/", "post").stack).toHaveLength(6);
     expect(
       getRoute(syncPipelineRouter, "/graded-prices", "post").stack,
-    ).toHaveLength(6);
+    ).toHaveLength(7);
   });
 });
