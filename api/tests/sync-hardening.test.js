@@ -1,9 +1,30 @@
 import { EventEmitter } from "node:events";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const databaseMocks = vi.hoisted(() => ({
+  connect: vi.fn(),
+}));
+
+vi.mock("../src/config/database.js", () => ({
+  default: {
+    connect: databaseMocks.connect,
+  },
+}));
 
 import { pokemonTcgRequest } from "../src/integrations/pokemon-tcg/pokemon-tcg.client.js";
 import { syncExecutionLock } from "../src/middlewares/sync-lock.middleware.js";
+
+beforeEach(() => {
+  databaseMocks.connect.mockResolvedValue({
+    query: vi.fn(async (query) =>
+      query.includes("pg_try_advisory_lock")
+        ? { rows: [{ acquired: true }] }
+        : { rows: [] },
+    ),
+    release: vi.fn(),
+  });
+});
 
 describe("sync hardening", () => {
   afterEach(() => {
@@ -11,7 +32,7 @@ describe("sync hardening", () => {
     vi.unstubAllGlobals();
   });
 
-  it("rechaza una segunda sincronización mientras la primera está activa", () => {
+  it("rechaza una segunda sincronización mientras la primera está activa", async () => {
     const firstResponse = new EventEmitter();
     const secondResponse = new EventEmitter();
     const thirdResponse = new EventEmitter();
@@ -19,10 +40,10 @@ describe("sync hardening", () => {
     let secondError;
     let thirdError;
 
-    syncExecutionLock({}, firstResponse, (error) => {
+    await syncExecutionLock({}, firstResponse, (error) => {
       firstError = error;
     });
-    syncExecutionLock({}, secondResponse, (error) => {
+    await syncExecutionLock({}, secondResponse, (error) => {
       secondError = error;
     });
 
@@ -34,7 +55,7 @@ describe("sync hardening", () => {
 
     firstResponse.emit("finish");
 
-    syncExecutionLock({}, thirdResponse, (error) => {
+    await syncExecutionLock({}, thirdResponse, (error) => {
       thirdError = error;
     });
 

@@ -13,6 +13,25 @@ const envSchema = z.object({
   DATABASE_NAME: z.string().min(1),
   DATABASE_USER: z.string().min(1),
   DATABASE_PASSWORD: z.string(),
+  DATABASE_SSL: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  DATABASE_SSL_REJECT_UNAUTHORIZED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
+  DATABASE_CONNECTION_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(5000),
+  DATABASE_IDLE_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
+  DATABASE_STATEMENT_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(30000),
 
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -64,6 +83,11 @@ const env = {
     name: parsedEnv.data.DATABASE_NAME,
     user: parsedEnv.data.DATABASE_USER,
     password: parsedEnv.data.DATABASE_PASSWORD,
+    ssl: parsedEnv.data.DATABASE_SSL,
+    sslRejectUnauthorized: parsedEnv.data.DATABASE_SSL_REJECT_UNAUTHORIZED,
+    connectionTimeoutMs: parsedEnv.data.DATABASE_CONNECTION_TIMEOUT_MS,
+    idleTimeoutMs: parsedEnv.data.DATABASE_IDLE_TIMEOUT_MS,
+    statementTimeoutMs: parsedEnv.data.DATABASE_STATEMENT_TIMEOUT_MS,
   },
   pokemonTcg: {
     apiKey: parsedEnv.data.POKEMON_TCG_API_KEY,

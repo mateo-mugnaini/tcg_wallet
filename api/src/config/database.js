@@ -9,6 +9,12 @@ const pool = new Pool({
   database: env.database.name,
   user: env.database.user,
   password: env.database.password,
+  ssl: env.database.ssl
+    ? { rejectUnauthorized: env.database.sslRejectUnauthorized }
+    : false,
+  connectionTimeoutMillis: env.database.connectionTimeoutMs,
+  idleTimeoutMillis: env.database.idleTimeoutMs,
+  statement_timeout: env.database.statementTimeoutMs,
 });
 
 export const testDatabaseConnection = async () => {

@@ -11,7 +11,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Fase 2: **finalizada en alcance funcional**. `GET /api/collection-items/value` separa precios normales y graded, incluye contadores y desglose por grading company; para graded usa card, grading company y grade, sin fallback al precio normal. La política actual evalúa exclusivamente precios USD; la conversión multicurrency queda como ampliación futura.
 - Fase 3: en progreso. `GET /api/cards` ya admite filtros por TCG, set, nombre, rareza, número y external ID; el detalle de card incluye set, TCG, últimos precios normales y resumen de la colección del usuario. Faltan ampliar pruebas y normalizar filtros de sets/TCGs.
 - Fase 4: en progreso. `cards`, `TCGs`, `sets`, `collection-items`, `grading-companies`, auth, users y syncs principales tienen schemas Zod de request/response conectados a sus rutas; faltan respuestas generales de otros módulos menores y normalización común.
-- Fase 7: en progreso. Helmet, CORS con credenciales, límite JSON, rate limits, autorización admin, timeout de integraciones y lock por proceso están implementados; lock distribuido y configuración de producción siguen pendientes.
+- Fase 7: en progreso. Helmet, CORS con credenciales, límite JSON, rate limits, autorización admin, timeout de integraciones, timeouts PostgreSQL y advisory lock distribuido están implementados; rate limits distribuidos y configuración de producción siguen pendientes.
 - Validación realizada: app import OK; card inexistente devuelve 404; card existente sin precios graded devuelve lista vacía con paginación válida; la response pasa el schema Zod.
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
@@ -424,8 +424,8 @@ Pendiente: estrategia distribuida si hay más de una instancia.
 - Añadir protección contra CSRF si la arquitectura cookie lo requiere.
 - ✅ Añadir payload/JSON size limits.
 - ✅ Revisar autorización de mutaciones de cards, prices y syncs.
-- ✅ Timeout del cliente externo y lock por proceso para sincronizaciones.
-- Pendiente: lock distribuido y revocación completa al eliminar usuarios.
+- ✅ Timeout del cliente externo, timeouts PostgreSQL y advisory lock distribuido para sincronizaciones.
+- Pendiente: rate limits distribuidos, CSRF y revocación completa al eliminar usuarios.
 
 ### Criterio de salida
 
