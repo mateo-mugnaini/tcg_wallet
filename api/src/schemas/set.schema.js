@@ -126,3 +126,23 @@ export const getSetsQuerySchema = z
     sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
   })
   .strict();
+
+export const setResponseSchema = z.object({
+  id: z.string().uuid(),
+  tcg_id: z.string().uuid(),
+  external_id: z.string().nullable(),
+  name: z.string(),
+  code: z.string().nullable(),
+  release_date: z.union([z.string(), z.date()]).nullable(),
+  created_at: z.union([z.string(), z.date()]),
+});
+
+export const setsListResponseSchema = z.object({
+  data: z.array(setResponseSchema),
+  pagination: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  }),
+});

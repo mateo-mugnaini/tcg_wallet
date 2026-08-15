@@ -14,7 +14,7 @@ import { syncPokemonSets } from "../syncs/sets.sync.service.js";
 
 export async function getSet(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const set = await getSetById(id);
 
@@ -30,7 +30,8 @@ export async function getSet(req, res, next) {
 
 export async function getSetsController(req, res, next) {
   try {
-    const { tcgId, search, page, limit, sortBy, sortOrder } = req.query;
+    const { tcgId, search, page, limit, sortBy, sortOrder } =
+      req.validated.query;
 
     const result = await getSets({
       tcgId,
@@ -53,7 +54,8 @@ export async function getSetsController(req, res, next) {
 
 export async function createSet(req, res, next) {
   try {
-    const { tcgId, externalId, name, code, releaseDate } = req.body;
+    const { tcgId, externalId, name, code, releaseDate } =
+      req.validated.body;
 
     const set = await registerSet({
       tcgId,
@@ -75,9 +77,10 @@ export async function createSet(req, res, next) {
 
 export async function updateSet(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
-    const { tcgId, externalId, name, code, releaseDate } = req.body;
+    const { tcgId, externalId, name, code, releaseDate } =
+      req.validated.body;
 
     const set = await editSet(id, {
       tcgId,
@@ -99,7 +102,7 @@ export async function updateSet(req, res, next) {
 
 export async function deleteSet(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const set = await removeSet(id);
 

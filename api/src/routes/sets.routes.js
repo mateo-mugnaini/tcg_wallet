@@ -14,6 +14,7 @@ import {
 import { requireRole } from "../middlewares/role.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
 // SCHEMAS
 import {
@@ -21,6 +22,8 @@ import {
   updateSetSchema,
   setIdParamsSchema,
   getSetsQuerySchema,
+  setResponseSchema,
+  setsListResponseSchema,
 } from "../schemas/set.schema.js";
 
 const router = express.Router();
@@ -34,6 +37,7 @@ router.post(
   authenticate,
   requireRole("admin"),
   validate(createSetSchema),
+  validateResponse(setResponseSchema),
   createSet,
 );
 
@@ -56,6 +60,7 @@ router.get(
   "/",
   authenticate,
   validate(getSetsQuerySchema, "query"),
+  validateResponse(setsListResponseSchema),
   getSetsController,
 );
 
@@ -63,7 +68,13 @@ router.get(
           OBTENER SET POR ID
 ==================================== */
 
-router.get("/:id", authenticate, validate(setIdParamsSchema, "params"), getSet);
+router.get(
+  "/:id",
+  authenticate,
+  validate(setIdParamsSchema, "params"),
+  validateResponse(setResponseSchema),
+  getSet,
+);
 
 /* ====================================
             ACTUALIZAR SET
@@ -75,6 +86,7 @@ router.patch(
   requireRole("admin"),
   validate(setIdParamsSchema, "params"),
   validate(updateSetSchema),
+  validateResponse(setResponseSchema),
   updateSet,
 );
 
@@ -87,6 +99,7 @@ router.delete(
   authenticate,
   requireRole("admin"),
   validate(setIdParamsSchema, "params"),
+  validateResponse(setResponseSchema),
   deleteSet,
 );
 

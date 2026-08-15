@@ -75,3 +75,19 @@ export const getTcgsQuerySchema = z.object({
 
   sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
 });
+
+export const tcgResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  created_at: z.union([z.string(), z.date()]),
+});
+
+export const tcgsListResponseSchema = z.object({
+  data: z.array(tcgResponseSchema),
+  pagination: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  }),
+});

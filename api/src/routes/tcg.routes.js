@@ -13,6 +13,7 @@ import {
 import { requireRole } from "../middlewares/role.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
 // SCHEMAS
 import {
@@ -20,6 +21,8 @@ import {
   updateTcgSchema,
   tcgIdParamsSchema,
   getTcgsQuerySchema,
+  tcgResponseSchema,
+  tcgsListResponseSchema,
 } from "../schemas/tcg.schema.js";
 
 const router = express.Router();
@@ -33,6 +36,7 @@ router.post(
   authenticate,
   requireRole("admin"),
   validate(createTcgSchema),
+  validateResponse(tcgResponseSchema),
   createTcg,
 );
 
@@ -44,6 +48,7 @@ router.get(
   "/",
   authenticate,
   validate(getTcgsQuerySchema, "query"),
+  validateResponse(tcgsListResponseSchema),
   getTcgsController,
 );
 
@@ -51,7 +56,13 @@ router.get(
           OBTENER TCG POR ID
 ==================================== */
 
-router.get("/:id", authenticate, validate(tcgIdParamsSchema, "params"), getTcg);
+router.get(
+  "/:id",
+  authenticate,
+  validate(tcgIdParamsSchema, "params"),
+  validateResponse(tcgResponseSchema),
+  getTcg,
+);
 
 /* ====================================
             ACTUALIZAR TCG
@@ -63,6 +74,7 @@ router.patch(
   requireRole("admin"),
   validate(tcgIdParamsSchema, "params"),
   validate(updateTcgSchema),
+  validateResponse(tcgResponseSchema),
   updateTcg,
 );
 
@@ -75,6 +87,7 @@ router.delete(
   authenticate,
   requireRole("admin"),
   validate(tcgIdParamsSchema, "params"),
+  validateResponse(tcgResponseSchema),
   deleteTcg,
 );
 

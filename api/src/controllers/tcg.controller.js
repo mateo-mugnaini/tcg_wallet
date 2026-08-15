@@ -12,7 +12,7 @@ import {
 
 export async function getTcg(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const tcg = await getTcgById(id);
 
@@ -28,7 +28,7 @@ export async function getTcg(req, res, next) {
 
 export async function getTcgsController(req, res, next) {
   try {
-    const { search, page, limit, sortBy, sortOrder } = req.query;
+    const { search, page, limit, sortBy, sortOrder } = req.validated.query;
 
     const result = await getTcgs({
       search,
@@ -50,7 +50,7 @@ export async function getTcgsController(req, res, next) {
 
 export async function createTcg(req, res, next) {
   try {
-    const { name } = req.body;
+    const { name } = req.validated.body;
 
     const tcg = await registerTcg({
       name,
@@ -68,8 +68,8 @@ export async function createTcg(req, res, next) {
 
 export async function updateTcg(req, res, next) {
   try {
-    const { id } = req.params;
-    const { name } = req.body;
+    const { id } = req.validated.params;
+    const { name } = req.validated.body;
 
     const tcg = await editTcg(id, {
       name,
@@ -87,7 +87,7 @@ export async function updateTcg(req, res, next) {
 
 export async function deleteTcg(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const tcg = await removeTcg(id);
 

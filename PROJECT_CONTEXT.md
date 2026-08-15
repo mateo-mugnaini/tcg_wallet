@@ -492,7 +492,7 @@ validate.middleware.js hace safeParse sobre body/query/params y guarda el result
 
 validate-response.middleware.js intercepta res.json, valida el objeto y transforma response inválida en AppError 500. Se usa en card prices, graded prices y collection value.
 
-Inconsistencias: todavía no hay schemas de request para syncs; cards ya tiene schemas de params, query, body y responses CRUD/list, y collection items tiene params, filtros, create/update y value response. Todavía faltan response schemas generales para users, TCGs, sets, collection CRUD/stats y grading companies.
+Inconsistencias: todavía no hay schemas de request para syncs; cards, TCGs y sets ya tienen schemas de entrada y responses principales, y collection items tiene params, filtros, create/update y value response. Todavía faltan response schemas generales para users, collection CRUD/stats y grading companies.
 
 ## 20. Error handling
 
@@ -616,7 +616,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
 | 04 | Valoración de colección | **Finalizado** en alcance funcional: normal/graded, USD, desglose por grading y smoke test validados. |
 | 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
-| 06 | Validación Zod completa | Parcial; cards y collection avanzados cubiertos; faltan sync y responses generales de otros módulos. |
+| 06 | Validación Zod completa | Parcial; cards, TCGs, sets y collection avanzados cubiertos; faltan sync y responses generales de otros módulos. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
 | 08 | Testing profesional | En progreso inicial; hay 8 tests de contratos graded y collection. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies sí, Helmet/CORS no activos. |
