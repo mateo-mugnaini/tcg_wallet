@@ -5,6 +5,7 @@ import {
   getLatestCardPriceController,
   createCardPriceController,
   getCardPriceStatisticsController,
+  getCardPriceVariationController,
 } from "../controllers/cards-prices.controller.js";
 
 import { syncPokemonCardPricesController } from "../controllers/cards-prices-sync.controller.js";
@@ -56,6 +57,18 @@ router.get(
   validate(cardPriceCardIdParamsSchema, "params"),
   validate(getLatestCardPriceQuerySchema, "query"),
   getCardPriceStatisticsController,
+);
+
+/* ====================================
+        VARIACIÓN CARD PRICE
+==================================== */
+
+router.get(
+  "/cards/:cardId/prices/variation",
+  authenticate,
+  validate(cardPriceCardIdParamsSchema, "params"),
+  validate(getLatestCardPriceQuerySchema, "query"),
+  getCardPriceVariationController,
 );
 
 /* ====================================

@@ -1,6 +1,7 @@
 import {
   getCardPrices,
   getCardPriceStatistics,
+  getCardPriceVariation,
   getLatestCardPrice,
   registerCardPrice,
 } from "../services/cards-prices.service.js";
@@ -95,6 +96,29 @@ export async function getCardPriceStatisticsController(req, res, next) {
 
     return res.status(200).json({
       data: statistics,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+/* ====================================
+        VARIACIÓN CARD PRICE
+==================================== */
+
+export async function getCardPriceVariationController(req, res, next) {
+  try {
+    const { cardId } = req.params;
+
+    const { source, condition } = req.query;
+
+    const variation = await getCardPriceVariation({
+      cardId,
+      source,
+      condition,
+    });
+
+    return res.status(200).json({
+      data: variation,
     });
   } catch (error) {
     next(error);

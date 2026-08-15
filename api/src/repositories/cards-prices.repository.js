@@ -303,3 +303,53 @@ export async function getCardPriceStats({ cardId, source, condition }) {
 
   return result.rows[0];
 }
+
+/* ====================================
+        OBTENER ÚLTIMOS PRECIOS
+==================================== */
+
+export async function findLatestCardPrices({ cardId, source, condition }) {
+  const values = [cardId];
+  const conditions = [`card_id = $1`];
+
+  /* ====================================
+          FILTRAR POR SOURCE
+  ==================================== */
+
+  if (source) {
+    values.push(source);
+    conditions.push(`source = $${values.length}`);
+  }
+
+  /* ====================================
+          FILTRAR POR CONDITION
+  ==================================== */
+
+  if (condition) {
+    values.push(condition);
+    conditions.push(`condition = $${values.length}`);
+  }
+
+  /* ====================================
+              QUERY
+  ==================================== */
+
+  const query = `
+    SELECT
+      id,
+      card_id,
+      condition,
+      price,
+      currency,
+      source,
+      recorded_at
+    FROM card_prices
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY recorded_at DESC
+    LIMIT 2
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
+}

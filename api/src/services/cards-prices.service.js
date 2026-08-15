@@ -4,10 +4,12 @@ import {
   findLatestCardPrice,
   createCardPrice,
   getCardPriceStats,
+  findLatestCardPrices,
 } from "../repositories/cards-prices.repository.js";
 import { findCardById } from "../repositories/cards.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
+import { formatTimestamp } from "../utils/dateformater.js";
 
 /* ====================================
         LISTAR CARD PRICES
@@ -246,5 +248,106 @@ export async function getCardPriceStatistics({ cardId, source, condition }) {
       stats.maximum_price !== null ? Number(stats.maximum_price) : null,
     averagePrice:
       stats.average_price !== null ? Number(stats.average_price) : null,
+  };
+}
+
+/* ====================================
+        VARIACIÓN CARD PRICE
+==================================== */
+
+export async function getCardPriceVariation({ cardId, source, condition }) {
+  /* ====================================
+          COMPROBAR CARD
+  ==================================== */
+
+  const card = await findCardById(cardId);
+
+  if (!card) {
+    throw createAppError("Card no encontrada", 404);
+  }
+
+  /* ====================================
+          OBTENER ÚLTIMOS PRECIOS
+  ==================================== */
+
+  const prices = await findLatestCardPrices({
+    cardId,
+    source,
+    condition,
+  });
+
+  /* ====================================
+          VALIDAR HISTORIAL
+  ==================================== */
+
+  if (prices.length === 0) {
+    throw createAppError("No existen precios registrados para esta Card", 404);
+  }
+
+  if (prices.length < 2) {
+    throw createAppError(
+      "No existen suficientes precios históricos para calcular una variación",
+      404,
+    );
+  }
+
+  /* ====================================
+          OBTENER PRECIOS
+  ==================================== */
+
+  const currentPrice = Number(prices[0].price);
+  const previousPrice = Number(prices[1].price);
+
+  /* ====================================
+          VALIDAR PRECIOS
+  ==================================== */
+
+  if (!Number.isFinite(currentPrice) || !Number.isFinite(previousPrice)) {
+    throw createAppError("Los precios registrados no son válidos", 500);
+  }
+
+  /* ====================================
+          CALCULAR VARIACIÓN ABSOLUTA
+  ==================================== */
+
+  const absoluteVariation = currentPrice - previousPrice;
+
+  /* ====================================
+          CALCULAR VARIACIÓN PORCENTUAL
+  ==================================== */
+
+  let percentageVariation = null;
+
+  if (previousPrice !== 0) {
+    percentageVariation = (absoluteVariation / previousPrice) * 100;
+  }
+
+  /* ====================================
+          DETERMINAR DIRECCIÓN
+  ==================================== */
+
+  let direction = "unchanged";
+
+  if (absoluteVariation > 0) {
+    direction = "up";
+  } else if (absoluteVariation < 0) {
+    direction = "down";
+  }
+
+  /* ====================================
+              RESULTADO
+  ==================================== */
+
+  return {
+    currentPrice,
+    previousPrice,
+    absoluteVariation,
+    percentageVariation,
+    direction,
+    currency: prices[0].currency,
+    source: prices[0].source,
+    condition: prices[0].condition,
+    currentRecordedAt: formatTimestamp(prices[0].recorded_at),
+    previousRecordedAt: formatTimestamp(prices[1].recorded_at),
   };
 }
