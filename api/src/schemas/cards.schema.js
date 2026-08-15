@@ -4,6 +4,8 @@ const cardIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+const cardTimestampSchema = z.union([z.string(), z.date()]);
+
 const cardFieldsSchema = {
   setId: z.string().uuid(),
   externalId: z.string().trim().min(1).max(100),
@@ -38,5 +40,31 @@ export const updateCardSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: "Debe proporcionar al menos un campo para actualizar",
   });
+
+export const cardResponseSchema = z.object({
+  id: z.string().uuid(),
+  set_id: z.string().uuid(),
+  external_id: z.string().nullable(),
+  name: z.string(),
+  card_number: z.string().nullable(),
+  rarity: z.string().nullable(),
+  image_url: z.string().nullable(),
+  created_at: cardTimestampSchema,
+  updated_at: cardTimestampSchema,
+});
+
+export const cardDataResponseSchema = z.object({
+  data: cardResponseSchema,
+});
+
+export const cardsListResponseSchema = z.object({
+  data: z.array(cardResponseSchema),
+  pagination: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  }),
+});
 
 export { cardIdParamsSchema };

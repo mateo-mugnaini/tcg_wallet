@@ -11,9 +11,12 @@ import {
 
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
 import {
   cardIdParamsSchema,
+  cardDataResponseSchema,
+  cardsListResponseSchema,
   createCardSchema,
   getCardsQuerySchema,
   updateCardSchema,
@@ -29,6 +32,7 @@ router.get(
   "/",
   authenticate,
   validate(getCardsQuerySchema, "query"),
+  validateResponse(cardsListResponseSchema),
   getCardsController,
 );
 
@@ -40,6 +44,7 @@ router.get(
   "/:id",
   authenticate,
   validate(cardIdParamsSchema, "params"),
+  validateResponse(cardDataResponseSchema),
   getCardByIdController,
 );
 
@@ -51,6 +56,7 @@ router.post(
   "/",
   authenticate,
   validate(createCardSchema, "body"),
+  validateResponse(cardDataResponseSchema),
   createCardController,
 );
 
@@ -63,6 +69,7 @@ router.put(
   authenticate,
   validate(cardIdParamsSchema, "params"),
   validate(updateCardSchema, "body"),
+  validateResponse(cardDataResponseSchema),
   updateCardController,
 );
 
@@ -74,6 +81,7 @@ router.delete(
   "/:id",
   authenticate,
   validate(cardIdParamsSchema, "params"),
+  validateResponse(cardDataResponseSchema),
   deleteCardController,
 );
 
