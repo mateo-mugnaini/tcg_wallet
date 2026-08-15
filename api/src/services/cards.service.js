@@ -5,6 +5,7 @@ import {
   updateCard,
   deleteCard,
   findCardById,
+  findCardDetailsById,
   findCardByName,
   findCardByExternalId,
 } from "../repositories/cards.repository.js";
@@ -12,16 +13,28 @@ import { findSetById } from "../repositories/sets.repository.js";
 import { createAppError } from "../errors/app.errors.js";
 /* ==================================== OBTENER CARD POR ID ==================================== */ export async function getCardById(
   id,
+  userId,
 ) {
-  const card = await findCardById(id);
+  const card = await findCardDetailsById(id, userId);
   if (!card) {
     throw createAppError("Card no encontrada", 404);
   }
-  return card;
+
+  return {
+    ...card,
+    latest_prices: card.latest_prices.map((price) => ({
+      ...price,
+      price: Number(price.price),
+    })),
+  };
 }
 /* ==================================== LISTAR CARDS ==================================== */ export async function getCards({
   setId,
+  tcgId,
   search,
+  rarity,
+  cardNumber,
+  externalId,
   page = 1,
   limit = 10,
   sortBy = "created_at",
@@ -60,13 +73,17 @@ import { createAppError } from "../errors/app.errors.js";
   ] = await Promise.all([
     findCards({
       setId,
+      tcgId,
       search,
+      rarity,
+      cardNumber,
+      externalId,
       limit: normalizedLimit,
       offset,
       sortBy,
       sortOrder,
     }),
-    countCards({ setId, search }),
+    countCards({ setId, tcgId, search, rarity, cardNumber, externalId }),
   ]);
   /* * Calculamos las páginas totales. */ const totalPages =
     total === 0 ? 0 : Math.ceil(total / normalizedLimit);

@@ -4,7 +4,11 @@ import pool from "../config/database.js";
 
 export async function findCards({
   setId,
+  tcgId,
   search,
+  rarity,
+  cardNumber,
+  externalId,
   limit = 10,
   offset = 0,
   sortBy = "created_at",
@@ -16,21 +20,42 @@ export async function findCards({
   //* FILTRAR POR SET
   if (setId) {
     values.push(setId);
-    conditions.push(`set_id = $${values.length}`);
+    conditions.push(`c.set_id = $${values.length}`);
+  }
+
+  if (tcgId) {
+    values.push(tcgId);
+    conditions.push(`s.tcg_id = $${values.length}`);
   }
 
   //* BUSCAR POR NOMBRE
   if (search) {
     values.push(`%${search}%`);
-    conditions.push(`name ILIKE $${values.length}`);
+    conditions.push(`c.name ILIKE $${values.length}`);
+  }
+
+  if (rarity) {
+    values.push(`%${rarity}%`);
+    conditions.push(`c.rarity ILIKE $${values.length}`);
+  }
+
+  if (cardNumber) {
+    values.push(cardNumber);
+    conditions.push(`c.card_number = $${values.length}`);
+  }
+
+  if (externalId) {
+    values.push(externalId);
+    conditions.push(`c.external_id = $${values.length}`);
   }
 
   const allowedSortFields = {
-    created_at: "created_at",
-    updated_at: "updated_at",
-    name: "name",
-    card_number: "card_number",
-    rarity: "rarity",
+    created_at: "c.created_at",
+    updated_at: "c.updated_at",
+    name: "c.name",
+    card_number: "c.card_number",
+    external_id: "c.external_id",
+    rarity: "c.rarity",
   };
 
   const safeSortBy = allowedSortFields[sortBy] ?? "created_at";
@@ -51,16 +76,17 @@ export async function findCards({
 
   const query = `
     SELECT
-      id,
-      set_id,
-      external_id,
-      name,
-      card_number,
-      rarity,
-      image_url,
-      created_at,
-      updated_at
-    FROM cards
+      c.id,
+      c.set_id,
+      c.external_id,
+      c.name,
+      c.card_number,
+      c.rarity,
+      c.image_url,
+      c.created_at,
+      c.updated_at
+    FROM cards c
+    INNER JOIN sets s ON s.id = c.set_id
     ${whereClause}
     ORDER BY ${safeSortBy} ${safeSortOrder}
     LIMIT $${limitIndex}
@@ -76,20 +102,47 @@ export async function findCards({
         CONTAR CARDS
 ==================================== */
 
-export async function countCards({ setId, search }) {
+export async function countCards({
+  setId,
+  tcgId,
+  search,
+  rarity,
+  cardNumber,
+  externalId,
+}) {
   const values = [];
   const conditions = [];
 
   /* * Filtrar por Set. */
   if (setId) {
     values.push(setId);
-    conditions.push(`set_id = $${values.length}`);
+    conditions.push(`c.set_id = $${values.length}`);
+  }
+
+  if (tcgId) {
+    values.push(tcgId);
+    conditions.push(`s.tcg_id = $${values.length}`);
   }
 
   /* * Buscar por nombre. */
   if (search) {
     values.push(`%${search}%`);
-    conditions.push(`name ILIKE $${values.length}`);
+    conditions.push(`c.name ILIKE $${values.length}`);
+  }
+
+  if (rarity) {
+    values.push(`%${rarity}%`);
+    conditions.push(`c.rarity ILIKE $${values.length}`);
+  }
+
+  if (cardNumber) {
+    values.push(cardNumber);
+    conditions.push(`c.card_number = $${values.length}`);
+  }
+
+  if (externalId) {
+    values.push(externalId);
+    conditions.push(`c.external_id = $${values.length}`);
   }
 
   const whereClause =
@@ -97,7 +150,8 @@ export async function countCards({ setId, search }) {
 
   const query = `
     SELECT COUNT(*) AS total
-    FROM cards
+    FROM cards c
+    INNER JOIN sets s ON s.id = c.set_id
     ${whereClause}
   `;
 
@@ -367,6 +421,91 @@ export async function findCardsByExternalIds({ setId, externalIds }) {
   const result = await pool.query(query, values);
 
   return result.rows;
+}
+
+/* ====================================
+       DETALLE ENRIQUECIDO DE CARD
+==================================== */
+
+export async function findCardDetailsById(id, userId) {
+  const result = await pool.query(
+    `
+      SELECT
+        c.id,
+        c.set_id,
+        c.external_id,
+        c.name,
+        c.card_number,
+        c.rarity,
+        c.image_url,
+        c.created_at,
+        c.updated_at,
+        json_build_object(
+          'id', s.id,
+          'tcg_id', s.tcg_id,
+          'external_id', s.external_id,
+          'name', s.name,
+          'code', s.code,
+          'release_date', s.release_date
+        ) AS set,
+        json_build_object(
+          'id', t.id,
+          'name', t.name
+        ) AS tcg,
+        COALESCE(latest_prices.data, '[]'::json) AS latest_prices,
+        json_build_object(
+          'item_count', COALESCE(collection.item_count, 0),
+          'total_quantity', COALESCE(collection.total_quantity, 0),
+          'graded_quantity', COALESCE(collection.graded_quantity, 0)
+        ) AS collection
+      FROM cards c
+      INNER JOIN sets s ON s.id = c.set_id
+      INNER JOIN tcgs t ON t.id = s.tcg_id
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'id', latest.id,
+            'card_id', latest.card_id,
+            'condition', latest.condition,
+            'price', latest.price,
+            'currency', latest.currency,
+            'source', latest.source,
+            'recorded_at', latest.recorded_at
+          )
+          ORDER BY latest.recorded_at DESC
+        ) AS data
+        FROM (
+          SELECT DISTINCT ON (condition, source)
+            id,
+            card_id,
+            condition,
+            price,
+            currency,
+            source,
+            recorded_at
+          FROM card_prices
+          WHERE card_id = c.id
+          ORDER BY condition, source, recorded_at DESC
+        ) latest
+      ) latest_prices ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*)::int AS item_count,
+          COALESCE(SUM(quantity), 0)::int AS total_quantity,
+          COALESCE(
+            SUM(CASE WHEN is_graded = TRUE THEN quantity ELSE 0 END),
+            0
+          )::int AS graded_quantity
+        FROM collection_items
+        WHERE card_id = c.id
+          AND user_id = $2
+      ) collection ON TRUE
+      WHERE c.id = $1
+    `,
+    [id, userId],
+  );
+
+  return result.rows[0] ?? null;
 }
 
 export async function findCardsByIds(cardIds) {

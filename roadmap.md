@@ -14,7 +14,7 @@
 | 02 | Grading Companies | **Finalizado** | Añadir tests y completar auditoría de FKs como tarea de calidad. |
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
 | 04 | Valoración de colección | **Finalizado** | Ampliar tests y documentar conversión multicurrency futura. |
-| 05 | Catálogo avanzado | **Pendiente** | Filtros, búsqueda y detalle enriquecido de cards. |
+| 05 | Catálogo avanzado | **En progreso** | Completar tests y normalización de filtros en sets/TCGs. |
 | 06 | Validación Zod completa | **Parcial** | Cubrir sync y responses generales de otros módulos; cards, TCGs, sets y collection ya avanzados. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
 | 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |

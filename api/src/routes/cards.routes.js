@@ -16,6 +16,7 @@ import { validateResponse } from "../middlewares/validate-response.middleware.js
 import {
   cardIdParamsSchema,
   cardDataResponseSchema,
+  cardDetailDataResponseSchema,
   cardsListResponseSchema,
   createCardSchema,
   getCardsQuerySchema,
@@ -44,7 +45,7 @@ router.get(
   "/:id",
   authenticate,
   validate(cardIdParamsSchema, "params"),
-  validateResponse(cardDataResponseSchema),
+  validateResponse(cardDetailDataResponseSchema),
   getCardByIdController,
 );
 

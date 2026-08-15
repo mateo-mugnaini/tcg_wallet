@@ -615,7 +615,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 02 | Grading Companies | **Finalizado** en alcance funcional; tests y auditoría completa de DB pendientes. |
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
 | 04 | Valoración de colección | **Finalizado** en alcance funcional: normal/graded, USD, desglose por grading y smoke test validados. |
-| 05 | Catálogo avanzado | Pendiente; cards tiene búsqueda limitada. |
+| 05 | Catálogo avanzado | **En progreso**; cards ya tiene filtros avanzados y detalle enriquecido, faltan cobertura y normalización final. |
 | 06 | Validación Zod completa | Parcial; cards, TCGs, sets y collection avanzados cubiertos; faltan sync y responses generales de otros módulos. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
 | 08 | Testing profesional | En progreso inicial; hay 8 tests de contratos graded y collection. |

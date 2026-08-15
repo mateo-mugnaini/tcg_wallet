@@ -12,11 +12,26 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
   next,
 ) {
   try {
-    const { setId, search, page, limit, sortBy, sortOrder } =
+    const {
+      setId,
+      tcgId,
+      search,
+      rarity,
+      cardNumber,
+      externalId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } =
       req.validated.query;
     const result = await getCards({
       setId,
+      tcgId,
       search,
+      rarity,
+      cardNumber,
+      externalId,
       page,
       limit,
       sortBy,
@@ -34,7 +49,7 @@ import { syncPokemonCards } from "../syncs/cards.sync.service.js";
 ) {
   try {
     const { id } = req.validated.params;
-    const card = await getCardById(id);
+    const card = await getCardById(id, req.user.id);
     return res.status(200).json({ data: card });
   } catch (error) {
     next(error);
