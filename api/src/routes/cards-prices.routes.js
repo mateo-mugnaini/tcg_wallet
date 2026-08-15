@@ -12,6 +12,7 @@ import {
 import { syncPokemonCardPricesController } from "../controllers/cards-prices-sync.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 
 import { validate } from "../middlewares/validate.middleware.js";
 
@@ -28,8 +29,8 @@ import {
   cardPriceStatisticsResponseSchema,
   cardPriceVariationResponseSchema,
   cardPriceAggregationsResponseSchema,
-  cardPricesSyncResponseSchema,
 } from "../schemas/cards-prices.schema.js";
+import { pokemonCardPricesSyncResponseSchema } from "../schemas/sync.schema.js";
 
 import {
   gradedCardPriceCardIdParamsSchema,
@@ -194,7 +195,8 @@ router.post(
 /* ==================================== SYNC CARD PRICES ==================================== */ router.post(
   "/sync/cards/prices",
   authenticate,
-  validateResponse(cardPricesSyncResponseSchema),
+  requireRole("admin"),
+  validateResponse(pokemonCardPricesSyncResponseSchema),
   syncPokemonCardPricesController,
 );
 export default router;

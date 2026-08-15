@@ -10,14 +10,15 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Fase 1: en progreso. Ya existen los cinco endpoints de consulta, el registro manual, el importador batch administrativo y el fixture ejecutable de graded prices con repository, service, controller, routes y schemas Zod; el proveedor de sync automático sigue pendiente.
 - Fase 2: **finalizada en alcance funcional**. `GET /api/collection-items/value` separa precios normales y graded, incluye contadores y desglose por grading company; para graded usa card, grading company y grade, sin fallback al precio normal. La política actual evalúa exclusivamente precios USD; la conversión multicurrency queda como ampliación futura.
 - Fase 3: en progreso. `GET /api/cards` ya admite filtros por TCG, set, nombre, rareza, número y external ID; el detalle de card incluye set, TCG, últimos precios normales y resumen de la colección del usuario. Faltan ampliar pruebas y normalizar filtros de sets/TCGs.
-- Fase 4: inicio. `cards`, `TCGs` y `sets` ya tienen schemas Zod de request y response conectados a sus rutas; `collection-items` tiene schemas para filtros, params, create y update.
+- Fase 4: en progreso. `cards`, `TCGs`, `sets`, `collection-items`, `grading-companies`, auth, users y syncs principales tienen schemas Zod de request/response conectados a sus rutas; faltan respuestas generales de otros módulos menores y normalización común.
+- Fase 7: progreso inicial. Los syncs de cards y precios ahora requieren rol admin; Helmet, CORS y rate limits específicos siguen pendientes.
 - Validación realizada: app import OK; card inexistente devuelve 404; card existente sin precios graded devuelve lista vacía con paginación válida; la response pasa el schema Zod.
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm test:run` OK con 4 archivos y 18 tests de contratos graded, collection y catálogo.
+- Validación adicional: `pnpm test:run` OK con 5 archivos y 23 tests de contratos graded, collection, catálogo y operaciones.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
-- Siguiente tarea: ampliar tests de catálogo y luego conectar un proveedor real al importador batch de graded prices.
+- Siguiente tarea: completar schemas de auth/users y después ampliar tests de catálogo e integración.
 
 ## 1. Estado inicial
 

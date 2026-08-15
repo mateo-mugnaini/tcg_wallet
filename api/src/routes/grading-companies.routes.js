@@ -11,11 +11,15 @@ import {
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
 import {
   createGradingCompanySchema,
   updateGradingCompanySchema,
   gradingCompanyIdParamsSchema,
+  gradingCompaniesListResponseSchema,
+  gradingCompanyDataResponseSchema,
+  gradingCompanyMutationResponseSchema,
 } from "../schemas/grading-companies.schema.js";
 
 const router = express.Router();
@@ -24,7 +28,12 @@ const router = express.Router();
         LISTAR GRADING COMPANIES
 ==================================== */
 
-router.get("/", authenticate, getGradingCompaniesController);
+router.get(
+  "/",
+  authenticate,
+  validateResponse(gradingCompaniesListResponseSchema),
+  getGradingCompaniesController,
+);
 
 /* ====================================
       OBTENER GRADING COMPANY POR ID
@@ -34,6 +43,7 @@ router.get(
   "/:id",
   authenticate,
   validate(gradingCompanyIdParamsSchema, "params"),
+  validateResponse(gradingCompanyDataResponseSchema),
   getGradingCompanyByIdController,
 );
 
@@ -46,6 +56,7 @@ router.post(
   authenticate,
   requireRole("admin"),
   validate(createGradingCompanySchema),
+  validateResponse(gradingCompanyMutationResponseSchema),
   createGradingCompanyController,
 );
 
@@ -59,6 +70,7 @@ router.patch(
   requireRole("admin"),
   validate(gradingCompanyIdParamsSchema, "params"),
   validate(updateGradingCompanySchema),
+  validateResponse(gradingCompanyMutationResponseSchema),
   updateGradingCompanyController,
 );
 
@@ -71,6 +83,7 @@ router.delete(
   authenticate,
   requireRole("admin"),
   validate(gradingCompanyIdParamsSchema, "params"),
+  validateResponse(gradingCompanyMutationResponseSchema),
   deleteGradingCompanyController,
 );
 

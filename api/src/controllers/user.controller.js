@@ -24,7 +24,7 @@ export async function createUser(req, res, next) {
 ==================================== */
 export async function getUser(req, res, next) {
   try {
-    const user = await getUserById(req.params.id);
+    const user = await getUserById(req.validated.params.id);
 
     return res.status(200).json(user);
   } catch (error) {
@@ -37,7 +37,7 @@ export async function getUser(req, res, next) {
 ==================================== */
 export async function getUserByEmailController(req, res, next) {
   try {
-    const user = await getUserByEmail(req.params.email);
+    const user = await getUserByEmail(req.validated.params.email);
 
     return res.status(200).json(user);
   } catch (error) {
@@ -63,7 +63,7 @@ export async function getUsersController(req, res, next) {
 ==================================== */
 export async function updateUser(req, res, next) {
   try {
-    const user = await editUser(req.params.id, req.validated.body);
+    const user = await editUser(req.validated.params.id, req.validated.body);
 
     return res.status(200).json(user);
   } catch (error) {
@@ -76,7 +76,7 @@ export async function updateUser(req, res, next) {
 ==================================== */
 export async function deleteUser(req, res, next) {
   try {
-    await removeUser(req.params.id);
+    await removeUser(req.validated.params.id);
 
     return res.status(200).json({
       status: "success",

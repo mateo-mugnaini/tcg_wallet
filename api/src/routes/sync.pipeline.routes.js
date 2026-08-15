@@ -11,6 +11,7 @@ import {
   gradedCardPricesImportResponseSchema,
   importGradedCardPricesSchema,
 } from "../schemas/graded-card-prices.schema.js";
+import { syncPipelineResponseSchema } from "../schemas/sync.schema.js";
 
 const router = express.Router();
 
@@ -18,7 +19,13 @@ const router = express.Router();
         EJECUTAR SYNC PIPELINE
 ==================================== */
 
-router.post("/", authenticate, requireRole("admin"), runSyncPipelineController);
+router.post(
+  "/",
+  authenticate,
+  requireRole("admin"),
+  validateResponse(syncPipelineResponseSchema),
+  runSyncPipelineController,
+);
 
 router.post(
   "/graded-prices",

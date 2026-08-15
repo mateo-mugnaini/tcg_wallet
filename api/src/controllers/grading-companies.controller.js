@@ -28,7 +28,7 @@ export async function getGradingCompaniesController(req, res, next) {
 
 export async function getGradingCompanyByIdController(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const company = await getGradingCompanyById(id);
 
@@ -46,7 +46,7 @@ export async function getGradingCompanyByIdController(req, res, next) {
 
 export async function createGradingCompanyController(req, res, next) {
   try {
-    const { name } = req.body;
+    const { name } = req.validated.body;
 
     const company = await addGradingCompany({ name });
 
@@ -65,8 +65,8 @@ export async function createGradingCompanyController(req, res, next) {
 
 export async function updateGradingCompanyController(req, res, next) {
   try {
-    const { id } = req.params;
-    const { name } = req.body;
+    const { id } = req.validated.params;
+    const { name } = req.validated.body;
 
     const company = await editGradingCompany(id, { name });
 
@@ -85,7 +85,7 @@ export async function updateGradingCompanyController(req, res, next) {
 
 export async function deleteGradingCompanyController(req, res, next) {
   try {
-    const { id } = req.params;
+    const { id } = req.validated.params;
 
     const company = await removeGradingCompany(id);
 

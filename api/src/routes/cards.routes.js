@@ -10,6 +10,7 @@ import {
 } from "../controllers/cards.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
@@ -22,6 +23,7 @@ import {
   getCardsQuerySchema,
   updateCardSchema,
 } from "../schemas/cards.schema.js";
+import { pokemonCardsSyncResponseSchema } from "../schemas/sync.schema.js";
 
 const router = Router();
 
@@ -90,6 +92,12 @@ router.delete(
         SINCRONIZAR POKÉMON
 ==================================== */
 
-router.post("/sync/pokemon", authenticate, syncPokemonCardsController);
+router.post(
+  "/sync/pokemon",
+  authenticate,
+  requireRole("admin"),
+  validateResponse(pokemonCardsSyncResponseSchema),
+  syncPokemonCardsController,
+);
 
 export default router;

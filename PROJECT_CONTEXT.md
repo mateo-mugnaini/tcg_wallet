@@ -616,10 +616,10 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
 | 04 | Valoración de colección | **Finalizado** en alcance funcional: normal/graded, USD, desglose por grading y smoke test validados. |
 | 05 | Catálogo avanzado | **En progreso**; cards ya tiene filtros avanzados y detalle enriquecido, faltan cobertura y normalización final. |
-| 06 | Validación Zod completa | Parcial; cards, TCGs, sets y collection avanzados cubiertos; faltan sync y responses generales de otros módulos. |
+| 06 | Validación Zod completa | **En progreso**; cards, TCGs, sets, collection, grading y syncs principales cubiertos; faltan auth, users y responses generales restantes. |
 | 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
 | 08 | Testing profesional | En progreso inicial; hay 8 tests de contratos graded y collection. |
-| 09 | Seguridad avanzada | Parcial; JWT/rate/cookies sí, Helmet/CORS no activos. |
+| 09 | Seguridad avanzada | Parcial; JWT/rate/cookies sí y syncs costosos protegidos por admin; Helmet/CORS y rate limits específicos pendientes. |
 | 10 | Índices y optimización DB | No verificable sin DDL/DB activa. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
 | 12 | Logging/Observabilidad | Pendiente; console logging. |

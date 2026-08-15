@@ -25,6 +25,7 @@ import {
   setResponseSchema,
   setsListResponseSchema,
 } from "../schemas/set.schema.js";
+import { pokemonSetsSyncResponseSchema } from "../schemas/sync.schema.js";
 
 const router = express.Router();
 
@@ -49,6 +50,7 @@ router.post(
   "/sync/pokemon",
   authenticate,
   requireRole("admin"),
+  validateResponse(pokemonSetsSyncResponseSchema),
   syncPokemonSetsController,
 );
 

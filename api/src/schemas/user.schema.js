@@ -106,3 +106,31 @@ export const updateUserSchema = z
       message: "Debes proporcionar al menos un campo para actualizar",
     },
   );
+
+export const userResponseSchema = z.object({
+  id: z.string().uuid(),
+  role: z.enum(["user", "admin"]),
+  email: z.string().email(),
+  username: z.string(),
+  created_at: z.union([z.string(), z.date()]),
+  updated_at: z.union([z.string(), z.date()]),
+});
+
+export const userListResponseSchema = z.object({
+  data: z.array(userResponseSchema),
+  pagination: z.object({
+    page: z.number().int().min(1),
+    limit: z.number().int().min(1),
+    total: z.number().int().min(0),
+    totalPages: z.number().int().min(0),
+  }),
+});
+
+export const userDataResponseSchema = z.object({
+  data: userResponseSchema,
+});
+
+export const userDeleteResponseSchema = z.object({
+  status: z.literal("success"),
+  message: z.string(),
+});

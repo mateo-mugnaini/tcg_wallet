@@ -109,3 +109,107 @@ export const collectionValueResponseSchema = z.object({
     ),
   }),
 });
+
+const collectionItemBaseResponseSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  card_id: z.string().uuid(),
+  quantity: z.number().int().min(1),
+  condition: z.string(),
+  is_graded: z.boolean(),
+  grading_company_id: z.string().uuid().nullable(),
+  grade: z.number().nullable(),
+  created_at: z.union([z.string(), z.date()]),
+  updated_at: z.union([z.string(), z.date()]),
+});
+
+const collectionCardResponseSchema = z.object({
+  id: z.string().uuid(),
+  set_id: z.string().uuid(),
+  external_id: z.string().nullable(),
+  name: z.string(),
+  card_number: z.string().nullable(),
+  rarity: z.string().nullable(),
+  image_url: z.string().nullable(),
+});
+
+const collectionSetResponseSchema = z.object({
+  id: z.string().uuid(),
+  tcg_id: z.string().uuid(),
+  name: z.string(),
+  code: z.string().nullable(),
+  release_date: z.union([z.string(), z.date()]).nullable(),
+});
+
+const collectionTcgResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+});
+
+const collectionGradingCompanyResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+});
+
+export const collectionItemResponseSchema = collectionItemBaseResponseSchema.extend({
+  card: collectionCardResponseSchema,
+  set: collectionSetResponseSchema,
+  tcg: collectionTcgResponseSchema,
+  grading_company: collectionGradingCompanyResponseSchema.nullable(),
+});
+
+export const collectionItemsListResponseSchema = z.object({
+  data: z.array(collectionItemResponseSchema),
+  pagination: z.object({
+    total: z.number().int().min(0),
+    limit: z.number().int().min(1),
+    offset: z.number().int().min(0),
+  }),
+});
+
+export const collectionItemDataResponseSchema = z.object({
+  data: collectionItemResponseSchema,
+});
+
+export const collectionItemMutationResponseSchema = z.object({
+  message: z.string(),
+  data: z.union([collectionItemResponseSchema, collectionItemBaseResponseSchema]),
+});
+
+const collectionStatsBreakdownSchema = z.object({
+  distinctCards: z.number().int().min(0),
+  totalQuantity: z.number().int().min(0),
+});
+
+export const collectionStatsResponseSchema = z.object({
+  data: z.object({
+    summary: z.object({
+      totalDistinctCards: z.number().int().min(0),
+      totalQuantity: z.number().int().min(0),
+      gradedQuantity: z.number().int().min(0),
+      ungradedQuantity: z.number().int().min(0),
+    }),
+    byCondition: z.array(
+      collectionStatsBreakdownSchema.extend({ condition: z.string() }),
+    ),
+    bySet: z.array(
+      collectionStatsBreakdownSchema.extend({
+        setId: z.string().uuid(),
+        setName: z.string(),
+        setCode: z.string().nullable(),
+      }),
+    ),
+    byTcg: z.array(
+      collectionStatsBreakdownSchema.extend({
+        tcgId: z.string().uuid(),
+        tcgName: z.string(),
+      }),
+    ),
+    byGradingCompany: z.array(
+      collectionStatsBreakdownSchema.extend({
+        gradingCompanyId: z.string().uuid(),
+        gradingCompanyName: z.string(),
+      }),
+    ),
+  }),
+});

@@ -15,10 +15,10 @@
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
 | 04 | Valoración de colección | **Finalizado** | Ampliar tests y documentar conversión multicurrency futura. |
 | 05 | Catálogo avanzado | **En progreso** | Completar tests y normalización de filtros en sets/TCGs. |
-| 06 | Validación Zod completa | **Parcial** | Cubrir sync y responses generales de otros módulos; cards, TCGs, sets y collection ya avanzados. |
+| 06 | Validación Zod completa | **En progreso** | Cubrir auth, users y responses generales restantes; cards, TCGs, sets, collection, grading y sync ya avanzados. |
 | 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
 | 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
-| 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y proteger syncs. |
+| 09 | Seguridad avanzada | **Parcial** | Activar Helmet/CORS y definir rate limits específicos. |
 | 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |

@@ -16,6 +16,10 @@ import { validateResponse } from "../middlewares/validate-response.middleware.js
 
 import {
   collectionItemIdParamsSchema,
+  collectionItemDataResponseSchema,
+  collectionItemMutationResponseSchema,
+  collectionItemsListResponseSchema,
+  collectionStatsResponseSchema,
   collectionValueResponseSchema,
   createCollectionItemSchema,
   getCollectionItemsQuerySchema,
@@ -34,6 +38,7 @@ router.get(
   "/",
   authenticate,
   validate(getCollectionItemsQuerySchema, "query"),
+  validateResponse(collectionItemsListResponseSchema),
   getCollectionItemsController,
 );
 
@@ -41,7 +46,12 @@ router.get(
       ESTADÍSTICAS DE COLECCIÓN
 ==================================== */
 
-router.get("/stats", authenticate, getCollectionStatsController);
+router.get(
+  "/stats",
+  authenticate,
+  validateResponse(collectionStatsResponseSchema),
+  getCollectionStatsController,
+);
 
 /* ====================================
       VALOR ESTIMADO DE COLECCIÓN
@@ -62,6 +72,7 @@ router.get(
   "/:id",
   authenticate,
   validate(collectionItemIdParamsSchema, "params"),
+  validateResponse(collectionItemDataResponseSchema),
   getCollectionItemByIdController,
 );
 
@@ -73,6 +84,7 @@ router.post(
   "/",
   authenticate,
   validate(createCollectionItemSchema, "body"),
+  validateResponse(collectionItemMutationResponseSchema),
   createCollectionItemController,
 );
 
@@ -85,6 +97,7 @@ router.put(
   authenticate,
   validate(collectionItemIdParamsSchema, "params"),
   validate(updateCollectionItemSchema, "body"),
+  validateResponse(collectionItemMutationResponseSchema),
   updateCollectionItemController,
 );
 
@@ -96,6 +109,7 @@ router.delete(
   "/:id",
   authenticate,
   validate(collectionItemIdParamsSchema, "params"),
+  validateResponse(collectionItemMutationResponseSchema),
   deleteCollectionItemController,
 );
 

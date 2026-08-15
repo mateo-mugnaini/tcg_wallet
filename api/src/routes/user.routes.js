@@ -23,14 +23,24 @@ import {
   userIdParamsSchema,
   getUsersQuerySchema,
   userEmailParamsSchema,
+  userResponseSchema,
+  userListResponseSchema,
+  userDataResponseSchema,
+  userDeleteResponseSchema,
 } from "../schemas/user.schema.js";
+import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
 const router = express.Router();
 /* ====================================
            * CREAR USUARIO
 ==================================== */
 
-router.post("/", validate(createUserSchema), createUser);
+router.post(
+  "/",
+  validate(createUserSchema),
+  validateResponse(userResponseSchema),
+  createUser,
+);
 
 /* ====================================
            * LISTAR USUARIOS
@@ -41,6 +51,7 @@ router.get(
   authenticate,
   requireRole("admin"),
   validate(getUsersQuerySchema, "query"),
+  validateResponse(userListResponseSchema),
   getUsersController,
 );
 
@@ -53,6 +64,7 @@ router.get(
   authenticate,
   requireRole("admin"),
   validate(userEmailParamsSchema, "params"),
+  validateResponse(userResponseSchema),
   getUserByEmailController,
 );
 
@@ -65,6 +77,7 @@ router.get(
   authenticate,
   validate(userIdParamsSchema, "params"),
   requireOwnershipOrRole("admin"),
+  validateResponse(userResponseSchema),
   getUser,
 );
 
@@ -78,6 +91,7 @@ router.patch(
   validate(userIdParamsSchema, "params"),
   validate(updateUserSchema),
   requireOwnershipOrRole("admin"),
+  validateResponse(userResponseSchema),
   updateUser,
 );
 
@@ -90,6 +104,7 @@ router.delete(
   authenticate,
   validate(userIdParamsSchema, "params"),
   requireOwnershipOrRole("admin"),
+  validateResponse(userDeleteResponseSchema),
   deleteUser,
 );
 export default router;

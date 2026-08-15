@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   collectionItemIdParamsSchema,
+  collectionItemDataResponseSchema,
   createCollectionItemSchema,
   getCollectionItemsQuerySchema,
   updateCollectionItemSchema,
@@ -71,5 +72,42 @@ describe("collection items schemas", () => {
     expect(collectionItemIdParamsSchema.parse({ id: cardId })).toEqual({
       id: cardId,
     });
+  });
+
+  it("validates an enriched collection item response", () => {
+    const result = collectionItemDataResponseSchema.parse({
+      data: {
+        id: cardId,
+        user_id: gradingCompanyId,
+        card_id: cardId,
+        quantity: 1,
+        condition: "Near Mint",
+        is_graded: false,
+        grading_company_id: null,
+        grade: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+        card: {
+          id: cardId,
+          set_id: gradingCompanyId,
+          external_id: "base-1",
+          name: "Test Card",
+          card_number: "1/10",
+          rarity: "Rare",
+          image_url: null,
+        },
+        set: {
+          id: gradingCompanyId,
+          tcg_id: gradingCompanyId,
+          name: "Base Set",
+          code: null,
+          release_date: null,
+        },
+        tcg: { id: gradingCompanyId, name: "Pokémon" },
+        grading_company: null,
+      },
+    });
+
+    expect(result.data.quantity).toBe(1);
   });
 });
