@@ -12,7 +12,8 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Validación realizada: app import OK; card inexistente devuelve 404; card existente sin precios graded devuelve lista vacía con paginación válida; la response pasa el schema Zod.
 - Datos actuales: 20.479 cards y 0 registros en graded_card_prices, por lo que todavía falta probar una response con una fila real.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
-- Siguiente tarea: probar responses y valoración con filas graded reales y definir el sync graded sobre el schema verificado.
+- Fixture preparado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes.
+- Siguiente tarea: ejecutar el fixture en desarrollo, probar responses y valoración con filas graded reales y definir el sync graded sobre el schema verificado.
 
 ## 1. Estado inicial
 

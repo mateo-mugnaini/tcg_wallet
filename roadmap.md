@@ -942,7 +942,7 @@ Continuar el módulo HTTP graded prices. Los cinco endpoints de consulta ya est�
 GET /api/cards/:cardId/graded-prices
 ```
 
-La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El siguiente trabajo es probar el registro con datos reales y completar el sync graded.
+La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El comando opt-in `pnpm db:seed:graded` prepara dos capturas históricas reproducibles. El siguiente trabajo es ejecutar el fixture en desarrollo, probar el registro con datos reales y completar el sync graded.
 
 ### Contexto histórico
 

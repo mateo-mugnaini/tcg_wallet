@@ -423,10 +423,10 @@ Estado exacto al cierre de esta revisión:
 - controller: existe graded-card-prices.controller.js;
 - routes: existen los cinco endpoints GET y el POST /api/cards/:cardId/graded-prices;
 - schemas: existe graded-card-prices.schema.js para params, query, body y response;
-- sync: no existe;
+- sync: no existe; hay fixture opt-in en scripts/seed-graded-card-prices.js;
 - latest/stats/variation/aggregations: implementados como endpoints de consulta.
 
-Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual y conexión inicial con valoración terminados; sync y pruebas con datos graded pendientes**.
+Por tanto: **PARCIALMENTE IMPLEMENTADO — consultas, registro manual, fixture opt-in y conexión inicial con valoración terminados; sync y pruebas con datos graded pendientes**.
 
 Endpoints disponibles:
 
