@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortOrderSchema } from "./common.schema.js";
 
 const booleanQuerySchema = z.preprocess(
   (value) => {
@@ -33,7 +34,7 @@ export const getCollectionItemsQuerySchema = z.object({
   sortBy: z
     .enum(["created_at", "updated_at", "quantity", "grade", "card_name", "name"])
     .default("created_at"),
-  sortOrder: z.enum(["ASC", "DESC", "asc", "desc"]).default("DESC"),
+  sortOrder: sortOrderSchema.default("DESC"),
 });
 
 export const createCollectionItemSchema = z.object({

@@ -29,7 +29,6 @@ import {
   userEmailParamsSchema,
   userResponseSchema,
   userListResponseSchema,
-  userDataResponseSchema,
   userDeleteResponseSchema,
 } from "../schemas/user.schema.js";
 import { validateResponse } from "../middlewares/validate-response.middleware.js";

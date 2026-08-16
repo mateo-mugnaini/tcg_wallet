@@ -1,24 +1,34 @@
 # TCG Wallet API — Plan de implementación del roadmap
 
-Fecha base: 2026-08-15
+Fecha base: 2026-08-16
 
 Este documento convierte el roadmap en un plan ejecutable. No implementa código. La fuente de verdad del estado actual es PROJECT_CONTEXT.md; el código actual prevalece sobre el roadmap histórico.
 
 ## Estado de ejecución actual
 
+### Registro de avance — 2026-08-16
+
+- Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
+- Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
+- Se agregaron pruebas de filtros y contratos del catálogo.
+- Validación actual: `pnpm.cmd test:run` pasa con 11 archivos y 58 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
+- Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
+
 - Fase 0: parcialmente completada. PostgreSQL está configurado en el puerto 2203 y el schema de graded_card_prices ya fue verificado en la base activa. La auditoría completa de tablas, índices y constraints sigue pendiente.
 - Fase 1: en progreso. Ya existen los cinco endpoints de consulta, el registro manual, el importador batch administrativo y el fixture ejecutable de graded prices con repository, service, controller, routes y schemas Zod; el proveedor de sync automático sigue pendiente.
 - Fase 2: **finalizada en alcance funcional**. `GET /api/collection-items/value` separa precios normales y graded, incluye contadores y desglose por grading company; para graded usa card, grading company y grade, sin fallback al precio normal. La política actual evalúa exclusivamente precios USD; la conversión multicurrency queda como ampliación futura.
-- Fase 3: en progreso. `GET /api/cards` ya admite filtros por TCG, set, nombre, rareza, número y external ID; el detalle de card incluye set, TCG, últimos precios normales y resumen de la colección del usuario. Faltan ampliar pruebas y normalizar filtros de sets/TCGs.
-- Fase 4: en progreso. `cards`, `TCGs`, `sets`, `collection-items`, `grading-companies`, auth, users y syncs principales tienen schemas Zod de request/response conectados a sus rutas; faltan respuestas generales de otros módulos menores y normalización común.
+- Fase 3: en progreso. `GET /api/cards` ya admite filtros por TCG, set, nombre, rareza, número y external ID; el detalle de card incluye set, TCG, últimos precios normales y resumen de la colección del usuario. Se ampliaron las pruebas y se normalizó `sortOrder` en TCGs, sets, cards, colección y usuarios.
+- Fase 4: en progreso. Los schemas de auth/users y los contratos principales están conectados; se añadió un schema común para normalizar `sortOrder`. Faltan respuestas generales de módulos menores y normalización adicional.
+- Fase 5: en progreso. El pipeline duplicado roto fue reemplazado por un shim de compatibilidad que re-exporta la única implementación activa bajo `src/syncs`.
 - Fase 7: en progreso. Helmet, CORS con credenciales, límite JSON, rate limits, autorización admin, timeout de integraciones, timeouts PostgreSQL y advisory lock distribuido están implementados; rate limits distribuidos y configuración de producción siguen pendientes.
 - Validación realizada: app import OK; card inexistente devuelve 404; card existente sin precios graded devuelve lista vacía con paginación válida; la response pasa el schema Zod.
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm test:run` OK con 8 archivos y 47 tests de contratos, autorización, JWT, refresh rotation, hardening y operaciones.
+- Validación adicional: `pnpm.cmd test:run` OK con 11 archivos y 58 tests de contratos, catálogo, servicios, autorización, JWT, refresh rotation, hardening y operaciones.
+- Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
-- Siguiente tarea: completar schemas de auth/users y después ampliar tests de catálogo e integración.
+- Siguiente tarea: ampliar tests de repository/API con PostgreSQL y continuar la limpieza de capas.
 
 ## 1. Estado inicial
 

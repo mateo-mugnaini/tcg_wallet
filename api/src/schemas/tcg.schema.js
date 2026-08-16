@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortOrderSchema } from "./common.schema.js";
 
 /* ====================================
           CREAR TCG
@@ -73,7 +74,7 @@ export const getTcgsQuerySchema = z.object({
 
   sortBy: z.enum(["name", "created_at"]).default("created_at"),
 
-  sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
+  sortOrder: sortOrderSchema.default("DESC"),
 });
 
 export const tcgResponseSchema = z.object({

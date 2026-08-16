@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortOrderSchema } from "./common.schema.js";
 
 /* ====================================
           SCHEMA CREAR USUARIO
@@ -68,7 +69,7 @@ export const getUsersQuerySchema = z.object({
     .enum(["username", "email", "created_at", "updated_at"])
     .default("created_at"),
 
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  sortOrder: sortOrderSchema.default("DESC"),
 });
 
 /* ====================================

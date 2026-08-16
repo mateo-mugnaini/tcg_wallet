@@ -1,7 +1,7 @@
 /* ====================================
           ERROR MIDDLEWARE
 ==================================== */
-export function errorMiddleware(error, req, res, next) {
+export function errorMiddleware(error, req, res, _next) {
   console.error(error);
 
   if (error.statusCode) {

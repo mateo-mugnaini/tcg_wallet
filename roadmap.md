@@ -2,11 +2,19 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. Existe una suite inicial de 8 tests; la cobertura completa y el esquema activo de PostgreSQL aún no están verificados.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite actual tiene 11 archivos y 58 tests pasando; la cobertura completa y el esquema activo de PostgreSQL aún no están verificados.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
-## Estado actualizado al 2026-08-15
+## Estado actualizado al 2026-08-16
+
+### Registro del avance actual
+
+- Se consolidó el pipeline de sincronización: `api/src/services/sync.pipeline.service.js` quedó como shim hacia la única implementación activa en `api/src/syncs`.
+- Se centralizó la normalización de `sortOrder` (`ASC`/`DESC`) para TCGs, sets, cards, colección y usuarios.
+- Se añadieron pruebas de contratos del catálogo y pruebas unitarias del `cards.service` con repositories mockeados.
+- Se incorporó el comando oficial `pnpm lint` y ESLint ejecuta sin errores ni warnings.
+- Validación realizada: `pnpm.cmd test:run` pasa con 11 archivos y 58 tests; `pnpm.cmd lint` pasa correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
@@ -14,10 +22,10 @@
 | 02 | Grading Companies | **Finalizado** | Añadir tests y completar auditoría de FKs como tarea de calidad. |
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
 | 04 | Valoración de colección | **Finalizado** | Ampliar tests y documentar conversión multicurrency futura. |
-| 05 | Catálogo avanzado | **En progreso** | Completar tests y normalización de filtros en sets/TCGs. |
-| 06 | Validación Zod completa | **En progreso** | Cubrir auth, users y responses generales restantes; cards, TCGs, sets, collection, grading y sync ya avanzados. |
-| 07 | Separación de capas | **Parcial/Pendiente** | Retirar validación HTTP duplicada y limpiar legacy. |
-| 08 | Testing profesional | **En progreso inicial** | Ampliar unit, integration y API tests. |
+| 05 | Catálogo avanzado | **En progreso** | Completar tests de integración y normalización restante de filtros en sets/TCGs. |
+| 06 | Validación Zod completa | **En progreso** | Auth, users y catálogo ya tienen schemas conectados; faltan responses menores y normalización adicional. |
+| 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
+| 08 | Testing profesional | **En progreso** | 11 archivos y 58 tests; ampliar repository/API tests con PostgreSQL. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
 | 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
@@ -933,13 +941,19 @@ La prioridad recomendada queda así:
 
 ---
 
-# 18. Siguiente módulo
+# 18. Siguiente bloque de implementación
 
-El CRUD de `collection_items` está implementado en código. La existencia de pruebas automatizadas reproducibles no está verificada en el repositorio.
+El siguiente bloque ejecutado fue testing unitario y contratos del catálogo. Actualmente existe evidencia reproducible de 11 archivos y 58 tests pasando.
 
-Por lo tanto, el siguiente bloque lógico es:
+Por lo tanto, el siguiente bloque lógico es ampliar pruebas de repository/API con PostgreSQL y continuar la limpieza de capas.
 
-## Módulo siguiente — Graded Card Prices
+## Módulo siguiente — Testing de repository/API y limpieza de capas
+
+### Objetivo
+
+Cubrir con repositories mockeados las reglas de negocio restantes y, cuando la base de test esté disponible, validar consultas, filtros, paginación, ownership y respuestas mediante PostgreSQL. En paralelo se continuará homogeneizando el flujo Route → Middleware → Controller → Service → Repository.
+
+### Módulo posterior — Graded Card Prices automático
 
 ### Objetivo
 
@@ -949,11 +963,11 @@ Continuar el módulo HTTP graded prices. Los cinco endpoints de consulta ya est�
 GET /api/cards/:cardId/graded-prices
 ```
 
-La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El comando opt-in `pnpm db:seed:graded` fue ejecutado y validó las cinco consultas graded con dos capturas históricas. `pnpm check:graded-value` validó el cálculo con un item graded temporal y limpió sus datos. También existe el importador administrativo `POST /api/sync/graded-prices`, preparado para recibir lotes validados. El siguiente trabajo es conectar un proveedor real.
+La tabla ya fue verificada en PostgreSQL y contiene card_id, grading_company_id, grade, price, currency, source y recorded_at. La valoración ya selecciona el último precio graded para items graded. El comando opt-in `pnpm db:seed:graded` fue ejecutado y validó las cinco consultas graded con dos capturas históricas. `pnpm check:graded-value` validó el cálculo con un item graded temporal y limpió sus datos. También existe el importador administrativo `POST /api/sync/graded-prices`, preparado para recibir lotes validados. Este módulo permanece **En progreso** hasta definir y conectar un proveedor real.
 
 ### Contexto histórico
 
-La sección siguiente conserva la descripción original de Collection avanzada, pero ya está completada en código. La prioridad actual es Graded Card Prices.
+La sección siguiente conserva la descripción original de Collection avanzada, pero ya está completada en código. Graded Card Prices automático queda como prioridad posterior al bloque de testing y limpieza.
 
 ### Objetivo histórico ya completado
 

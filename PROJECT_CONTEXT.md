@@ -1,6 +1,6 @@
 # TCG Wallet API — Project Context
 
-> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-15. Rama: test. Commit observado: f07eb5b.
+> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 11 archivos y 58 tests pasando.
 >
 > Regla de evidencia: si un dato no puede comprobarse en código o mediante una ejecución reproducible, se marca **NO VERIFICADO**. Si aparece solamente en roadmap/historial y no en código actual, se marca **PLANIFICADO / NO VERIFICADO EN CÓDIGO**.
 
@@ -36,12 +36,12 @@ El módulo graded_card_prices tiene implementados sus cinco endpoints de consult
 | zod | ^4.4.3 | Validación de entorno, requests y responses. |
 | cookie-parser | ^1.4.7 | Cookie del refresh token. |
 | express-rate-limit | ^8.6.2 | Límites de login y refresh. |
-| helmet | ^8.3.0 | Dependencia y opciones preparadas; no activa en app. |
-| cors | ^2.8.6 | Dependencia y opciones preparadas; no activa en app. |
+| helmet | ^8.3.0 | Headers de seguridad activos en app.js. |
+| cors | ^2.8.6 | CORS por entorno activo en app.js. |
 | dotenv | ^17.4.2 | Carga de .env. |
-| vitest | ^4.1.10 | Runner declarado; no hay tests. |
+| vitest | ^4.1.10 | Runner; 11 archivos y 58 tests pasando en la última ejecución. |
 | nodemon | ^3.1.14 | Desarrollo. |
-| ESLint | ^10.8.1 | Lint; no arranca porque falta globals. |
+| ESLint | ^10.8.1 | Lint ejecutable; globals está declarado como dependencia de desarrollo. |
 | Prettier | ^3.9.6 | Formato. |
 | PNPM | pnpm@10.30.3 | Package manager. |
 
@@ -99,6 +99,14 @@ Archivos centrales:
 - api/src/config/env.js: validación de entorno.
 - api/src/integrations/pokemon-tcg/pokemon-tcg.client.js: cliente externo.
 - api/src/syncs/sync.pipeline.service.js: pipeline usado por /api/sync.
+
+## Actualización de implementación — 2026-08-16
+
+- Se consolidó el pipeline de sincronización: `src/services/sync.pipeline.service.js` ahora es únicamente un re-export de compatibilidad hacia `src/syncs`.
+- Se creó `src/schemas/common.schema.js` y se normaliza `sortOrder` como `ASC`/`DESC` en TCGs, sets, cards, colección y usuarios.
+- La suite pasó de 47 a 58 tests en 11 archivos.
+- ESLint ya ejecuta correctamente después de declarar `globals` en `api/package.json`; la ejecución final no tuvo errores ni warnings.
+- El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático, migraciones y observabilidad continúan pendientes.
 
 ## 4. Arquitectura
 
@@ -472,7 +480,7 @@ Pasos de src/syncs/sync.pipeline.service.js:
 
 Devuelve status completed, durationSeconds y resultados sets/cards/prices, con TCG y summary. Se ejecuta secuencialmente. Un error se registra y se propaga; no hay rollback global entre pasos.
 
-Hay un módulo antiguo no usado por app.js: src/services/sync.pipeline.service.js. Importa sets.sync.service.js y cards-prices.sync.services.js, que no existen; un import directo falla con ERR_MODULE_NOT_FOUND. Debe documentarse como legado, no como pipeline activo.
+Hay un shim de compatibilidad en src/services/sync.pipeline.service.js que re-exporta el pipeline activo de src/syncs. Ya no mantiene una segunda implementación ni imports rotos.
 
 ## 19. Zod y validación
 
@@ -547,12 +555,12 @@ check_schema.js es diagnóstico de solo lectura. Consulta columnas y FKs de grad
 Resultado real de esta revisión:
 
 - Import de src/app.js: OK; verifica carga de módulos, no endpoints ni DB.
-- pnpm.cmd test:run: OK; 1 archivo y 4 tests de contratos/import graded.
+- pnpm.cmd test:run: OK; 11 archivos y 58 tests de contratos, catálogo, servicios, autorización, seguridad y operaciones.
 - node check_schema.js: falló con ECONNREFUSED en localhost:5432.
-- pnpm.cmd exec eslint src: falló antes de analizar porque falta el paquete globals usado por eslint.config.js.
-- Import directo del pipeline legado: falló por módulos inexistentes.
+- pnpm.cmd exec eslint src tests: OK, sin errores ni warnings, después de declarar globals en devDependencies.
+- Import del shim legacy: conserva compatibilidad y delega al pipeline activo.
 
-Conclusión: **EXISTE UNA SUITE INICIAL DE TESTS AUTOMATIZADA**, todavía limitada a contratos y validaciones graded; faltan tests de repository, API, ownership, collection y sync.
+Conclusión: **EXISTE UNA SUITE AUTOMATIZADA DE CONTRATOS Y HARDENING**, todavía faltan tests de repository, API con PostgreSQL, ownership, collection CRUD y sync end-to-end.
 
 roadmap.md afirma que Collection CRUD está implementado y probado, pero la evidencia automatizada actual se limita a contratos graded y un smoke test aislado de valoración: **COBERTURA PARCIAL — RESTO NO VERIFICADO AUTOMÁTICAMENTE**. No puede afirmarse desde este repo que auth, catálogo, prices, collection CRUD o sync tengan cobertura completa contra una DB real.
 
@@ -560,15 +568,15 @@ roadmap.md afirma que Collection CRUD está implementado y probado, pero la evid
 
 | Problema | Causa/evidencia | Impacto | Estado |
 |---|---|---|---|
-| Pipeline legacy roto | Importa archivos inexistentes en src/services. | Ese módulo no puede cargarse. | No usado por app.js; no corregido. |
+| Pipeline legacy duplicado | La ruta histórica tenía una implementación separada y rota. | Podía generar imports inconsistentes. | Resuelto con shim hacia src/syncs. |
 | Base local inaccesible | PostgreSQL rechaza localhost:5432. | No se puede verificar DDL ni ejecutar endpoints DB. | Limitación de revisión. |
-| Sin suite de tests | Vitest no encuentra test/spec. | No hay cobertura automatizada. | Pendiente. |
-| ESLint roto | Falta globals, requerido por config. | Lint no puede arrancar. | No corregido. |
-| Helmet/CORS no activos | Dependencias/opciones no usadas por app.js. | Seguridad HTTP incompleta. | Pendiente. |
+| Cobertura de integración pendiente | La suite actual es principalmente de schemas, contratos y hardening. | Flujos con PostgreSQL todavía no están cubiertos end-to-end. | Pendiente. |
+| ESLint | Faltaba globals, requerido por config. | Lint no podía arrancar. | Resuelto. |
+| Helmet/CORS | Están registrados en app.js. | Falta validar despliegue real y configuración de producción. | Implementado; producción pendiente. |
 | Retry de cards inconsistente | Integration usa details.externalStatus; cards sync usa error.status. | Retry real no confirmado. | No corregido. |
 | Counters de sets | Upsert incrementa created; no se ve update/unchanged efectivo. | Summary puede ser engañoso. | Estado actual documentado. |
 | JWT errors | auth middleware propaga error nativo. | Un token inválido puede acabar como 500. | Mapping 401 pendiente. |
-| Validación desigual | Cards/collection no tienen schemas; prices sí. | Contratos inconsistentes. | Zod completa pendiente. |
+| Validación desigual | Los contratos principales ya están conectados; faltan respuestas menores y normalización adicional. | Cobertura de contratos todavía incompleta. | En progreso. |
 | Graded prices parcial | Hay consultas HTTP, registro manual, importación batch y fixture, pero no sync automático. | Falta proveedor real y cobertura automatizada de repository/API. | En progreso. |
 
 ## 25. Decisiones técnicas observadas
@@ -615,11 +623,11 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 02 | Grading Companies | **Finalizado** en alcance funcional; tests y auditoría completa de DB pendientes. |
 | 03 | Graded Card Prices | **En progreso**: cinco consultas implementadas; sync y pruebas con datos pendientes. |
 | 04 | Valoración de colección | **Finalizado** en alcance funcional: normal/graded, USD, desglose por grading y smoke test validados. |
-| 05 | Catálogo avanzado | **En progreso**; cards ya tiene filtros avanzados y detalle enriquecido, faltan cobertura y normalización final. |
-| 06 | Validación Zod completa | **En progreso**; cards, TCGs, sets, collection, grading y syncs principales cubiertos; faltan auth, users y responses generales restantes. |
-| 07 | Limpieza Controller/Service/Repository | Pendiente/parcial; validación en controllers y legacy roto. |
-| 08 | Testing profesional | En progreso inicial; hay 8 tests de contratos graded y collection. |
-| 09 | Seguridad avanzada | Parcial; JWT/rate/cookies sí y syncs costosos protegidos por admin; Helmet/CORS y rate limits específicos pendientes. |
+| 05 | Catálogo avanzado | **En progreso**; filtros y normalización de orden cubiertos, faltan tests de integración y normalización restante. |
+| 06 | Validación Zod completa | **En progreso**; auth/users y catálogo tienen schemas conectados, faltan respuestas menores y normalización adicional. |
+| 07 | Limpieza Controller/Service/Repository | **En progreso**; pipeline duplicado resuelto con shim, queda retirar validación duplicada restante. |
+| 08 | Testing profesional | **En progreso**; 11 archivos y 58 tests automatizados, faltan suites de repository/API con PostgreSQL. |
+| 09 | Seguridad avanzada | Parcial; JWT/rate/cookies, Helmet/CORS y syncs costosos protegidos por admin; quedan rate limits distribuidos, CSRF y validación de producción. |
 | 10 | Índices y optimización DB | No verificable sin DDL/DB activa. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
 | 12 | Logging/Observabilidad | Pendiente; console logging. |

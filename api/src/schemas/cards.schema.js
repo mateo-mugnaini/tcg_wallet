@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortOrderSchema } from "./common.schema.js";
 
 const cardIdParamsSchema = z.object({
   id: z.string().uuid(),
@@ -34,7 +35,7 @@ export const getCardsQuerySchema = z.object({
       "rarity",
     ])
     .default("created_at"),
-  sortOrder: z.enum(["ASC", "DESC", "asc", "desc"]).default("DESC"),
+  sortOrder: sortOrderSchema.default("DESC"),
 });
 
 export const createCardSchema = z.object(cardFieldsSchema);

@@ -29,7 +29,7 @@ describe("cards schemas", () => {
       page: 2,
       limit: 25,
       sortBy: "name",
-      sortOrder: "asc",
+      sortOrder: "ASC",
     });
   });
 

@@ -9,7 +9,8 @@
     "db:seed:graded": "node scripts/seed-graded-card-prices.js",
     "check:graded-value": "node scripts/check-graded-collection-value.js",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "lint": "eslint src tests"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.11.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.6",
     "vitest": "^4.1.10"

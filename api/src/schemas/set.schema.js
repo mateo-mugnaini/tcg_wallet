@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortOrderSchema } from "./common.schema.js";
 
 /* ====================================
             UUID REUTILIZABLE
@@ -123,7 +124,7 @@ export const getSetsQuerySchema = z
       .enum(["name", "code", "release_date", "created_at"])
       .default("created_at"),
 
-    sortOrder: z.enum(["ASC", "DESC"]).default("DESC"),
+    sortOrder: sortOrderSchema.default("DESC"),
   })
   .strict();
 
