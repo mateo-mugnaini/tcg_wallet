@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
-import { getCards, getSets, getTcgs } from "../../redux/actions/catalog/get/catalog.actions.js";
+import { POKEMON_TCG_ID } from "../../app/config/catalog.js";
+import { CARD_CONDITION_OPTIONS, getConditionLabel } from "../../app/config/card-conditions.js";
+import { getAllSets, getCards } from "../../redux/actions/catalog/get/catalog.actions.js";
 import { getGradingCompanies } from "../../redux/actions/grading/get/grading.actions.js";
 import { getCollectionItems, getCollectionStats, getCollectionValue } from "../../redux/actions/collection/get/collection.actions.js";
 import { createCollectionItem } from "../../redux/actions/collection/post/collection.actions.js";
@@ -11,7 +13,7 @@ import CollectionItemForm from "./components/CollectionItemForm/CollectionItemFo
 import ValuationBreakdown from "./components/ValuationBreakdown/ValuationBreakdown.jsx";
 import styles from "./CollectionPage.module.css";
 
-const initialQuery = { limit: 20, offset: 0, sortBy: "card_name", sortOrder: "ASC" };
+const initialQuery = { tcgId: POKEMON_TCG_ID, limit: 20, offset: 0, sortBy: "card_name", sortOrder: "ASC" };
 
 function formatCurrency(value, currency = "USD") {
   if (value === null || value === undefined) return "—";
@@ -47,8 +49,7 @@ function CollectionPage() {
   useEffect(() => {
     dispatch(getCollectionStats());
     dispatch(getCollectionValue());
-    dispatch(getTcgs({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
-    dispatch(getSets({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
+    dispatch(getAllSets({ query: { tcgId: POKEMON_TCG_ID, sortBy: "release_date", sortOrder: "DESC" } }));
     dispatch(getGradingCompanies());
   }, [dispatch]);
 
@@ -105,7 +106,7 @@ function CollectionPage() {
       <PageHeader
         description="Administra tus cartas, cantidades, condiciones y valoración estimada."
         eyebrow="Mi colección"
-        title="Tus cartas"
+        title="Tus cartas Pokémon"
       >
         <button className={styles.addButton} onClick={() => setShowForm((current) => !current)} type="button">
           {showForm ? "Cerrar formulario" : "Agregar carta"}
@@ -142,7 +143,6 @@ function CollectionPage() {
       {collection.value && (
         <div className={styles.breakdowns}>
           <ValuationBreakdown formatCurrency={(amount) => formatCurrency(amount, valueSummary?.currency)} items={collection.value.bySet || []} nameKey="setName" title="Valor por set" />
-          <ValuationBreakdown formatCurrency={(amount) => formatCurrency(amount, valueSummary?.currency)} items={collection.value.byTcg || []} nameKey="tcgName" title="Valor por TCG" />
           <ValuationBreakdown formatCurrency={(amount) => formatCurrency(amount, valueSummary?.currency)} items={collection.value.byGradingCompany || []} nameKey="gradingCompanyName" title="Valor por grading" />
         </div>
       )}
@@ -155,7 +155,10 @@ function CollectionPage() {
         <form className={styles.filters} onSubmit={handleFilterSubmit}>
           <label>
             Condición
-            <input maxLength="100" onChange={(event) => setDraft((current) => ({ ...current, condition: event.target.value }))} placeholder="Near Mint" value={draft.condition || ""} />
+            <select onChange={(event) => setDraft((current) => ({ ...current, condition: event.target.value || undefined }))} value={draft.condition || ""}>
+              <option value="">Todas</option>
+              {CARD_CONDITION_OPTIONS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+            </select>
           </label>
           <SelectField label="Estado" onChange={(event) => setDraft((current) => ({ ...current, isGraded: event.target.value || undefined }))} options={[["", "Todas"], ["false", "Sin grading"], ["true", "Gradadas"]]} value={draft.isGraded || ""} />
           <SelectField label="Set" onChange={(event) => setDraft((current) => ({ ...current, setId: event.target.value || undefined }))} options={[["", "Todos los sets"], ...catalog.sets.map((set) => [set.id, set.name])]} value={draft.setId || ""} />
@@ -173,7 +176,7 @@ function CollectionPage() {
                 {item.card?.image_url ? <img alt="" src={item.card.image_url} /> : <span className={styles.placeholder}>TCG</span>}
                 <span className={styles.itemContent}>
                   <strong>{item.card?.name || item.card_id}</strong>
-                  <small>{item.set?.name || "Set desconocido"} · {item.condition}</small>
+                  <small>{item.set?.name || "Set desconocido"} · {getConditionLabel(item.condition)}</small>
                   <span className={styles.tags}>{item.quantity} unidades {item.is_graded ? `· Grado ${item.grade}` : "· Sin grading"}</span>
                 </span>
               </Link>

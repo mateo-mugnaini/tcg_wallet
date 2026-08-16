@@ -1,4 +1,5 @@
 import styles from "./PricePanel.module.css";
+import { getConditionLabel } from "../../../../app/config/card-conditions.js";
 
 function formatCurrency(value, currency = "USD") {
   if (value === null || value === undefined) return "—";
@@ -49,7 +50,7 @@ function NormalHistory({ list }) {
         <ul>
           {list.slice(0, 5).map((price) => (
             <li key={price.id}>
-              <span>{price.condition} · {price.source}</span>
+              <span>{getConditionLabel(price.condition)} · {price.source}</span>
               <strong>{formatCurrency(price.price, price.currency)}</strong>
             </li>
           ))}

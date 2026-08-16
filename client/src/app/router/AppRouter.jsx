@@ -93,7 +93,6 @@ function AppRouter() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="catalog" element={<CatalogPage />} />
-                <Route path="catalog/tcgs/:tcgId" element={<CatalogDetailPage type="tcg" />} />
                 <Route path="catalog/sets/:setId" element={<CatalogDetailPage type="set" />} />
                 <Route path="catalog/cards/:cardId" element={<CatalogDetailPage type="card" />} />
                 <Route path="catalog/cards/:cardId/prices" element={<CardPricesPage />} />

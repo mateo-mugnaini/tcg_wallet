@@ -13,6 +13,7 @@ import {
   getPriceAggregations,
 } from "../../redux/actions/prices/get/prices.actions.js";
 import { clearPrices } from "../../redux/slices/prices.slice.js";
+import { getConditionLabel } from "../../app/config/card-conditions.js";
 import CollectionItemForm from "./components/CollectionItemForm/CollectionItemForm.jsx";
 import PriceHistoryChart from "./components/PriceHistoryChart/PriceHistoryChart.jsx";
 import styles from "./CollectionDetailPage.module.css";
@@ -235,7 +236,7 @@ function CollectionDetailPage() {
               </div>
 
               <dl className={styles.details}>
-                <div><dt>Condición</dt><dd>{selectedItem.condition}</dd></div>
+                <div><dt>Condición</dt><dd>{getConditionLabel(selectedItem.condition)}</dd></div>
                 <div><dt>Estado</dt><dd>{selectedItem.is_graded ? selectedItem.grading_company?.name || "Gradada" : "Sin grading"}</dd></div>
                 <div><dt>Nota</dt><dd>{selectedItem.is_graded ? selectedItem.grade : "—"}</dd></div>
                 <div><dt>La tienes desde</dt><dd>{formatDate(selectedItem.created_at)}</dd></div>

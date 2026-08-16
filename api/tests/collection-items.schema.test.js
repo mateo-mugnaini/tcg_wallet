@@ -56,6 +56,19 @@ describe("collection items schemas", () => {
     });
   });
 
+  it("keeps an explicit null grade as null for an ungraded item", () => {
+    const result = createCollectionItemSchema.parse({
+      cardId,
+      quantity: 1,
+      condition: "Near Mint",
+      isGraded: false,
+      gradingCompanyId: null,
+      grade: null,
+    });
+
+    expect(result.grade).toBeNull();
+  });
+
   it("accepts graded updates and validates item params", () => {
     expect(
       updateCollectionItemSchema.parse({

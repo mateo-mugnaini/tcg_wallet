@@ -11,9 +11,12 @@ const booleanQuerySchema = z.preprocess(
   z.boolean().optional(),
 );
 
-const nullableGradeSchema = z
-  .union([z.coerce.number().min(0).max(10), z.null()])
-  .default(null);
+const nullableGradeInputSchema = z.preprocess(
+  (value) => (value === "" ? null : value),
+  z.union([z.null(), z.coerce.number().min(0).max(10)]),
+);
+
+const nullableGradeSchema = nullableGradeInputSchema.default(null);
 
 export const collectionItemIdParamsSchema = z.object({
   id: z.string().uuid(),
@@ -51,7 +54,7 @@ export const updateCollectionItemSchema = z.object({
   condition: z.string().trim().min(1).max(100).optional(),
   isGraded: z.boolean().optional(),
   gradingCompanyId: z.string().uuid().nullable().optional(),
-  grade: z.union([z.coerce.number().min(0).max(10), z.null()]).optional(),
+  grade: nullableGradeInputSchema.optional(),
 });
 
 const collectionValueItemSchema = z.object({

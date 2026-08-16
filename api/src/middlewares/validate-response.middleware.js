@@ -10,6 +10,14 @@ export function validateResponse(schema) {
     const originalJson = res.json.bind(res);
 
     res.json = (data) => {
+      // Los errores pertenecen al contrato de error de la API, no al contrato
+      // exitoso de la ruta. Validarlos aquí ocultaría el error original y
+      // podría hacer que Express termine devolviendo HTML.
+      if (res.statusCode >= 400) {
+        res.json = originalJson;
+        return originalJson(data);
+      }
+
       const result = schema.safeParse(data);
 
       /* ====================================

@@ -1,4 +1,5 @@
 import styles from "./TopValuedItems.module.css";
+import { getConditionLabel } from "../../../../app/config/card-conditions.js";
 
 function TopValuedItems({ items, currency, formatCurrency }) {
   return (
@@ -28,7 +29,7 @@ function TopValuedItems({ items, currency, formatCurrency }) {
                   <td>
                     <strong>{item.cardName}</strong>
                     <span>
-                      {item.setName} · {item.condition}
+                      {item.setName} · {getConditionLabel(item.condition)}
                       {item.priceMatch === "fallback" ? " · Estimación base" : ""}
                     </span>
                   </td>

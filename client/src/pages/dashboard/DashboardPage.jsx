@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
+import { getConditionLabel } from "../../app/config/card-conditions.js";
 import { getCollectionStats, getCollectionValue } from "../../redux/actions/collection/get/collection.actions.js";
 import { debugLog } from "../../lib/debug/logger.js";
 import BreakdownCard from "./components/BreakdownCard/BreakdownCard.jsx";
@@ -117,6 +118,7 @@ function DashboardPage() {
               formatValue={(item) => `${item.distinctCards} distintas`}
               items={stats?.byCondition || []}
               nameKey="condition"
+              formatName={getConditionLabel}
               title="Por condición"
             />
             <BreakdownCard
@@ -125,13 +127,6 @@ function DashboardPage() {
               items={stats?.bySet || []}
               nameKey="setName"
               title="Por set"
-            />
-            <BreakdownCard
-              emptyLabel="Sin TCGs registrados."
-              formatValue={(item) => `${item.distinctCards} distintas`}
-              items={stats?.byTcg || []}
-              nameKey="tcgName"
-              title="Por TCG"
             />
             <BreakdownCard
               emptyLabel="Sin cartas gradadas."

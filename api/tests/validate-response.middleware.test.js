@@ -35,4 +35,28 @@ describe("validateResponse middleware", () => {
       message: "Error controlado",
     });
   });
+
+  it("does not replace an application error with a success-contract error", () => {
+    const next = vi.fn();
+    const originalJson = vi.fn();
+    const response = {
+      statusCode: 400,
+      json: originalJson,
+    };
+    const request = {
+      requestId: "request-error-test",
+      method: "POST",
+      originalUrl: "/collection-items",
+    };
+
+    validateResponse(z.object({ data: z.string() }))(request, response, next);
+    next.mockClear();
+    response.json({ status: "error", message: "Una carta no gradada no puede tener una calificaciÃ³n" });
+
+    expect(next).not.toHaveBeenCalled();
+    expect(originalJson).toHaveBeenCalledWith({
+      status: "error",
+      message: "Una carta no gradada no puede tener una calificaciÃ³n",
+    });
+  });
 });

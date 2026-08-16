@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
+import { CARD_CONDITION_OPTIONS } from "../../app/config/card-conditions.js";
 import { getCardById } from "../../redux/actions/catalog/get/catalog.actions.js";
 import { getGradingCompanies } from "../../redux/actions/grading/get/grading.actions.js";
 import {
@@ -72,7 +73,10 @@ function CardPricesPage() {
           <form className={styles.filters} onSubmit={(event) => { event.preventDefault(); setNormalQuery(normalDraft); }}>
             <h3>Precio normal</h3>
             <label>Fuente<input maxLength="100" onChange={(event) => setNormalDraft((current) => ({ ...current, source: event.target.value }))} placeholder="TCGPlayer..." value={normalDraft.source} /></label>
-            <label>Condición<input maxLength="100" onChange={(event) => setNormalDraft((current) => ({ ...current, condition: event.target.value }))} placeholder="Near Mint..." value={normalDraft.condition} /></label>
+            <label>Condición<select onChange={(event) => setNormalDraft((current) => ({ ...current, condition: event.target.value }))} value={normalDraft.condition}>
+              <option value="">Todas</option>
+              {CARD_CONDITION_OPTIONS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+            </select></label>
             <PeriodSelect value={normalDraft.period} onChange={(event) => setNormalDraft((current) => ({ ...current, period: event.target.value }))} />
             <button type="submit">Aplicar</button>
           </form>

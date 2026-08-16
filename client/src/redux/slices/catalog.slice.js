@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   getCardById,
   getCards,
+  getAllSets,
   getSetById,
   getSets,
   getTcgById,
@@ -37,6 +38,10 @@ const catalogSlice = createSlice({
       state.selectedTcg = null;
       state.selectedSet = null;
       state.selectedCard = null;
+      state.cards = [];
+      state.pagination.cards = initialState.pagination.cards;
+      state.resourceStatus.cards = "idle";
+      state.resourceErrors.cards = null;
     },
   },
   extraReducers: (builder) => {
@@ -82,6 +87,22 @@ const catalogSlice = createSlice({
         state.resourceStatus.sets = "failed";
         state.resourceErrors.sets = action.payload;
       })
+      .addCase(getAllSets.pending, (state) => {
+        loading(state);
+        state.resourceStatus.sets = "loading";
+        state.resourceErrors.sets = null;
+      })
+      .addCase(getAllSets.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.sets = action.payload?.data || [];
+        state.pagination.sets = action.payload?.pagination || initialState.pagination.sets;
+        state.resourceStatus.sets = "succeeded";
+      })
+      .addCase(getAllSets.rejected, (state, action) => {
+        failed(state, action);
+        state.resourceStatus.sets = "failed";
+        state.resourceErrors.sets = action.payload;
+      })
       .addCase(getCards.pending, (state) => {
         loading(state);
         state.resourceStatus.cards = "loading";
@@ -101,19 +122,19 @@ const catalogSlice = createSlice({
       .addCase(getTcgById.pending, loading)
       .addCase(getTcgById.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.selectedTcg = action.payload?.data || null;
+        state.selectedTcg = action.payload?.data || action.payload || null;
       })
       .addCase(getTcgById.rejected, failed)
       .addCase(getSetById.pending, loading)
       .addCase(getSetById.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.selectedSet = action.payload?.data || null;
+        state.selectedSet = action.payload?.data || action.payload || null;
       })
       .addCase(getSetById.rejected, failed)
       .addCase(getCardById.pending, loading)
       .addCase(getCardById.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.selectedCard = action.payload?.data || null;
+        state.selectedCard = action.payload?.data || action.payload || null;
       })
       .addCase(getCardById.rejected, failed);
   },

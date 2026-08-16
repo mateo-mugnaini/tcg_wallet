@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { ReactReduxContext } from "react-redux";
+import { CARD_CONDITION_OPTIONS, getConditionLabel } from "../../../../app/config/card-conditions.js";
 import { addNotification } from "../../../../redux/slices/notifications.slice.js";
 import styles from "./CollectionItemForm.module.css";
 
@@ -8,7 +9,7 @@ function getInitialForm(item) {
     cardId: item?.card_id || "",
     setId: item?.set_id || item?.set?.id || item?.card?.set_id || "",
     quantity: item?.quantity || 1,
-    condition: item?.condition || "Near Mint",
+    condition: item?.condition || "normal",
     isGraded: item?.is_graded || false,
     gradingCompanyId: item?.grading_company_id || "",
     grade: item?.grade ?? "",
@@ -32,6 +33,12 @@ function CollectionItemForm({
   const dispatch = reduxContext?.store?.dispatch || (() => {});
   const [form, setForm] = useState(() => getInitialForm(item));
   const [cardSearch, setCardSearch] = useState("");
+  const conditionOptions = CARD_CONDITION_OPTIONS.some(({ value }) => value === form.condition)
+    ? CARD_CONDITION_OPTIONS
+    : [
+      ...CARD_CONDITION_OPTIONS,
+      { value: form.condition, label: getConditionLabel(form.condition) },
+    ];
   const setError = (message) => {
     if (!message) return;
     dispatch(addNotification({
@@ -158,7 +165,9 @@ function CollectionItemForm({
         </label>
         <label>
           Condición
-          <input maxLength="100" onChange={(event) => change("condition", event.target.value)} required type="text" value={form.condition} />
+          <select onChange={(event) => change("condition", event.target.value)} required value={form.condition}>
+            {conditionOptions.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+          </select>
         </label>
       </div>
       <label className={styles.checkbox}>

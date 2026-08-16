@@ -1,4 +1,5 @@
 import styles from "./CardSummary.module.css";
+import { getConditionLabel } from "../../../../app/config/card-conditions.js";
 
 function formatCurrency(value, currency = "USD") {
   if (value === null || value === undefined) return "Sin precio";
@@ -50,7 +51,7 @@ function CardSummary({ card }) {
             <ul>
               {card.latest_prices.map((price) => (
                 <li key={price.id}>
-                  <span>{price.condition} · {price.source}</span>
+                  <span>{getConditionLabel(price.condition)} · {price.source}</span>
                   <strong>{formatCurrency(price.price, price.currency)}</strong>
                 </li>
               ))}
