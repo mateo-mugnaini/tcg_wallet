@@ -603,6 +603,8 @@ La auditoría `pnpm audit --prod` no reportó vulnerabilidades conocidas en las 
 
 Se añadió `scripts/monitor-health.js` para comprobaciones puntuales o continuas de liveness/readiness, con umbral de fallos consecutivos y webhook opcional. La integración con el sistema real de alertas queda pendiente de staging.
 
+GitHub Actions validó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
+
 Pendiente para cerrar la fase: ejecutar staging reproducible, backup/restore real, rollback operativo, conectar monitoring/alertas y completar la revisión final de vulnerabilidades.
 
 Checklist:
