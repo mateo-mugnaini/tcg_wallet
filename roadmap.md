@@ -2,7 +2,7 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 12 archivos y 63 tests; la suite de integración añade 3 tests PostgreSQL ejecutados correctamente.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 13 archivos y 66 tests; la suite de integración añade 3 tests PostgreSQL ejecutados correctamente.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
@@ -17,7 +17,10 @@
 - Se incorporó el comando oficial `pnpm lint` y ESLint ejecuta sin errores ni warnings.
 - Se amplió `api/check_schema.js` para auditar las nueve tablas principales, columnas, constraints e índices sin modificar datos.
 - Se añadió `pnpm test:integration` con 3 pruebas de lectura de repositories contra PostgreSQL.
-- Validación realizada: `pnpm.cmd test:run` pasa con 12 archivos y 63 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd lint` pasa correctamente.
+- Se añadieron pruebas HTTP end-to-end para health, validación de login y autenticación de colección.
+- Se añadió `pnpm db:explain` para medir cuatro consultas críticas sin modificar datos.
+- Se preparó `api/migrations/001_critical_read_indexes.sql` para los dos scans secuenciales detectados; no se aplicó automáticamente.
+- Validación realizada: `pnpm.cmd test:run` pasa con 13 archivos y 66 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd db:explain` y `pnpm.cmd lint` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
@@ -29,9 +32,9 @@
 | 05 | Catálogo avanzado | **En progreso** | Completar tests de integración y normalización restante de filtros en sets/TCGs. |
 | 06 | Validación Zod completa | **En progreso** | Auth, users y catálogo ya tienen schemas conectados; faltan responses menores y normalización adicional. |
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
-| 08 | Testing profesional | **En progreso** | 12 archivos y 63 tests normales + 3 tests PostgreSQL; ampliar API end-to-end y operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso** | 13 archivos y 66 tests normales + 3 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
-| 10 | Índices y optimización DB | **En progreso** | Inventario verificado; ejecutar EXPLAIN y crear migrations/índices solo con evidencia. |
+| 10 | Índices y optimización DB | **En progreso** | EXPLAIN ejecutado y migration preparada; falta revisión/aplicación controlada y comparar planes posteriores. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |
 | 13 | Swagger/OpenAPI | **Pendiente** | Publicar contrato de la API. |
@@ -947,9 +950,9 @@ La prioridad recomendada queda así:
 
 # 18. Siguiente bloque de implementación
 
-El siguiente bloque ejecutado fue testing unitario de catálogo y colección, seguido por 3 pruebas de repositories contra PostgreSQL. Actualmente existe evidencia reproducible de 13 archivos y 66 tests ejecutados.
+El siguiente bloque ejecutado fue testing unitario de catálogo y colección, 3 pruebas de repositories contra PostgreSQL y 3 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 14 archivos y 69 tests ejecutados.
 
-Por lo tanto, el siguiente bloque lógico es ampliar API end-to-end, medir EXPLAIN de queries críticas y preparar migrations versionadas.
+Por lo tanto, el siguiente bloque lógico es revisar/aplicar controladamente la migration de índices, comparar EXPLAIN posterior y ampliar tests de operaciones de escritura aisladas.
 
 ## Módulo siguiente — Testing de repository/API y limpieza de capas
 

@@ -1,6 +1,6 @@
 # TCG Wallet API — Project Context
 
-> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 13 archivos y 66 tests ejecutados (63 normales + 3 de integración).
+> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 14 archivos y 69 tests ejecutados (66 normales + 3 de integración).
 >
 > Regla de evidencia: si un dato no puede comprobarse en código o mediante una ejecución reproducible, se marca **NO VERIFICADO**. Si aparece solamente en roadmap/historial y no en código actual, se marca **PLANIFICADO / NO VERIFICADO EN CÓDIGO**.
 
@@ -39,7 +39,7 @@ El módulo graded_card_prices tiene implementados sus cinco endpoints de consult
 | helmet | ^8.3.0 | Headers de seguridad activos en app.js. |
 | cors | ^2.8.6 | CORS por entorno activo en app.js. |
 | dotenv | ^17.4.2 | Carga de .env. |
-| vitest | ^4.1.10 | Runner; 12 archivos y 63 tests normales, más 3 tests de integración PostgreSQL. |
+| vitest | ^4.1.10 | Runner; 13 archivos y 66 tests normales, más 3 tests de integración PostgreSQL. |
 | nodemon | ^3.1.14 | Desarrollo. |
 | ESLint | ^10.8.1 | Lint ejecutable; globals está declarado como dependencia de desarrollo. |
 | Prettier | ^3.9.6 | Formato. |
@@ -549,6 +549,8 @@ pnpm start     -> node src/server.js
 pnpm test      -> vitest
 pnpm test:run  -> vitest run --exclude tests/repositories.integration.test.js
 pnpm test:integration -> runner de Vitest con RUN_DB_TESTS=true contra PostgreSQL
+pnpm db:check:schema -> auditoría de schema PostgreSQL de solo lectura
+pnpm db:explain -> planes EXPLAIN de queries críticas de solo lectura
 pnpm lint -> eslint src tests
 ~~~
 
@@ -559,8 +561,9 @@ check_schema.js es diagnóstico de solo lectura. Audita las nueve tablas princip
 Resultado real de esta revisión:
 
 - Import de src/app.js: OK; verifica carga de módulos, no endpoints ni DB.
-- pnpm.cmd test:run: OK; 12 archivos y 63 tests de contratos, catálogo, servicios, colección, autorización, seguridad y operaciones.
+- pnpm.cmd test:run: OK; 13 archivos y 66 tests de contratos, catálogo, servicios, colección, API HTTP, autorización, seguridad y operaciones.
 - pnpm.cmd test:integration: OK; 1 archivo y 3 tests de repositories contra PostgreSQL en el puerto 2203.
+- pnpm.cmd db:explain: OK; cuatro planes críticos inspeccionados y dos oportunidades de índices identificadas.
 - pnpm.cmd db:check:schema: OK; nueve tablas, constraints e índices inventariados.
 - pnpm.cmd exec eslint src tests: OK, sin errores ni warnings, después de declarar globals en devDependencies.
 - Import del shim legacy: conserva compatibilidad y delega al pipeline activo.
@@ -631,9 +634,9 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 05 | Catálogo avanzado | **En progreso**; filtros y normalización de orden cubiertos, faltan tests de integración y normalización restante. |
 | 06 | Validación Zod completa | **En progreso**; auth/users y catálogo tienen schemas conectados, faltan respuestas menores y normalización adicional. |
 | 07 | Limpieza Controller/Service/Repository | **En progreso**; pipeline duplicado resuelto con shim, queda retirar validación duplicada restante. |
-| 08 | Testing profesional | **En progreso**; 13 archivos y 66 tests ejecutados, incluyendo 3 de repositories contra PostgreSQL; faltan API end-to-end y más operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso**; 14 archivos y 69 tests ejecutados, incluyendo 3 de repositories PostgreSQL y 3 API HTTP; faltan operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies, Helmet/CORS y syncs costosos protegidos por admin; quedan rate limits distribuidos, CSRF y validación de producción. |
-| 10 | Índices y optimización DB | **En progreso**; inventario de índices verificado, faltan EXPLAIN, migrations y creación justificada de índices. |
+| 10 | Índices y optimización DB | **En progreso**; inventario y EXPLAIN verificados, migration preparada; falta aplicación controlada y comparación posterior. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
 | 12 | Logging/Observabilidad | Pendiente; console logging. |
 | 13 | Swagger/OpenAPI | Pendiente. |

@@ -11,7 +11,9 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
 - Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
 - Se agregaron pruebas de filtros y contratos del catálogo.
-- Validación actual: `pnpm.cmd test:run` pasa con 12 archivos y 63 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
+- `pnpm.cmd test:run` pasó con 13 archivos y 66 tests, incluyendo 3 pruebas HTTP end-to-end.
+- `pnpm.cmd db:explain` inspeccionó cuatro consultas críticas y dejó preparada una migration para los scans secuenciales detectados.
+- Validación actual: `pnpm.cmd test:run` pasa con 13 archivos y 66 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
 - `pnpm.cmd db:check:schema` inventarió las nueve tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
 - `pnpm.cmd test:integration` pasó con 3 tests de lectura de repositories contra PostgreSQL.
@@ -29,9 +31,10 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
 - Validación adicional: `pnpm.cmd test:run` OK con 12 archivos y 63 tests de contratos, catálogo, servicios, colección, autorización, JWT, refresh rotation, hardening y operaciones.
 - Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 3 tests de repositories contra PostgreSQL.
+- Validación adicional: `pnpm.cmd db:explain` OK con cuatro planes críticos; la migration de índices está preparada, todavía no aplicada.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
-- Siguiente tarea: ampliar tests API end-to-end, medir EXPLAIN de queries críticas y preparar migrations versionadas.
+- Siguiente tarea: revisar/aplicar controladamente la migration de índices, comparar EXPLAIN posterior y ampliar tests de escritura aislados.
 
 ## 1. Estado inicial
 
