@@ -1,18 +1,18 @@
 .page {
   display: grid;
-  gap: 28px;
+  gap: var(--space-8);
 }
 
 .header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .eyebrow {
-  margin: 0 0 8px;
-  color: #5eead4;
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent);
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.15em;
@@ -21,58 +21,58 @@
 
 .title {
   margin: 0;
-  color: #f8fafc;
+  color: var(--color-text-primary);
   font-size: clamp(2rem, 5vw, 3.8rem);
   letter-spacing: -0.06em;
 }
 
 .description {
   max-width: 650px;
-  margin: 12px 0 0;
-  color: #94a3b8;
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
   line-height: 1.6;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .twoColumns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .card {
-  padding: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.72);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
 }
 
 .card h2,
 .card h3 {
-  margin: 0 0 8px;
-  color: #f8fafc;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-primary);
 }
 
 .metric {
   display: block;
-  color: #5eead4;
+  color: var(--color-accent);
   font-size: 2rem;
   font-weight: 800;
 }
 
 .muted {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   font-size: 0.86rem;
 }
 
 .list {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -83,31 +83,31 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  color: #cbd5e1;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 
 .link {
-  color: #a5b4fc;
+  color: var(--color-link);
   text-decoration: none;
 }
 
 .link:hover {
-  color: #c4b5fd;
+  color: var(--color-accent);
 }
 
 .notice,
 .error {
-  padding: 14px 16px;
-  border-radius: 10px;
-  color: #cbd5e1;
-  background: rgba(30, 41, 59, 0.8);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-raised);
 }
 
 .error {
   color: #fecdd3;
-  background: rgba(127, 29, 29, 0.32);
+  background: var(--color-danger-surface);
 }
 
 @media (max-width: 760px) {

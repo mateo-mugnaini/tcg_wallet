@@ -43,9 +43,10 @@ The development server runs at `http://localhost:5173`.
 
 ```bash
 pnpm lint
+pnpm test
 pnpm build
 ```
 
 Copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL` when the API is ready to be connected. Do not commit `.env.local` or secrets.
 
-Component-scoped styles use the `*.module.css` convention. Global resets and design tokens belong in `src/index.css`.
+Component-scoped styles use the `*.module.css` convention. Global resets and design tokens belong in `src/styles/global.css`.

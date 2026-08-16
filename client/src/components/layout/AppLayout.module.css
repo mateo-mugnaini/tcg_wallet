@@ -61,6 +61,8 @@
 
 .menuButton {
   display: none;
+  min-width: 44px;
+  min-height: 44px;
   padding: 7px 10px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
@@ -70,6 +72,9 @@
 
 .link,
 .activeLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--color-text-muted);
   font-size: 0.88rem;
   font-weight: 700;
@@ -139,22 +144,9 @@
   }
 
   .navigation {
+    display: none;
     order: 3;
     width: 100%;
-    gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
-}
-
-@media (max-width: 540px) {
-  .accountName,
-  .role {
-    display: none;
-  }
-
-  .navigation {
-    display: none;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
@@ -168,5 +160,17 @@
   .link,
   .activeLink {
     padding: 11px 4px;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 540px) {
+  .accountName,
+  .role {
+    display: none;
+  }
+
+  .account {
+    gap: 8px;
   }
 }

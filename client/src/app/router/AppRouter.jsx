@@ -6,6 +6,7 @@ import {
   Outlet,
   Route,
   Routes,
+  useLocation,
 } from "react-router-dom";
 import SessionLoading from "../../components/routing/SessionLoading.jsx";
 import AdminRoute from "../../components/routing/AdminRoute.jsx";
@@ -67,9 +68,21 @@ function AuthRoute() {
   return accessToken ? <Navigate to="/dashboard" replace /> : <AuthPages />;
 }
 
+function RouteFocus() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const mainContent = document.getElementById("main-content");
+    mainContent?.focus({ preventScroll: true });
+  }, [location.pathname]);
+
+  return null;
+}
+
 function AppRouter() {
   return (
     <BrowserRouter>
+      <RouteFocus />
       <SessionBootstrap>
         <Routes>
           <Route path="/auth" element={<AuthRoute />} />
