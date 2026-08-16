@@ -15,6 +15,10 @@ const collectionSlice = createSlice({
     value: null,
     status: "idle",
     error: null,
+    statsStatus: "idle",
+    statsError: null,
+    valueStatus: "idle",
+    valueError: null,
   },
   reducers: {
     clearCollectionError: (state) => {
@@ -43,11 +47,31 @@ const collectionSlice = createSlice({
         state.selectedItem = action.payload?.data || null;
       })
       .addCase(getCollectionItemById.rejected, failed)
+      .addCase(getCollectionStats.pending, (state) => {
+        state.statsStatus = "loading";
+        state.statsError = null;
+      })
       .addCase(getCollectionStats.fulfilled, (state, action) => {
+        state.statsStatus = "succeeded";
+        state.statsError = null;
         state.stats = action.payload?.data || null;
       })
+      .addCase(getCollectionStats.rejected, (state, action) => {
+        state.statsStatus = "failed";
+        state.statsError = action.payload;
+      })
+      .addCase(getCollectionValue.pending, (state) => {
+        state.valueStatus = "loading";
+        state.valueError = null;
+      })
       .addCase(getCollectionValue.fulfilled, (state, action) => {
+        state.valueStatus = "succeeded";
+        state.valueError = null;
         state.value = action.payload?.data || null;
+      })
+      .addCase(getCollectionValue.rejected, (state, action) => {
+        state.valueStatus = "failed";
+        state.valueError = action.payload;
       });
   },
 });
