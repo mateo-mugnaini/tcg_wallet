@@ -29,4 +29,8 @@ export const testDatabaseConnection = async () => {
   }
 };
 
+export const closeDatabasePool = async () => {
+  await pool.end();
+};
+
 export default pool;

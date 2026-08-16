@@ -33,6 +33,7 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(30000),
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
 
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -75,6 +76,11 @@ if (
   process.exit(1);
 }
 
+if (parsedEnv.data.NODE_ENV === "production" && !parsedEnv.data.DATABASE_SSL) {
+  logger.error("database_ssl_required_for_production");
+  process.exit(1);
+}
+
 /* ====================================
           CONFIGURACIÓN DE ENV
 ==================================== */
@@ -82,6 +88,7 @@ if (
 const env = {
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
+  shutdownTimeoutMs: parsedEnv.data.SHUTDOWN_TIMEOUT_MS,
 
   database: {
     host: parsedEnv.data.DATABASE_HOST,

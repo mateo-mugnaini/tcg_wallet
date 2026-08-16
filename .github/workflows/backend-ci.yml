@@ -1,0 +1,103 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "api/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "api/**"
+      - ".github/workflows/backend-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: tcg_wallet_ci
+          POSTGRES_USER: tcg_wallet_ci
+          POSTGRES_PASSWORD: tcg_wallet_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tcg_wallet_ci -d tcg_wallet_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: api
+
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: 5432
+      DATABASE_NAME: tcg_wallet_ci
+      DATABASE_USER: tcg_wallet_ci
+      DATABASE_PASSWORD: tcg_wallet_ci_password
+      DATABASE_SSL: "false"
+      DATABASE_SSL_REJECT_UNAUTHORIZED: "true"
+      JWT_ACCESS_SECRET: ci-access-secret-long-enough-for-tests-123
+      JWT_REFRESH_SECRET: ci-refresh-secret-long-enough-for-tests-123
+      CORS_ORIGIN_DEV: http://localhost:5173
+      CORS_ORIGIN_PRODUCTION: https://example.invalid
+      POKEMON_TCG_API_KEY: ci-test-key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply database migrations
+        run: pnpm db:migrate
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run unit and HTTP tests
+        run: pnpm test:run
+
+      - name: Run PostgreSQL integration tests
+        run: pnpm test:integration
+
+      - name: Validate OpenAPI
+        run: pnpm check:openapi
+
+      - name: Start API for smoke tests
+        run: |
+          pnpm start > /tmp/tcg-wallet-api.log 2>&1 &
+          echo $! > /tmp/tcg-wallet-api.pid
+
+      - name: Run deployment smoke tests
+        run: pnpm check:smoke
+        env:
+          BASE_URL: http://127.0.0.1:3000/api
+
+      - name: Stop API after smoke tests
+        if: always()
+        run: |
+          if [ -f /tmp/tcg-wallet-api.pid ]; then
+            kill "$(cat /tmp/tcg-wallet-api.pid)" || true
+          fi

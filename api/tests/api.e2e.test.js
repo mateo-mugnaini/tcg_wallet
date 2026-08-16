@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import app from "../src/app.js";
+import { markShuttingDown, resetAppState } from "../src/runtime/app-state.js";
 
 let server;
 let baseUrl;
@@ -18,6 +19,10 @@ afterAll(async () => {
   await new Promise((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });
+});
+
+afterEach(() => {
+  resetAppState();
 });
 
 async function request(path, options = {}) {
@@ -66,6 +71,18 @@ describe("API end-to-end contracts", () => {
     expect(response.status).toBe(200);
     expect(body.status).toBe("ready");
     expect(body.checks.database).toBe("ok");
+  });
+
+  it("reports the application as unavailable while shutting down", async () => {
+    markShuttingDown();
+
+    const { response, body } = await request("/api/health/ready");
+
+    expect(response.status).toBe(503);
+    expect(body).toEqual({
+      status: "not_ready",
+      checks: { app: "shutting_down" },
+    });
   });
 
   it("exposes aggregated HTTP metrics", async () => {

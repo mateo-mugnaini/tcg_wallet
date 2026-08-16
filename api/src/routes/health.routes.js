@@ -3,6 +3,7 @@ import express from "express";
 import pool from "../config/database.js";
 import { logger } from "../utils/logger.js";
 import { getMetricsSnapshot } from "../utils/metrics.js";
+import { isAcceptingRequests } from "../runtime/app-state.js";
 
 const router = express.Router();
 
@@ -17,6 +18,15 @@ router.get("/health/live", liveness);
 
 router.get("/health/ready", async (req, res) => {
   const startedAt = process.hrtime.bigint();
+
+  if (!isAcceptingRequests()) {
+    return res.status(503).json({
+      status: "not_ready",
+      checks: {
+        app: "shutting_down",
+      },
+    });
+  }
 
   try {
     await pool.query("SELECT 1");

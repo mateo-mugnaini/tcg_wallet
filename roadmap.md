@@ -2,7 +2,7 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 16 archivos y 81 tests; la suite de integración añade 5 tests PostgreSQL ejecutados correctamente.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 16 archivos y 82 tests; la suite de integración añade 5 tests PostgreSQL ejecutados correctamente.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
@@ -29,7 +29,12 @@
 - Se implementó una cola interna de jobs de sincronización con estados queued/running/succeeded/failed, duración, resumen, error seguro y bloqueo de concurrencia; los endpoints asíncronos responden `202`.
 - Se implementó una cola persistente PostgreSQL de jobs de sincronización con estados, duración, resumen, error seguro, recuperación de jobs obsoletos y claim con `SKIP LOCKED`; los endpoints async responden `202`.
 - Los endpoints legacy de sets, cards, prices y pipeline ahora disparan jobs y conservan el advisory lock como protección adicional; ninguna sincronización larga queda dentro del ciclo HTTP.
-- Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 81 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
+- Se implementó graceful shutdown: `SIGTERM`/`SIGINT` detienen la cola, dejan readiness en `503`, cierran HTTP con timeout configurable y finalizan el pool PostgreSQL.
+- Se reforzó la configuración productiva exigiendo SSL de PostgreSQL y se añadió `SHUTDOWN_TIMEOUT_MS` con valor seguro por defecto.
+- Se añadió workflow de CI para instalar, migrar, ejecutar tests, integración, lint, validar OpenAPI y ejecutar smoke tests contra una API levantada. Docker/Compose queda explícitamente diferido por decisión de alcance.
+- Se añadieron scripts de backup/restore PostgreSQL con formato custom y confirmación explícita para restore, además de `DEPLOYMENT_RUNBOOK.md` con staging, rollback y monitoring.
+- `pnpm audit --prod` no reportó vulnerabilidades conocidas en las dependencias de producción.
+- Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 82 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
@@ -41,14 +46,14 @@
 | 05 | Catálogo avanzado | **En progreso** | Completar tests de integración y normalización restante de filtros en sets/TCGs. |
 | 06 | Validación Zod completa | **En progreso** | Auth, users y catálogo ya tienen schemas conectados; faltan responses menores y normalización adicional. |
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
-| 08 | Testing profesional | **En progreso** | 16 archivos y 81 tests normales + 5 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso** | 16 archivos y 82 tests normales + 5 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
 | 10 | Índices y optimización DB | **En progreso** | Migration aplicada y verificada; ampliar mediciones con volumen real y revisar planes de consultas graded/colección. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Finalizado** | Logger JSON, redacción, request IDs, métricas HTTP, liveness/readiness y stack traces controlados implementados y validados. |
 | 13 | Swagger/OpenAPI | **Finalizado** | Contrato OpenAPI 3.0.3 publicado en `/api/docs/openapi.json`, validado automáticamente y cubierto por test HTTP. |
 | 14 | Background Jobs | **Finalizado** | Cola persistente, recuperación, claim distribuido, bloqueo de concurrencia y endpoints async implementados; legacy convertido a disparador `202`. |
-| 15 | Production Readiness | **Pendiente** | Deploy, shutdown, backups, CI/CD y monitoring. |
+| 15 | Production Readiness | **En progreso** | Shutdown, CI/CD base, runbook, scripts de backup/restore y monitoring documentado implementados; Docker/Compose diferido; quedan ejecutar staging real, probar restore/rollback y conectar alertas operativas. |
 | 16 | Frontend | **Fuera del backend actual** | Iniciar después de estabilizar la API. |
 
 ### Orden ejecutable actualizado
@@ -66,9 +71,9 @@
 9. Transacciones restantes
 10. Logging y observabilidad
 11. Swagger/OpenAPI
-12. Background Jobs
-13. Production Readiness
-14. Frontend
+14. Background Jobs
+15. Production Readiness
+16. Frontend
 ```
 
 La numeración histórica de las fases se conserva más abajo para no perder contexto, pero el estado y el orden de ejecución válidos son los de esta sección y `ROADMAP_IMPLEMENTATION_PLAN.md`.
@@ -807,7 +812,7 @@ Para operaciones que requieran consistencia entre múltiples tablas.
 
 ---
 
-# 14. Fase 13 — Jobs y tareas automáticas
+# 14. Fase 14 — Jobs y tareas automáticas
 
 Actualmente la sincronización se ejecuta mediante endpoints.
 
@@ -837,7 +842,7 @@ Esto evitará mantener una request HTTP abierta durante sincronizaciones largas.
 
 ---
 
-# 15. Fase 14 — Production Readiness
+# 15. Fase 15 — Production Readiness
 
 Antes del deployment:
 
@@ -850,8 +855,7 @@ Antes del deployment:
 * graceful shutdown
 * PostgreSQL pool tuning
 * manejo de SIGTERM/SIGINT
-* Docker
-* Docker Compose
+* Docker/Compose: diferido por decisión de alcance
 * CI/CD
 * migrations automáticas
 * backups
@@ -859,7 +863,7 @@ Antes del deployment:
 
 ---
 
-# 16. Fase 15 — Frontend
+# 16. Fase 16 — Frontend
 
 Una vez estabilizada la API, comenzar el frontend.
 
@@ -961,7 +965,7 @@ La prioridad recomendada queda así:
 
 # 18. Siguiente bloque de implementación
 
-El siguiente bloque ejecutado fue testing unitario de catálogo, colección y precios, 5 pruebas de repositories contra PostgreSQL y 8 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 16 archivos y 81 tests normales ejecutados.
+El siguiente bloque ejecutado fue testing unitario de catálogo, colección y precios, 5 pruebas de repositories contra PostgreSQL y 9 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 16 archivos y 82 tests normales ejecutados.
 
 Por lo tanto, el siguiente bloque lógico es ampliar tests de operaciones de escritura aisladas y seguir con observabilidad/limpieza de capas; la optimización DB continúa con mediciones de volumen real.
 

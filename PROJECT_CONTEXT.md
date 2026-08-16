@@ -1,6 +1,6 @@
 # TCG Wallet API — Project Context
 
-> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 16 archivos y 86 tests ejecutados (81 normales + 5 de integración).
+> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 16 archivos y 87 tests ejecutados (82 normales + 5 de integración).
 >
 > Regla de evidencia: si un dato no puede comprobarse en código o mediante una ejecución reproducible, se marca **NO VERIFICADO**. Si aparece solamente en roadmap/historial y no en código actual, se marca **PLANIFICADO / NO VERIFICADO EN CÓDIGO**.
 
@@ -39,7 +39,7 @@ El módulo graded_card_prices tiene implementados sus cinco endpoints de consult
 | helmet | ^8.3.0 | Headers de seguridad activos en app.js. |
 | cors | ^2.8.6 | CORS por entorno activo en app.js. |
 | dotenv | ^17.4.2 | Carga de .env. |
-| vitest | ^4.1.10 | Runner; 16 archivos y 81 tests normales, más 5 tests de integración PostgreSQL. |
+| vitest | ^4.1.10 | Runner; 16 archivos y 82 tests normales, más 5 tests de integración PostgreSQL. |
 | nodemon | ^3.1.14 | Desarrollo. |
 | ESLint | ^10.8.1 | Lint ejecutable; globals está declarado como dependencia de desarrollo. |
 | Prettier | ^3.9.6 | Formato. |
@@ -104,10 +104,12 @@ Archivos centrales:
 
 - Se consolidó el pipeline de sincronización: `src/services/sync.pipeline.service.js` ahora es únicamente un re-export de compatibilidad hacia `src/syncs`.
 - Se creó `src/schemas/common.schema.js` y se normaliza `sortOrder` como `ASC`/`DESC` en TCGs, sets, cards, colección y usuarios.
-- La suite tiene 81 tests normales en 16 archivos y añade 5 tests de integración PostgreSQL.
+- La suite tiene 82 tests normales en 16 archivos y añade 5 tests de integración PostgreSQL.
 - ESLint ya ejecuta correctamente después de declarar `globals` en `api/package.json`; la ejecución final no tuvo errores ni warnings.
 - Se implementó logging JSON estructurado con redacción de secretos, request IDs y trazabilidad HTTP; toda la capa `api/src` ya usa el logger y no conserva logs directos fuera de `utils/logger.js`. También existen métricas HTTP, liveness, readiness con PostgreSQL y stack traces controlados.
 - Se implementó una cola persistente PostgreSQL para sets, cards, prices y pipeline, con endpoints admin async, estados, duración, resumen, errores seguros, recuperación de jobs obsoletos y claim distribuido. Los endpoints legacy ahora son disparadores `202`; el flujo real persistir-reclamar-completar fue validado contra PostgreSQL.
+- Se implementó la base de producción reproducible con workflow `.github/workflows/backend-ci.yml`, smoke test `check:smoke`, scripts `db:backup`/`db:restore` y `DEPLOYMENT_RUNBOOK.md`. Docker/Compose queda diferido por decisión de alcance; la ejecución real de staging, restore, rollback y alertas continúa pendiente.
+- La auditoría actual de dependencias de producción (`pnpm audit --prod`) no reportó vulnerabilidades conocidas.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.
 
 ## 4. Arquitectura
@@ -530,6 +532,12 @@ DATABASE_PORT=<positive integer, default 5432>
 DATABASE_NAME=<database>
 DATABASE_USER=<user>
 DATABASE_PASSWORD=<secret>
+DATABASE_SSL=true|false (obligatorio true en production)
+DATABASE_SSL_REJECT_UNAUTHORIZED=true|false (default true)
+DATABASE_CONNECTION_TIMEOUT_MS=<positive integer, default 5000>
+DATABASE_IDLE_TIMEOUT_MS=<positive integer, default 30000>
+DATABASE_STATEMENT_TIMEOUT_MS=<positive integer, default 30000>
+SHUTDOWN_TIMEOUT_MS=<positive integer, default 10000>
 JWT_ACCESS_SECRET=<secret, minimum 32 characters>
 JWT_REFRESH_SECRET=<secret, minimum 32 characters>
 JWT_ACCESS_EXPIRES_IN=<duration, default 15m>
@@ -539,7 +547,7 @@ CORS_ORIGIN_PRODUCTION=<URL>
 POKEMON_TCG_API_KEY=<secret/API key>
 ~~~
 
-env.js valida al importar y termina el proceso si faltan/son inválidas. En producción rechaza placeholders inseguros de JWT. database.js usa los campos DATABASE_*. El cliente externo usa POKEMON_TCG_API_KEY. security.js elige origen CORS por NODE_ENV aunque CORS no está registrado en app.
+env.js valida al importar y termina el proceso si faltan/son inválidas. En producción rechaza placeholders inseguros de JWT y exige `DATABASE_SSL=true`. `database.js` usa los campos `DATABASE_*` y aplica timeouts de conexión, idle y sentencia. `server.js` usa `SHUTDOWN_TIMEOUT_MS` para evitar un apagado HTTP indefinidamente bloqueado. El cliente externo usa `POKEMON_TCG_API_KEY`. security.js elige origen CORS por NODE_ENV aunque CORS no está registrado en app.
 
 ## 22. Scripts auxiliares
 
@@ -563,7 +571,7 @@ check_schema.js es diagnóstico de solo lectura. Audita las diez tablas principa
 Resultado real de esta revisión:
 
 - Import de src/app.js: OK; verifica carga de módulos, no endpoints ni DB.
-- pnpm.cmd test:run: OK; 16 archivos y 81 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, seguridad, operaciones, readiness, métricas, OpenAPI, jobs y redacción de logs.
+- pnpm.cmd test:run: OK; 16 archivos y 82 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, seguridad, operaciones, readiness, métricas, OpenAPI, jobs y redacción de logs.
 - `pnpm.cmd test:integration`: OK; 1 archivo y 5 tests de repositories contra PostgreSQL, incluyendo persistir, reclamar y completar un job real.
 - `pnpm.cmd check:openapi`: OK; contrato OpenAPI 3.0.3 con 40 paths y 61 operaciones.
 - pnpm.cmd test:integration: OK; 1 archivo y 5 tests de repositories contra PostgreSQL en el puerto 2203.
@@ -639,14 +647,14 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 05 | Catálogo avanzado | **En progreso**; filtros y normalización de orden cubiertos, faltan tests de integración y normalización restante. |
 | 06 | Validación Zod completa | **En progreso**; auth/users y catálogo tienen schemas conectados, faltan respuestas menores y normalización adicional. |
 | 07 | Limpieza Controller/Service/Repository | **En progreso**; pipeline duplicado resuelto con shim, queda retirar validación duplicada restante. |
-| 08 | Testing profesional | **En progreso**; 16 archivos y 81 tests normales, incluyendo 5 de repositories PostgreSQL y 8 API HTTP; faltan operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso**; 16 archivos y 82 tests normales, incluyendo 5 de repositories PostgreSQL y 9 API HTTP; faltan operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies, Helmet/CORS y syncs costosos protegidos por admin; quedan rate limits distribuidos, CSRF y validación de producción. |
 | 10 | Índices y optimización DB | **En progreso**; inventario, EXPLAIN y migration aplicados/verificados; falta medir con volumen real y optimizar consultas restantes. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
 | 12 | Logging/Observabilidad | **Finalizado**; logger JSON, redacción de secretos, request IDs, métricas HTTP, liveness/readiness y stack traces controlados validados. |
 | 13 | Swagger/OpenAPI | **Finalizado**; contrato OpenAPI 3.0.3 publicado y validado con 40 paths y 61 operaciones. |
 | 14 | Background Jobs | **Finalizado**; cola persistente PostgreSQL, recuperación de jobs obsoletos, claim con `SKIP LOCKED`, bloqueo global y endpoints async validados; legacy convertido a disparador `202`. |
-| 15 | Production Readiness | Pendiente. |
+| 15 | Production Readiness | **En progreso**; graceful shutdown, CI/CD base, runbook y scripts de backup/restore implementados. Docker/Compose diferido. Quedan despliegue staging real, restore/rollback ejecutados y alertas conectadas. |
 | 16 | Frontend | Fuera del alcance; existe client, estado no analizado. |
 
 roadmap.md todavía presenta Collection avanzada como siguiente bloque, pero el código actual ya contiene CRUD, joins, filtros, stats/value y grading companies. El código actual tiene prioridad.

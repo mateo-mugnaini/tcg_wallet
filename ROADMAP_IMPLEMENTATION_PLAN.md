@@ -11,7 +11,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
 - Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
 - Se agregaron pruebas de filtros y contratos del catálogo.
-- `pnpm.cmd test:run` pasó con 16 archivos y 81 tests, incluyendo 8 pruebas HTTP end-to-end, readiness, métricas, OpenAPI, jobs y pruebas de redacción del logger.
+- `pnpm.cmd test:run` pasó con 16 archivos y 82 tests, incluyendo 9 pruebas HTTP end-to-end, readiness, métricas, OpenAPI, jobs y pruebas de redacción del logger.
 - `pnpm.cmd db:explain` inspeccionó cuatro consultas críticas y dejó preparada una migration para los scans secuenciales detectados.
 - `pnpm db:migrate` fue ejecutado en desarrollo con runner versionado, advisory lock y transacciones; `001_critical_read_indexes.sql` quedó registrada en `schema_migrations`.
 - Se implementó logging JSON estructurado, redacción recursiva de secretos, request IDs y trazabilidad HTTP; `error.middleware` registra errores correlacionados sin exponer secretos.
@@ -19,7 +19,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se agregaron métricas HTTP agregadas por endpoint, liveness, readiness con PostgreSQL y stack traces controlados por entorno.
 - Se publicó `GET /api/docs/openapi.json` con un contrato OpenAPI 3.0.3 de 40 paths y 61 operaciones, y se agregó `pnpm.cmd check:openapi`.
 - Se implementó una cola interna de sync jobs para sets, cards, prices y pipeline, con `202 Accepted`, consulta de estado, resumen, duración, error seguro y bloqueo de concurrencia.
-- Validación actual: `pnpm.cmd test:run` pasa con 16 archivos y 81 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi` y `pnpm.cmd exec eslint src tests scripts` pasan sin errores ni warnings.
+- Validación actual: `pnpm.cmd test:run` pasa con 16 archivos y 82 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi` y `pnpm.cmd exec eslint src tests scripts` pasan sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
 - `pnpm.cmd db:check:schema` inventarió las diez tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
 - `pnpm.cmd test:integration` pasó con 5 tests de repositories contra PostgreSQL, incluyendo persistir, reclamar y completar un job real.
@@ -35,7 +35,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm.cmd test:run` OK con 16 archivos y 81 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones, logging, OpenAPI y jobs.
+- Validación adicional: `pnpm.cmd test:run` OK con 16 archivos y 82 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones, logging, OpenAPI y jobs.
 - Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 5 tests de repositories contra PostgreSQL.
 - Validación adicional: `pnpm.cmd db:explain` OK antes y después de la migration; los índices fueron verificados y las tablas pequeñas aún pueden elegir `Seq Scan` por coste estimado.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
@@ -117,11 +117,11 @@ Fase 10 Logging y observabilidad
    ↓
 Fase 11 OpenAPI
    ↓
-Fase 12 Background Jobs
+Fase 14 Background Jobs
    ↓
-Fase 13 Production Readiness
+Fase 15 Production Readiness
    ↓
-Fase 14 Frontend
+Fase 16 Frontend
 ~~~
 
 Fase 0 es obligatoria. Fases 1 y 2 son la siguiente entrega funcional. Fases 4–6 deben solaparse de forma controlada, pero ningún módulo nuevo debe quedar sin tests.
@@ -571,7 +571,7 @@ Documentar:
 
 Generar o servir la especificación desde un lugar versionado. Mantener OpenAPI sincronizado con los schemas Zod mediante una estrategia definida.
 
-## 16. Fase 12 — Background Jobs
+## 16. Fase 14 — Background Jobs
 
 Estado: **Finalizado**. La cola persistente PostgreSQL ejecuta jobs de sets, cards, prices y pipeline fuera del ciclo HTTP; usa claim con `FOR UPDATE SKIP LOCKED`, índice único para impedir jobs activos concurrentes y recuperación de jobs obsoletos al iniciar. Existen endpoints admin y tests de estados, concurrencia, persistencia de schema y flujo real persistir-reclamar-completar; los endpoints legacy fueron convertidos en disparadores `202`.
 
@@ -593,7 +593,15 @@ Extraer syncs largos del request HTTP.
 
 El endpoint actual puede conservarse como compatibilidad o convertirse en disparador de job, pero no debe mantener una request abierta durante todo el sync.
 
-## 17. Fase 13 — Production Readiness
+## 17. Fase 15 — Production Readiness
+
+Estado: **En progreso**.
+
+Implementado en este bloque: graceful shutdown centralizado en `src/server.js`, manejo de `SIGTERM`/`SIGINT`, detención de la cola persistente, cierre ordenado del servidor HTTP y del pool PostgreSQL, timeout de apagado configurable mediante `SHUTDOWN_TIMEOUT_MS`, readiness `503` durante el drenaje y exigencia de `DATABASE_SSL=true` en producción. También existen workflow `.github/workflows/backend-ci.yml`, smoke test `check:smoke`, scripts `db:backup`/`db:restore` con confirmación explícita y `DEPLOYMENT_RUNBOOK.md`. Docker/Compose queda diferido por decisión de alcance. La prueba HTTP cubre el estado no disponible durante el shutdown.
+
+La auditoría `pnpm audit --prod` no reportó vulnerabilidades conocidas en las dependencias de producción.
+
+Pendiente para cerrar la fase: ejecutar staging reproducible, backup/restore real, rollback operativo, conectar monitoring/alertas y completar la revisión final de vulnerabilidades.
 
 Checklist:
 
@@ -607,7 +615,7 @@ Checklist:
 - pool tuning;
 - timeouts;
 - payload limits;
-- Docker/Compose si se adopta;
+- Docker/Compose: diferido, no forma parte del alcance actual;
 - CI/CD;
 - backups y restore probado;
 - monitoring/alertas;
@@ -620,7 +628,7 @@ Checklist:
 
 Criterio de salida: despliegue reproducible en un entorno staging, smoke tests exitosos, rollback probado y checklist de seguridad aprobado.
 
-## 18. Fase 14 — Frontend
+## 18. Fase 16 — Frontend
 
 El frontend está fuera del análisis actual, pero el roadmap lo incluye como fase final.
 
