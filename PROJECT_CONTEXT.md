@@ -56,6 +56,7 @@ tcg_wallet/
 │   ├── eslint.config.js
 │   ├── package.json
 │   ├── pnpm-lock.yaml
+│   ├── BACKEND_ROADMAP.md     # local, no versionar
 │   └── src/
 │       ├── app.js
 │       ├── server.js
@@ -71,9 +72,10 @@ tcg_wallet/
 │       ├── services/
 │       ├── syncs/
 │       └── utils/
-├── client/                 # fuera del alcance de este documento
+├── client/
+│   └── FRONTEND_ROADMAP.md    # local, no versionar
 ├── readme.md
-└── roadmap.md
+└── PROJECT_CONTEXT.md
 ~~~
 
 Responsabilidades:
@@ -116,6 +118,7 @@ Archivos centrales:
 - Se añadió `scripts/check-config.js` para validar el entorno y las políticas de configuración sin imprimir secretos ni conectarse a PostgreSQL.
 - Se añadió `scripts/check-data-integrity.js` para auditar precios negativos y grades fuera de rango antes de aplicar constraints adicionales.
 - Las nuevas implementaciones pasaron las pruebas manuales locales y GitHub Actions, incluyendo migration 003, auditoría de datos, tests, integración y smoke tests.
+- Backup/restore validado localmente en una base temporal aislada con `pg_dump`/`pg_restore`; se verificaron tablas principales y las cuatro migrations restauradas, sin conservar la base temporal ni el backup al finalizar.
 - GitHub Actions volvió a pasar correctamente después del preflight staging, validando configuración, migrations, tests, integración PostgreSQL, OpenAPI y smoke tests.
 - GitHub Actions ejecutó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.
@@ -591,7 +594,7 @@ Resultado real de esta revisión:
 
 Conclusión: **EXISTE UNA SUITE AUTOMATIZADA DE CONTRATOS Y HARDENING**, con lecturas de repositories contra PostgreSQL y smoke HTTP; todavía faltan API con PostgreSQL, ownership, collection CRUD y sync end-to-end.
 
-roadmap.md afirma que Collection CRUD está implementado y probado, pero la evidencia automatizada actual se limita a contratos graded y un smoke test aislado de valoración: **COBERTURA PARCIAL — RESTO NO VERIFICADO AUTOMÁTICAMENTE**. No puede afirmarse desde este repo que auth, catálogo, prices, collection CRUD o sync tengan cobertura completa contra una DB real.
+`api/BACKEND_ROADMAP.md` contiene el estado vigente del backend. La cobertura automatizada y las tareas pendientes deben mantenerse alineadas con ese documento.
 
 ## 24. Discrepancias detectadas
 
@@ -662,10 +665,10 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 12 | Logging/Observabilidad | **Finalizado**; logger JSON, redacción de secretos, request IDs, métricas HTTP, liveness/readiness y stack traces controlados validados. |
 | 13 | Swagger/OpenAPI | **Finalizado**; contrato OpenAPI 3.0.3 publicado y validado con 40 paths y 61 operaciones. |
 | 14 | Background Jobs | **Finalizado**; cola persistente PostgreSQL, recuperación de jobs obsoletos, claim con `SKIP LOCKED`, bloqueo global y endpoints async validados; legacy convertido a disparador `202`. |
-| 15 | Production Readiness | **En progreso**; validación local y CI/CD base completadas, graceful shutdown, runbook, backup/restore y monitor de health implementados. Docker/Compose diferido. Quedan backup/restore, rollback y alertas conectadas a infraestructura real. |
-| 16 | Frontend | Fuera del alcance; existe client, estado no analizado. |
+| 15 | Production Readiness | **En progreso**; validación local, CI/CD y backup/restore temporal completados, graceful shutdown, runbook y monitor implementados. Docker/Compose diferido. Quedan restore/rollback en staging y alertas conectadas a infraestructura real. |
+| 16 | Frontend | **En progreso**; base Vite/React/CSS Modules/ESLint creada en `client`, con pantalla responsive, `.env.example`, lockfile y workflow de CI; falta conectar los contratos OpenAPI y construir los módulos funcionales. |
 
-roadmap.md todavía presenta Collection avanzada como siguiente bloque, pero el código actual ya contiene CRUD, joins, filtros, stats/value y grading companies. El código actual tiene prioridad.
+El roadmap local vigente es `api/BACKEND_ROADMAP.md`; el roadmap del frontend está en `client/FRONTEND_ROADMAP.md`.
 
 ## 28. Próximo módulo recomendado
 

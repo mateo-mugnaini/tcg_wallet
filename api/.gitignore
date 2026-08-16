@@ -5,6 +5,9 @@
 node_modules/
 *.yaml
 !pnpm-lock.yaml
+
+# Roadmap local de trabajo; no versionar.
+BACKEND_ROADMAP.md
 # ==========================================
 # Environment variables
 # ==========================================
