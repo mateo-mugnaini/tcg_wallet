@@ -40,6 +40,7 @@
 
 .table {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   color: var(--color-text-secondary);
   font-size: 0.86rem;
@@ -93,4 +94,20 @@
 .empty {
   margin: 0;
   color: var(--color-text-muted);
+}
+
+@media (max-width: 540px) {
+  .card {
+    padding: var(--space-4);
+  }
+
+  .header {
+    flex-direction: column;
+    margin-bottom: var(--space-4);
+  }
+
+  .tableWrapper {
+    margin-right: calc(var(--space-4) * -1);
+    padding-right: var(--space-4);
+  }
 }

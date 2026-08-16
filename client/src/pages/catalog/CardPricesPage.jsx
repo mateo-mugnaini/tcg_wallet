@@ -28,7 +28,7 @@ function CardPricesPage() {
   const dispatch = useDispatch();
   const card = useSelector((state) => state.catalog.selectedCard);
   const companies = useSelector((state) => state.grading.companies);
-  const { normal, graded, status, error } = useSelector((state) => state.prices);
+  const { normal, graded, status } = useSelector((state) => state.prices);
   const [normalQuery, setNormalQuery] = useState(initialNormalQuery);
   const [gradedQuery, setGradedQuery] = useState(initialGradedQuery);
   const [normalDraft, setNormalDraft] = useState(initialNormalQuery);
@@ -86,7 +86,6 @@ function CardPricesPage() {
         </div>
       </section>
 
-      {error && <p className={styles.error} role="alert">{error.message}</p>}
       {isLoading && <p className={styles.loading}>Cargando precios...</p>}
 
       <div className={styles.panels}>

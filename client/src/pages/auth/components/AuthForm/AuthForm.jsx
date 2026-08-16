@@ -4,6 +4,7 @@ import { clearAuthError } from "../../../../redux/slices/auth.slice.js";
 import { login as loginAction } from "../../../../redux/actions/auth/post/auth.actions.js";
 import { createUser } from "../../../../redux/actions/users/post/users.actions.js";
 import { clearUsersError } from "../../../../redux/slices/users.slice.js";
+import { addNotification } from "../../../../redux/slices/notifications.slice.js";
 import styles from "./AuthForm.module.css";
 
 const initialForm = {
@@ -42,16 +43,18 @@ function AuthForm({ mode, onModeChange }) {
   const dispatch = useDispatch();
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [message, setMessage] = useState(null);
   const authState = useSelector((state) => state.auth);
   const usersState = useSelector((state) => state.users);
   const isSubmitting = authState.status === "loading" || usersState.status === "loading";
-  const serverError = mode === "login" ? authState.error : usersState.error;
 
   const changeMode = (nextMode, nextMessage = null) => {
     setForm(initialForm);
     setFieldErrors({});
-    setMessage(nextMessage);
+    if (nextMessage) dispatch(addNotification({
+      message: nextMessage.text,
+      title: "Cuenta creada",
+      type: nextMessage.type,
+    }));
     dispatch(clearAuthError());
     dispatch(clearUsersError());
     onModeChange(nextMode);
@@ -61,12 +64,10 @@ function AuthForm({ mode, onModeChange }) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => ({ ...current, [name]: undefined }));
-    setMessage(null);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setMessage(null);
     const errors = validateForm(mode, form);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -90,7 +91,7 @@ function AuthForm({ mode, onModeChange }) {
         text: "Cuenta creada correctamente. Ya puedes iniciar sesión.",
       });
     } catch {
-      setMessage(null);
+      // La notificación de error se genera desde Redux.
     }
   };
 
@@ -186,8 +187,6 @@ function AuthForm({ mode, onModeChange }) {
             <FieldError id="confirm-password-error" message={fieldErrors.confirmPassword} />
           </label>
         )}
-        {serverError && <p className={styles.error} role="alert">{serverError.message}</p>}
-        {message && <p className={styles.success} role="status">{message.text}</p>}
         <button className={styles.submit} type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
         </button>

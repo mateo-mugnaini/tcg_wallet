@@ -1,5 +1,6 @@
 .pagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
@@ -22,7 +23,18 @@
 }
 
 @media (max-width: 430px) {
+  .pagination {
+    justify-content: center;
+  }
+
   .pagination span {
+    order: -1;
+    width: 100%;
     text-align: center;
+  }
+
+  .pagination button {
+    min-width: 96px;
+    min-height: 44px;
   }
 }

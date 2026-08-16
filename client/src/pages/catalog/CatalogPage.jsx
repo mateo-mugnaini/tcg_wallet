@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import { getCards, getSets, getTcgs } from "../../redux/actions/catalog/get/catalog.actions.js";
+import { debugLog } from "../../lib/debug/logger.js";
 import styles from "./CatalogPage.module.css";
 
 const initialTcgQuery = { page: 1, limit: 10, sortBy: "name", sortOrder: "ASC" };
@@ -18,7 +19,6 @@ function CatalogPage() {
     cards,
     pagination,
     resourceStatus,
-    resourceErrors,
   } = useSelector((state) => state.catalog);
   const [tcgQuery, setTcgQuery] = useState(initialTcgQuery);
   const [setQuery, setSetQuery] = useState(initialSetQuery);
@@ -39,6 +39,18 @@ function CatalogPage() {
     dispatch(getCards({ query: cardQuery }));
   }, [dispatch, cardQuery]);
 
+  useEffect(() => {
+    debugLog("catalog_resources_state", {
+      statuses: resourceStatus,
+      counts: {
+        tcgs: tcgs.length,
+        sets: sets.length,
+        cards: cards.length,
+      },
+      pagination,
+    });
+  }, [cards.length, pagination, resourceStatus, sets.length, tcgs.length]);
+
   const submitQuery = (event, setQueryState, draft) => {
     event.preventDefault();
     setQueryState({ ...draft, page: 1 });
@@ -58,7 +70,6 @@ function CatalogPage() {
       />
 
       <CatalogSection
-        error={resourceErrors.tcgs}
         filters={(
           <form className={styles.filters} onSubmit={(event) => submitQuery(event, setTcgQuery, tcgDraft)}>
             <label>
@@ -102,7 +113,6 @@ function CatalogPage() {
       </CatalogSection>
 
       <CatalogSection
-        error={resourceErrors.sets}
         filters={(
           <form className={styles.filters} onSubmit={(event) => submitQuery(event, setSetQuery, setDraft)}>
             <label>
@@ -146,7 +156,6 @@ function CatalogPage() {
       </CatalogSection>
 
       <CatalogSection
-        error={resourceErrors.cards}
         filters={(
           <form className={styles.filters} onSubmit={(event) => submitQuery(event, setCardQuery, cardDraft)}>
             <label>
@@ -202,7 +211,14 @@ function CatalogPage() {
         <div className={styles.cardGrid}>
           {cards.map((card) => (
             <Link className={styles.cardItem} key={card.id} to={`/catalog/cards/${card.id}`}>
-              {card.image_url ? <img alt="" src={card.image_url} /> : <span className={styles.cardPlaceholder}>TCG</span>}
+              {card.image_url ? (
+                <img
+                  alt={`Imagen de ${card.name}`}
+                  decoding="async"
+                  loading="lazy"
+                  src={card.image_url}
+                />
+              ) : <span className={styles.cardPlaceholder}>TCG</span>}
               <span className={styles.cardContent}>
                 <strong>{card.name}</strong>
                 <small>{card.card_number || "Sin número"}{card.rarity ? ` · ${card.rarity}` : ""}</small>
@@ -216,7 +232,7 @@ function CatalogPage() {
   );
 }
 
-function CatalogSection({ title, filters, children, error, loading, pagination, onPageChange }) {
+function CatalogSection({ title, filters, children, loading, pagination, onPageChange }) {
   return (
     <article className={styles.section}>
       <header className={styles.sectionHeader}>
@@ -227,7 +243,6 @@ function CatalogSection({ title, filters, children, error, loading, pagination, 
         <span className={styles.total}>{pagination.total} resultados</span>
       </header>
       {filters}
-      {error && <p className={styles.error} role="alert">{error.message}</p>}
       {children}
       <Pagination
         disabled={loading}

@@ -19,7 +19,13 @@ function CardSummary({ card }) {
     <article className={styles.card}>
       <div className={styles.imageWrapper}>
         {card.image_url ? (
-          <img alt={`Imagen de ${card.name}`} className={styles.image} src={card.image_url} />
+          <img
+            alt={`Imagen de ${card.name}`}
+            className={styles.image}
+            decoding="async"
+            fetchPriority="high"
+            src={card.image_url}
+          />
         ) : (
           <div className={styles.placeholder}>TCG</div>
         )}

@@ -5,15 +5,15 @@ import { getGradingCompanies } from "../../redux/actions/grading/get/grading.act
 import { createGradingCompany } from "../../redux/actions/grading/post/grading.actions.js";
 import { updateGradingCompany } from "../../redux/actions/grading/patch/grading.actions.js";
 import { deleteGradingCompany } from "../../redux/actions/grading/delete/grading.actions.js";
+import { addNotification } from "../../redux/slices/notifications.slice.js";
 import styles from "./GradingCompaniesPage.module.css";
 
 function GradingCompaniesPage() {
   const dispatch = useDispatch();
-  const { companies, status, error, mutationStatus, mutationError } = useSelector((state) => state.grading);
+  const { companies, status, mutationStatus } = useSelector((state) => state.grading);
   const user = useSelector((state) => state.auth.user);
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState("");
-  const [formError, setFormError] = useState(null);
   const isAdmin = user?.role === "admin";
 
   useEffect(() => {
@@ -23,19 +23,21 @@ function GradingCompaniesPage() {
   const resetForm = () => {
     setEditingId(null);
     setName("");
-    setFormError(null);
   };
 
   const startEdit = (company) => {
     setEditingId(company.id);
     setName(company.name);
-    setFormError(null);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (name.trim().length < 1 || name.trim().length > 50) {
-      setFormError("El nombre debe tener entre 1 y 50 caracteres.");
+      dispatch(addNotification({
+        message: "El nombre debe tener entre 1 y 50 caracteres.",
+        title: "Revisa el formulario",
+        type: "error",
+      }));
       return;
     }
 
@@ -47,9 +49,7 @@ function GradingCompaniesPage() {
       }
       resetForm();
       dispatch(getGradingCompanies());
-    } catch {
-      // The mutation error is displayed from Redux.
-    }
+    } catch { /* La notificación se genera desde Redux. */ }
   };
 
   const handleDelete = async (company) => {
@@ -68,9 +68,6 @@ function GradingCompaniesPage() {
         <span className={styles.status}>{status === "loading" ? "Cargando..." : `${companies.length} empresas`}</span>
       </PageHeader>
 
-      {error && <p className={styles.error} role="alert">{error.message}</p>}
-      {mutationError && <p className={styles.error} role="alert">{mutationError.message}</p>}
-
       {isAdmin && (
         <form className={styles.form} onSubmit={handleSubmit}>
           <div>
@@ -79,9 +76,8 @@ function GradingCompaniesPage() {
           </div>
           <label>
             Nombre
-            <input maxLength="50" onChange={(event) => { setName(event.target.value); setFormError(null); }} placeholder="PSA, BGS, CGC..." required value={name} />
+            <input maxLength="50" onChange={(event) => setName(event.target.value)} placeholder="PSA, BGS, CGC..." required value={name} />
           </label>
-          {formError && <p className={styles.error} role="alert">{formError}</p>}
           <div className={styles.formActions}>
             <button className={styles.primary} disabled={mutationStatus === "loading"} type="submit">{mutationStatus === "loading" ? "Guardando..." : editingId ? "Guardar cambios" : "Crear empresa"}</button>
             {editingId && <button className={styles.secondary} onClick={resetForm} type="button">Cancelar</button>}

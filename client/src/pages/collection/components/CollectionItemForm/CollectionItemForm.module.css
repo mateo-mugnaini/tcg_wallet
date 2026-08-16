@@ -106,6 +106,19 @@
 }
 
 @media (max-width: 520px) {
+  .form {
+    padding: var(--space-4);
+  }
+
+  .formHeader {
+    flex-direction: column;
+  }
+
+  .close,
+  .submit {
+    min-height: 44px;
+  }
+
   .row {
     grid-template-columns: 1fr;
   }

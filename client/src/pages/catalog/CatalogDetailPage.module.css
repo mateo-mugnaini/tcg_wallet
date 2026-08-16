@@ -61,6 +61,11 @@
 }
 
 @media (max-width: 680px) {
+  .loadingCard,
+  .genericCard {
+    padding: var(--space-4);
+  }
+
   .genericCard dl {
     grid-template-columns: 1fr;
   }

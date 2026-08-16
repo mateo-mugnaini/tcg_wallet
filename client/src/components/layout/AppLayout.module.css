@@ -155,6 +155,7 @@
   .header {
     align-items: flex-start;
     flex-wrap: wrap;
+    gap: 14px;
   }
 
   .menuButton {
@@ -184,6 +185,21 @@
 }
 
 @media (max-width: 540px) {
+  .header {
+    min-height: 64px;
+    padding: 10px 14px;
+  }
+
+  .brand {
+    max-width: calc(100% - 58px);
+    font-size: 0.92rem;
+  }
+
+  .brandMark {
+    width: 28px;
+    height: 28px;
+  }
+
   .accountName,
   .role {
     display: none;
@@ -191,5 +207,13 @@
 
   .account {
     gap: 8px;
+  }
+
+  .account button {
+    min-height: 40px;
+  }
+
+  .content {
+    padding: 24px 14px 40px;
   }
 }

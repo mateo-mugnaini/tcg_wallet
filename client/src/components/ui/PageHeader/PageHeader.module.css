@@ -17,8 +17,9 @@
 .title {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-size: clamp(1.9rem, 5vw, 3.8rem);
   letter-spacing: -0.06em;
+  overflow-wrap: anywhere;
 }
 
 .description {
@@ -32,11 +33,32 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 760px) {
   .header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .actions > * {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  .title {
+    font-size: clamp(1.75rem, 9vw, 2.4rem);
+  }
+
+  .description {
+    font-size: 0.9rem;
   }
 }

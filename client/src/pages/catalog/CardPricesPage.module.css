@@ -116,6 +116,17 @@
   }
 }
 
+@media (max-width: 560px) {
+  .filtersCard {
+    padding: var(--space-4);
+  }
+
+  .filters button,
+  .back {
+    min-height: 44px;
+  }
+}
+
 @media (max-width: 430px) {
   .filters {
     grid-template-columns: 1fr;

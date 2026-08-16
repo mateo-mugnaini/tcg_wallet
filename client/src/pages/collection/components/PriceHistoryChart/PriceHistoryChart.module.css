@@ -1,0 +1,69 @@
+.card {
+  min-width: 0;
+  padding: clamp(20px, 4vw, 32px);
+  border: 2px solid var(--color-text-primary);
+  border-radius: var(--radius-lg);
+  background: var(--color-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-brand);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 1.2rem;
+}
+
+.legendHint {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.chart {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  min-height: 310px;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-8) 0;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 560px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .chart {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: var(--space-4);
+  }
+
+  .chart {
+    min-height: 230px;
+  }
+}

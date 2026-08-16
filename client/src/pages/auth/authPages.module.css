@@ -64,3 +64,9 @@
     padding: 28px 20px;
   }
 }
+
+@media (max-width: 350px) {
+  .card {
+    padding: 24px 16px;
+  }
+}

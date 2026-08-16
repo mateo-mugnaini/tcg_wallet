@@ -82,13 +82,6 @@ function DashboardPage() {
         </button>
       </PageHeader>
 
-      {(statsError || valueError) && (
-        <div className={styles.error} role="alert">
-          <span>{statsError?.message || valueError?.message || "No se pudo cargar el resumen."}</span>
-          <button onClick={refreshDashboard} type="button">Reintentar</button>
-        </div>
-      )}
-
       <div className={styles.metrics}>
         <MetricCard
           caption="Cartas distintas registradas"

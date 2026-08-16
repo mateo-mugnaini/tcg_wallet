@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { ReactReduxContext } from "react-redux";
+import { addNotification } from "../../../../redux/slices/notifications.slice.js";
 import styles from "./CollectionItemForm.module.css";
 
 function getInitialForm(item) {
@@ -26,9 +28,18 @@ function CollectionItemForm({
   onSetChange,
   onSubmit,
 }) {
+  const reduxContext = useContext(ReactReduxContext);
+  const dispatch = reduxContext?.store?.dispatch || (() => {});
   const [form, setForm] = useState(() => getInitialForm(item));
   const [cardSearch, setCardSearch] = useState("");
-  const [error, setError] = useState(null);
+  const setError = (message) => {
+    if (!message) return;
+    dispatch(addNotification({
+      message,
+      title: "Revisa el formulario",
+      type: "error",
+    }));
+  };
   const isEditing = Boolean(item);
 
   useEffect(() => {
@@ -84,7 +95,7 @@ function CollectionItemForm({
         grade: form.isGraded ? Number(form.grade) : null,
       });
     } catch {
-      // The parent displays the serialized API error.
+      // La notificación de error se genera desde Redux.
     }
   };
 
@@ -169,7 +180,6 @@ function CollectionItemForm({
           </label>
         </div>
       )}
-      {error && <p className={styles.error} role="alert">{error}</p>}
       <button className={styles.submit} disabled={loading} type="submit">
         {loading ? "Guardando..." : isEditing ? "Guardar cambios" : "Agregar carta"}
       </button>

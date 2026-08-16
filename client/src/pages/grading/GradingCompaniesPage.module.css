@@ -158,6 +158,21 @@
   }
 }
 
+@media (max-width: 760px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .formActions {
+    grid-column: auto;
+  }
+
+  .formActions > * {
+    flex: 1 1 140px;
+    min-height: 44px;
+  }
+}
+
 @media (max-width: 560px) {
   .grid,
   .form {

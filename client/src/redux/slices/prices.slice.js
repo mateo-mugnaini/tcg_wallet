@@ -24,6 +24,12 @@ const pricesSlice = createSlice({
     clearPricesError: (state) => {
       state.error = null;
     },
+    clearPrices: (state) => {
+      state.normal = { list: [], latest: null, stats: null, variation: null, aggregations: null, pagination: null };
+      state.graded = { list: [], latest: null, stats: null, variation: null, aggregations: null, pagination: null };
+      state.status = "idle";
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     const loading = (state) => {
@@ -66,5 +72,5 @@ const pricesSlice = createSlice({
   },
 });
 
-export const { clearPricesError } = pricesSlice.actions;
+export const { clearPrices, clearPricesError } = pricesSlice.actions;
 export default pricesSlice.reducer;

@@ -119,6 +119,15 @@
 }
 
 @media (max-width: 520px) {
+  .card {
+    padding: var(--space-4);
+  }
+
+  .header,
+  .chartHeader {
+    flex-direction: column;
+  }
+
   .variation {
     grid-template-columns: 1fr;
   }

@@ -36,7 +36,6 @@ function CatalogDetailPage({ type }) {
         <Link className={styles.back} to="/catalog">Volver al catálogo</Link>
       </PageHeader>
 
-      {catalog.error && <p className={styles.error} role="alert">{catalog.error.message}</p>}
       {type === "card" ? <CardSummary card={selected} /> : <GenericSummary item={selected} type={type} />}
     </section>
   );

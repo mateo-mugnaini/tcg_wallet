@@ -221,6 +221,12 @@
   }
 }
 
+@media (max-width: 820px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 620px) {
   .metrics,
   .items,
@@ -230,5 +236,14 @@
 
   .listCard {
     padding: var(--space-4);
+  }
+
+  .filterActions {
+    flex-wrap: wrap;
+  }
+
+  .filterActions > * {
+    flex: 1 1 120px;
+    min-height: 44px;
   }
 }

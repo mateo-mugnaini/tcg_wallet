@@ -7,6 +7,8 @@ import healthReducer from "./slices/health.slice.js";
 import pricesReducer from "./slices/prices.slice.js";
 import syncReducer from "./slices/sync.slice.js";
 import usersReducer from "./slices/users.slice.js";
+import notificationsReducer from "./slices/notifications.slice.js";
+import { notificationsMiddleware } from "./notifications.middleware.js";
 
 const persistedUserKey = "tcg-wallet-user";
 
@@ -30,7 +32,9 @@ export const store = configureStore({
     grading: gradingReducer,
     sync: syncReducer,
     health: healthReducer,
+    notifications: notificationsReducer,
   },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(notificationsMiddleware),
   preloadedState: {
     auth: { ...authInitialState, user: loadPersistedUser() },
   },

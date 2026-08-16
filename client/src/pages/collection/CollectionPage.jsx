@@ -112,9 +112,6 @@ function CollectionPage() {
         </button>
       </PageHeader>
 
-      {collection.error && <p className={styles.error} role="alert">{collection.error.message}</p>}
-      {collection.valueError && <p className={styles.error} role="alert">{collection.valueError.message}</p>}
-      {collection.mutationError && <p className={styles.error} role="alert">{collection.mutationError.message}</p>}
 
       {showForm && (
         <CollectionItemForm

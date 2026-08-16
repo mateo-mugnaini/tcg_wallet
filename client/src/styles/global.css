@@ -84,6 +84,18 @@ a {
   font: inherit;
 }
 
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 button {
   cursor: pointer;
 }
@@ -123,5 +135,11 @@ button:disabled {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    background-size: 24px 24px;
   }
 }
