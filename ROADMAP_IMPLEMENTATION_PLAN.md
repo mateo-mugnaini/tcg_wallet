@@ -601,6 +601,8 @@ Implementado en este bloque: graceful shutdown centralizado en `src/server.js`, 
 
 La auditoría `pnpm audit --prod` no reportó vulnerabilidades conocidas en las dependencias de producción.
 
+Se añadió `scripts/monitor-health.js` para comprobaciones puntuales o continuas de liveness/readiness, con umbral de fallos consecutivos y webhook opcional. La integración con el sistema real de alertas queda pendiente de staging.
+
 Pendiente para cerrar la fase: ejecutar staging reproducible, backup/restore real, rollback operativo, conectar monitoring/alertas y completar la revisión final de vulnerabilidades.
 
 Checklist:

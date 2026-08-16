@@ -34,6 +34,7 @@
 - Se añadió workflow de CI para instalar, migrar, ejecutar tests, integración, lint, validar OpenAPI y ejecutar smoke tests contra una API levantada. Docker/Compose queda explícitamente diferido por decisión de alcance.
 - Se añadieron scripts de backup/restore PostgreSQL con formato custom y confirmación explícita para restore, además de `DEPLOYMENT_RUNBOOK.md` con staging, rollback y monitoring.
 - `pnpm audit --prod` no reportó vulnerabilidades conocidas en las dependencias de producción.
+- Se añadió `pnpm monitor:health`, con modo puntual o continuo, umbral de fallos consecutivos y webhook opcional para alertas operativas.
 - Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 82 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
@@ -53,7 +54,7 @@
 | 12 | Logging/Observabilidad | **Finalizado** | Logger JSON, redacción, request IDs, métricas HTTP, liveness/readiness y stack traces controlados implementados y validados. |
 | 13 | Swagger/OpenAPI | **Finalizado** | Contrato OpenAPI 3.0.3 publicado en `/api/docs/openapi.json`, validado automáticamente y cubierto por test HTTP. |
 | 14 | Background Jobs | **Finalizado** | Cola persistente, recuperación, claim distribuido, bloqueo de concurrencia y endpoints async implementados; legacy convertido a disparador `202`. |
-| 15 | Production Readiness | **En progreso** | Shutdown, CI/CD base, runbook, scripts de backup/restore y monitoring documentado implementados; Docker/Compose diferido; quedan ejecutar staging real, probar restore/rollback y conectar alertas operativas. |
+| 15 | Production Readiness | **En progreso** | Shutdown, CI/CD base, runbook, scripts de backup/restore y monitor de health implementados; Docker/Compose diferido; quedan ejecutar staging real, probar restore/rollback y conectar alertas operativas reales. |
 | 16 | Frontend | **Fuera del backend actual** | Iniciar después de estabilizar la API. |
 
 ### Orden ejecutable actualizado
