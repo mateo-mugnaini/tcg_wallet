@@ -5,6 +5,9 @@ import {
   getCollectionStats,
   getCollectionValue,
 } from "../actions/collection/get/collection.actions.js";
+import { createCollectionItem } from "../actions/collection/post/collection.actions.js";
+import { updateCollectionItem } from "../actions/collection/put/collection.actions.js";
+import { deleteCollectionItem } from "../actions/collection/delete/collection.actions.js";
 
 const collectionSlice = createSlice({
   name: "collection",
@@ -19,6 +22,9 @@ const collectionSlice = createSlice({
     statsError: null,
     valueStatus: "idle",
     valueError: null,
+    pagination: { total: 0, limit: 20, offset: 0 },
+    mutationStatus: "idle",
+    mutationError: null,
   },
   reducers: {
     clearCollectionError: (state) => {
@@ -39,6 +45,7 @@ const collectionSlice = createSlice({
       .addCase(getCollectionItems.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.items = action.payload?.data || [];
+        state.pagination = action.payload?.pagination || state.pagination;
       })
       .addCase(getCollectionItems.rejected, failed)
       .addCase(getCollectionItemById.pending, loading)
@@ -72,6 +79,39 @@ const collectionSlice = createSlice({
       .addCase(getCollectionValue.rejected, (state, action) => {
         state.valueStatus = "failed";
         state.valueError = action.payload;
+      })
+      .addCase(createCollectionItem.pending, (state) => {
+        state.mutationStatus = "loading";
+        state.mutationError = null;
+      })
+      .addCase(createCollectionItem.fulfilled, (state) => {
+        state.mutationStatus = "succeeded";
+      })
+      .addCase(createCollectionItem.rejected, (state, action) => {
+        state.mutationStatus = "failed";
+        state.mutationError = action.payload;
+      })
+      .addCase(updateCollectionItem.pending, (state) => {
+        state.mutationStatus = "loading";
+        state.mutationError = null;
+      })
+      .addCase(updateCollectionItem.fulfilled, (state) => {
+        state.mutationStatus = "succeeded";
+      })
+      .addCase(updateCollectionItem.rejected, (state, action) => {
+        state.mutationStatus = "failed";
+        state.mutationError = action.payload;
+      })
+      .addCase(deleteCollectionItem.pending, (state) => {
+        state.mutationStatus = "loading";
+        state.mutationError = null;
+      })
+      .addCase(deleteCollectionItem.fulfilled, (state) => {
+        state.mutationStatus = "succeeded";
+      })
+      .addCase(deleteCollectionItem.rejected, (state, action) => {
+        state.mutationStatus = "failed";
+        state.mutationError = action.payload;
       });
   },
 });

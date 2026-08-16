@@ -17,6 +17,13 @@ const initialState = {
   selectedCard: null,
   status: "idle",
   error: null,
+  pagination: {
+    tcgs: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    sets: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    cards: { page: 1, limit: 10, total: 0, totalPages: 0 },
+  },
+  resourceStatus: { tcgs: "idle", sets: "idle", cards: "idle" },
+  resourceErrors: { tcgs: null, sets: null, cards: null },
 };
 
 const catalogSlice = createSlice({
@@ -43,24 +50,54 @@ const catalogSlice = createSlice({
     };
 
     builder
-      .addCase(getTcgs.pending, loading)
+      .addCase(getTcgs.pending, (state) => {
+        loading(state);
+        state.resourceStatus.tcgs = "loading";
+        state.resourceErrors.tcgs = null;
+      })
       .addCase(getTcgs.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.tcgs = action.payload?.data || [];
+        state.pagination.tcgs = action.payload?.pagination || initialState.pagination.tcgs;
+        state.resourceStatus.tcgs = "succeeded";
       })
-      .addCase(getTcgs.rejected, failed)
-      .addCase(getSets.pending, loading)
+      .addCase(getTcgs.rejected, (state, action) => {
+        failed(state, action);
+        state.resourceStatus.tcgs = "failed";
+        state.resourceErrors.tcgs = action.payload;
+      })
+      .addCase(getSets.pending, (state) => {
+        loading(state);
+        state.resourceStatus.sets = "loading";
+        state.resourceErrors.sets = null;
+      })
       .addCase(getSets.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.sets = action.payload?.data || [];
+        state.pagination.sets = action.payload?.pagination || initialState.pagination.sets;
+        state.resourceStatus.sets = "succeeded";
       })
-      .addCase(getSets.rejected, failed)
-      .addCase(getCards.pending, loading)
+      .addCase(getSets.rejected, (state, action) => {
+        failed(state, action);
+        state.resourceStatus.sets = "failed";
+        state.resourceErrors.sets = action.payload;
+      })
+      .addCase(getCards.pending, (state) => {
+        loading(state);
+        state.resourceStatus.cards = "loading";
+        state.resourceErrors.cards = null;
+      })
       .addCase(getCards.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.cards = action.payload?.data || [];
+        state.pagination.cards = action.payload?.pagination || initialState.pagination.cards;
+        state.resourceStatus.cards = "succeeded";
       })
-      .addCase(getCards.rejected, failed)
+      .addCase(getCards.rejected, (state, action) => {
+        failed(state, action);
+        state.resourceStatus.cards = "failed";
+        state.resourceErrors.cards = action.payload;
+      })
       .addCase(getTcgById.pending, loading)
       .addCase(getTcgById.fulfilled, (state, action) => {
         state.status = "succeeded";

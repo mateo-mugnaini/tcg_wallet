@@ -15,8 +15,8 @@ import {
 const pricesSlice = createSlice({
   name: "prices",
   initialState: {
-    normal: { list: [], latest: null, stats: null, variation: null, aggregations: null },
-    graded: { list: [], latest: null, stats: null, variation: null, aggregations: null },
+    normal: { list: [], latest: null, stats: null, variation: null, aggregations: null, pagination: null },
+    graded: { list: [], latest: null, stats: null, variation: null, aggregations: null, pagination: null },
     status: "idle",
     error: null,
   },
@@ -37,10 +37,12 @@ const pricesSlice = createSlice({
     const normal = (field) => (state, action) => {
       state.status = "succeeded";
       state.normal[field] = action.payload?.data || null;
+      if (field === "list") state.normal.pagination = action.payload?.pagination || null;
     };
     const graded = (field) => (state, action) => {
       state.status = "succeeded";
       state.graded[field] = action.payload?.data || null;
+      if (field === "list") state.graded.pagination = action.payload?.pagination || null;
     };
 
     [getPrices, getLatestPrice, getPriceStats, getPriceVariation, getPriceAggregations].forEach(

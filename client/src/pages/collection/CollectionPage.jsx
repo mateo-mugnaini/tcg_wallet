@@ -1,43 +1,154 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
+import Pagination from "../../components/ui/Pagination/Pagination.jsx";
+import { getCards, getSets, getTcgs } from "../../redux/actions/catalog/get/catalog.actions.js";
+import { getGradingCompanies } from "../../redux/actions/grading/get/grading.actions.js";
 import { getCollectionItems, getCollectionStats, getCollectionValue } from "../../redux/actions/collection/get/collection.actions.js";
-import styles from "../Page.module.css";
+import { createCollectionItem } from "../../redux/actions/collection/post/collection.actions.js";
+import CollectionItemForm from "./components/CollectionItemForm/CollectionItemForm.jsx";
+import ValuationBreakdown from "./components/ValuationBreakdown/ValuationBreakdown.jsx";
+import styles from "./CollectionPage.module.css";
+
+const initialQuery = { limit: 20, offset: 0, sortBy: "card_name", sortOrder: "ASC" };
+
+function formatCurrency(value, currency = "USD") {
+  if (value === null || value === undefined) return "—";
+  try {
+    return new Intl.NumberFormat("es-ES", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
+  } catch {
+    return `${value} ${currency}`;
+  }
+}
 
 function CollectionPage() {
   const dispatch = useDispatch();
-  const { items, stats, value, error, status } = useSelector((state) => state.collection);
+  const collection = useSelector((state) => state.collection);
+  const catalog = useSelector((state) => state.catalog);
+  const grading = useSelector((state) => state.grading);
+  const [query, setQuery] = useState(initialQuery);
+  const [draft, setDraft] = useState(initialQuery);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    dispatch(getCollectionItems());
+    dispatch(getCollectionItems({ query }));
+  }, [dispatch, query]);
+
+  useEffect(() => {
     dispatch(getCollectionStats());
     dispatch(getCollectionValue());
+    dispatch(getTcgs({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
+    dispatch(getSets({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
+    dispatch(getCards({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
+    dispatch(getGradingCompanies());
   }, [dispatch]);
+
+  const refreshCollection = () => {
+    dispatch(getCollectionItems({ query }));
+    dispatch(getCollectionStats());
+    dispatch(getCollectionValue());
+  };
+
+  const handleFilterSubmit = (event) => {
+    event.preventDefault();
+    setQuery({ ...draft, offset: 0 });
+  };
+
+  const handleCreate = async (data) => {
+    await dispatch(createCollectionItem(data)).unwrap();
+    setShowForm(false);
+    refreshCollection();
+  };
+
+  const summary = collection.stats?.summary;
+  const valueSummary = collection.value?.summary;
+  const isLoading = collection.status === "loading";
 
   return (
     <section className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Mi colección</p>
-          <h1 className={styles.title}>Tus cartas</h1>
-          <p className={styles.description}>CRUD, estadísticas y valoración de collection-items.</p>
-        </div>
-        <span className={styles.muted}>{status === "loading" ? "Cargando..." : "Conectado"}</span>
-      </header>
-      {error && <p className={styles.error}>{error.message}</p>}
-      <div className={styles.grid}>
-        <article className={styles.card}><h2>Items</h2><strong className={styles.metric}>{items.length}</strong></article>
-        <article className={styles.card}><h2>Total</h2><strong className={styles.metric}>{stats?.totalItems ?? "—"}</strong></article>
-        <article className={styles.card}><h2>Valor</h2><strong className={styles.metric}>{value?.totalValue ?? "—"}</strong></article>
+      <PageHeader
+        description="Administra tus cartas, cantidades, condiciones y valoración estimada."
+        eyebrow="Mi colección"
+        title="Tus cartas"
+      >
+        <button className={styles.addButton} onClick={() => setShowForm((current) => !current)} type="button">
+          {showForm ? "Cerrar formulario" : "Agregar carta"}
+        </button>
+      </PageHeader>
+
+      {collection.error && <p className={styles.error} role="alert">{collection.error.message}</p>}
+      {collection.mutationError && <p className={styles.error} role="alert">{collection.mutationError.message}</p>}
+
+      {showForm && (
+        <CollectionItemForm
+          cards={catalog.cards}
+          companies={grading.companies}
+          loading={collection.mutationStatus === "loading"}
+          onCancel={() => setShowForm(false)}
+          onSubmit={handleCreate}
+        />
+      )}
+
+      <div className={styles.metrics}>
+        <Metric label="Cartas distintas" value={summary?.totalDistinctCards ?? "—"} />
+        <Metric label="Unidades" value={summary?.totalQuantity ?? "—"} caption={`${summary?.gradedQuantity ?? 0} gradadas`} />
+        <Metric accent label="Valor estimado" value={formatCurrency(valueSummary?.totalEstimatedValue, valueSummary?.currency)} caption={`${valueSummary?.itemsMissingPriceCount ?? 0} sin precio`} />
       </div>
-      <article className={styles.card}>
-        <h2>Últimos items</h2>
-        <ul className={styles.list}>
-          {items.map((item) => <li className={styles.listItem} key={item.id}><span>{item.card?.name || item.card_name || item.id}</span><Link className={styles.link} to={`/collection/${item.id}`}>Ver</Link></li>)}
-        </ul>
+
+      {collection.value && (
+        <div className={styles.breakdowns}>
+          <ValuationBreakdown formatCurrency={(amount) => formatCurrency(amount, valueSummary?.currency)} items={collection.value.bySet || []} nameKey="setName" title="Valor por set" />
+          <ValuationBreakdown formatCurrency={(amount) => formatCurrency(amount, valueSummary?.currency)} items={collection.value.byTcg || []} nameKey="tcgName" title="Valor por TCG" />
+          <ValuationBreakdown formatCurrency={(amount) => formatCurrency(amount, valueSummary?.currency)} items={collection.value.byGradingCompany || []} nameKey="gradingCompanyName" title="Valor por grading" />
+        </div>
+      )}
+
+      <article className={styles.listCard}>
+        <header className={styles.sectionHeader}>
+          <div><p className={styles.eyebrow}>Inventario</p><h2>Items de colección</h2></div>
+          <span className={styles.total}>{collection.pagination.total} resultados</span>
+        </header>
+        <form className={styles.filters} onSubmit={handleFilterSubmit}>
+          <label>
+            Condición
+            <input maxLength="100" onChange={(event) => setDraft((current) => ({ ...current, condition: event.target.value }))} placeholder="Near Mint" value={draft.condition || ""} />
+          </label>
+          <SelectField label="Estado" onChange={(event) => setDraft((current) => ({ ...current, isGraded: event.target.value || undefined }))} options={[["", "Todas"], ["false", "Sin grading"], ["true", "Gradadas"]]} value={draft.isGraded || ""} />
+          <SelectField label="Set" onChange={(event) => setDraft((current) => ({ ...current, setId: event.target.value || undefined }))} options={[["", "Todos los sets"], ...catalog.sets.map((set) => [set.id, set.name])]} value={draft.setId || ""} />
+          <SelectField label="Ordenar por" onChange={(event) => setDraft((current) => ({ ...current, sortBy: event.target.value }))} options={[["card_name", "Carta"], ["quantity", "Cantidad"], ["grade", "Nota"], ["created_at", "Más recientes"]]} value={draft.sortBy} />
+          <SelectField label="Dirección" onChange={(event) => setDraft((current) => ({ ...current, sortOrder: event.target.value }))} options={[["ASC", "Ascendente"], ["DESC", "Descendente"]]} value={draft.sortOrder} />
+          <div className={styles.filterActions}><button className={styles.applyButton} type="submit">Aplicar</button><button className={styles.resetButton} onClick={() => { setDraft(initialQuery); setQuery(initialQuery); }} type="button">Limpiar</button></div>
+        </form>
+
+        {collection.items.length === 0 && !isLoading ? (
+          <p className={styles.empty}>No hay items que coincidan con los filtros.</p>
+        ) : (
+          <div className={styles.items}>
+            {collection.items.map((item) => (
+              <Link className={styles.item} key={item.id} to={`/collection/${item.id}`}>
+                {item.card?.image_url ? <img alt="" src={item.card.image_url} /> : <span className={styles.placeholder}>TCG</span>}
+                <span className={styles.itemContent}>
+                  <strong>{item.card?.name || item.card_id}</strong>
+                  <small>{item.set?.name || "Set desconocido"} · {item.condition}</small>
+                  <span className={styles.tags}>{item.quantity} unidades {item.is_graded ? `· Grado ${item.grade}` : "· Sin grading"}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+        <Pagination disabled={isLoading} onPageChange={(page) => setQuery((current) => ({ ...current, offset: (page - 1) * current.limit }))} page={Math.floor(collection.pagination.offset / collection.pagination.limit) + 1} totalPages={Math.ceil(collection.pagination.total / collection.pagination.limit)} />
       </article>
     </section>
   );
+}
+
+function Metric({ label, value, caption, accent = false }) {
+  return <article className={`${styles.metric} ${accent ? styles.metricAccent : ""}`}><span>{label}</span><strong>{value}</strong>{caption && <small>{caption}</small>}</article>;
+}
+
+function SelectField({ label, options, value, onChange }) {
+  return <label>{label}<select onChange={onChange} value={value || ""}>{options.map(([optionValue, optionLabel]) => <option key={optionValue || optionLabel} value={optionValue}>{optionLabel}</option>)}</select></label>;
 }
 
 export default CollectionPage;
