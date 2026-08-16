@@ -11,13 +11,14 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
 - Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
 - Se agregaron pruebas de filtros y contratos del catálogo.
-- `pnpm.cmd test:run` pasó con 15 archivos y 77 tests, incluyendo 7 pruebas HTTP end-to-end, readiness, métricas y pruebas de redacción del logger.
+- `pnpm.cmd test:run` pasó con 15 archivos y 78 tests, incluyendo 8 pruebas HTTP end-to-end, readiness, métricas, OpenAPI y pruebas de redacción del logger.
 - `pnpm.cmd db:explain` inspeccionó cuatro consultas críticas y dejó preparada una migration para los scans secuenciales detectados.
 - `pnpm db:migrate` fue ejecutado en desarrollo con runner versionado, advisory lock y transacciones; `001_critical_read_indexes.sql` quedó registrada en `schema_migrations`.
 - Se implementó logging JSON estructurado, redacción recursiva de secretos, request IDs y trazabilidad HTTP; `error.middleware` registra errores correlacionados sin exponer secretos.
 - Se migraron al logger los logs de infraestructura, sincronizadores, servicios de precios, sync lock y validación de responses; `api/src` ya no contiene logs directos fuera de `utils/logger.js`.
 - Se agregaron métricas HTTP agregadas por endpoint, liveness, readiness con PostgreSQL y stack traces controlados por entorno.
-- Validación actual: `pnpm.cmd test:run` pasa con 15 archivos y 77 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd exec eslint src tests scripts` pasa sin errores ni warnings.
+- Se publicó `GET /api/docs/openapi.json` con un contrato OpenAPI 3.0.3 de 38 paths y 58 operaciones, y se agregó `pnpm.cmd check:openapi`.
+- Validación actual: `pnpm.cmd test:run` pasa con 15 archivos y 78 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd check:openapi` y `pnpm.cmd exec eslint src tests scripts` pasan sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
 - `pnpm.cmd db:check:schema` inventarió las nueve tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
 - `pnpm.cmd test:integration` pasó con 3 tests de lectura de repositories contra PostgreSQL.
@@ -33,7 +34,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm.cmd test:run` OK con 15 archivos y 77 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones y logging.
+- Validación adicional: `pnpm.cmd test:run` OK con 15 archivos y 78 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones, logging y OpenAPI.
 - Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 3 tests de repositories contra PostgreSQL.
 - Validación adicional: `pnpm.cmd db:explain` OK antes y después de la migration; los índices fueron verificados y las tablas pequeñas aún pueden elegir `Seq Scan` por coste estimado.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
@@ -66,7 +67,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - DDL/migrations, índices y constraints verificables.
 - Transacciones restantes.
 - Logging/observabilidad: **finalizada**; logger, métricas HTTP, health/readiness y logs de dominio implementados.
-- OpenAPI.
+- Jobs de background y production readiness.
 - Background Jobs.
 - Production readiness.
 - Frontend completo.
@@ -552,6 +553,8 @@ Registrar:
 Un error de producción puede correlacionarse con request, usuario técnico, endpoint y operación sin exponer secretos.
 
 ## 15. Fase 11 — Swagger/OpenAPI
+
+Estado: **Finalizado**. El contrato OpenAPI 3.0.3 está versionado en `src/docs/openapi.js`, se sirve desde `GET /api/docs/openapi.json` y se valida con `pnpm check:openapi`. Incluye 38 paths, 58 operaciones, autenticación Bearer, cookie de refresh, parámetros, bodies, respuestas y errores estándar.
 
 Documentar:
 

@@ -13,6 +13,7 @@ import collectionItemsRoutes from "./routes/collection-items.routes.js";
 import gradingCompaniesRoutes from "./routes/grading-companies.routes.js";
 import syncRoutes from "./routes/sync.pipeline.routes.js";
 import healthRoutes from "./routes/health.routes.js";
+import docsRoutes from "./routes/docs.routes.js";
 
 import { corsOptions, helmetOptions } from "./config/security.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
@@ -31,6 +32,7 @@ app.use(cookieParser());
 ==================================== */
 
 app.use("/api", healthRoutes);
+app.use("/api", docsRoutes);
 app.use("/api", cardsPricesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);

@@ -11,6 +11,7 @@
     "db:migrate": "node scripts/run-migrations.js",
     "db:seed:graded": "node scripts/seed-graded-card-prices.js",
     "check:graded-value": "node scripts/check-graded-collection-value.js",
+    "check:openapi": "node scripts/check-openapi.js",
     "test": "vitest",
     "test:run": "vitest run --exclude tests/repositories.integration.test.js",
     "test:integration": "node scripts/run-integration-tests.js",

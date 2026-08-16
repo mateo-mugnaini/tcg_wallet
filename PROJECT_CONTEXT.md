@@ -1,6 +1,6 @@
 # TCG Wallet API — Project Context
 
-> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 15 archivos y 80 tests ejecutados (77 normales + 3 de integración).
+> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 15 archivos y 81 tests ejecutados (78 normales + 3 de integración).
 >
 > Regla de evidencia: si un dato no puede comprobarse en código o mediante una ejecución reproducible, se marca **NO VERIFICADO**. Si aparece solamente en roadmap/historial y no en código actual, se marca **PLANIFICADO / NO VERIFICADO EN CÓDIGO**.
 
@@ -39,7 +39,7 @@ El módulo graded_card_prices tiene implementados sus cinco endpoints de consult
 | helmet | ^8.3.0 | Headers de seguridad activos en app.js. |
 | cors | ^2.8.6 | CORS por entorno activo en app.js. |
 | dotenv | ^17.4.2 | Carga de .env. |
-| vitest | ^4.1.10 | Runner; 15 archivos y 77 tests normales, más 3 tests de integración PostgreSQL. |
+| vitest | ^4.1.10 | Runner; 15 archivos y 78 tests normales, más 3 tests de integración PostgreSQL. |
 | nodemon | ^3.1.14 | Desarrollo. |
 | ESLint | ^10.8.1 | Lint ejecutable; globals está declarado como dependencia de desarrollo. |
 | Prettier | ^3.9.6 | Formato. |
@@ -104,7 +104,7 @@ Archivos centrales:
 
 - Se consolidó el pipeline de sincronización: `src/services/sync.pipeline.service.js` ahora es únicamente un re-export de compatibilidad hacia `src/syncs`.
 - Se creó `src/schemas/common.schema.js` y se normaliza `sortOrder` como `ASC`/`DESC` en TCGs, sets, cards, colección y usuarios.
-- La suite tiene 77 tests normales en 15 archivos y añade 3 tests de integración PostgreSQL.
+- La suite tiene 78 tests normales en 15 archivos y añade 3 tests de integración PostgreSQL.
 - ESLint ya ejecuta correctamente después de declarar `globals` en `api/package.json`; la ejecución final no tuvo errores ni warnings.
 - Se implementó logging JSON estructurado con redacción de secretos, request IDs y trazabilidad HTTP; toda la capa `api/src` ya usa el logger y no conserva logs directos fuera de `utils/logger.js`. También existen métricas HTTP, liveness, readiness con PostgreSQL y stack traces controlados.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.
@@ -562,7 +562,8 @@ check_schema.js es diagnóstico de solo lectura. Audita las nueve tablas princip
 Resultado real de esta revisión:
 
 - Import de src/app.js: OK; verifica carga de módulos, no endpoints ni DB.
-- pnpm.cmd test:run: OK; 15 archivos y 77 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, seguridad, operaciones, readiness, métricas y redacción de logs.
+- pnpm.cmd test:run: OK; 15 archivos y 78 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, seguridad, operaciones, readiness, métricas, OpenAPI y redacción de logs.
+- `pnpm.cmd check:openapi`: OK; contrato OpenAPI 3.0.3 con 38 paths y 58 operaciones.
 - pnpm.cmd test:integration: OK; 1 archivo y 3 tests de repositories contra PostgreSQL en el puerto 2203.
 - pnpm.cmd db:explain: OK; cuatro planes críticos inspeccionados y dos oportunidades de índices identificadas.
 - `pnpm db:migrate` fue ejecutado correctamente en desarrollo; creó `schema_migrations`, aplicó `001_critical_read_indexes.sql` y registró la migration.
@@ -636,12 +637,12 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 05 | Catálogo avanzado | **En progreso**; filtros y normalización de orden cubiertos, faltan tests de integración y normalización restante. |
 | 06 | Validación Zod completa | **En progreso**; auth/users y catálogo tienen schemas conectados, faltan respuestas menores y normalización adicional. |
 | 07 | Limpieza Controller/Service/Repository | **En progreso**; pipeline duplicado resuelto con shim, queda retirar validación duplicada restante. |
-| 08 | Testing profesional | **En progreso**; 15 archivos y 77 tests normales, incluyendo 3 de repositories PostgreSQL y 7 API HTTP; faltan operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso**; 15 archivos y 78 tests normales, incluyendo 3 de repositories PostgreSQL y 8 API HTTP; faltan operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies, Helmet/CORS y syncs costosos protegidos por admin; quedan rate limits distribuidos, CSRF y validación de producción. |
 | 10 | Índices y optimización DB | **En progreso**; inventario, EXPLAIN y migration aplicados/verificados; falta medir con volumen real y optimizar consultas restantes. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
 | 12 | Logging/Observabilidad | **Finalizado**; logger JSON, redacción de secretos, request IDs, métricas HTTP, liveness/readiness y stack traces controlados validados. |
-| 13 | Swagger/OpenAPI | Pendiente. |
+| 13 | Swagger/OpenAPI | **Finalizado**; contrato OpenAPI 3.0.3 publicado y validado con 38 paths y 58 operaciones. |
 | 14 | Background Jobs | Pendiente; sync sigue en HTTP. |
 | 15 | Production Readiness | Pendiente. |
 | 16 | Frontend | Fuera del alcance; existe client, estado no analizado. |

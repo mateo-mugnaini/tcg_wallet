@@ -81,6 +81,16 @@ describe("API end-to-end contracts", () => {
     );
   });
 
+  it("publishes the versioned OpenAPI contract", async () => {
+    const { response, body } = await request("/api/docs/openapi.json");
+
+    expect(response.status).toBe(200);
+    expect(body.openapi).toBe("3.0.3");
+    expect(body.info.title).toBe("TCG Wallet API");
+    expect(body.paths["/cards/{cardId}/prices"]).toBeDefined();
+    expect(body.components.securitySchemes.bearerAuth.scheme).toBe("bearer");
+  });
+
   it("rejects invalid login input before reaching the database", async () => {
     const { response, body } = await request("/api/auth/login", {
       method: "POST",
