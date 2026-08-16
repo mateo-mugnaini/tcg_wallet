@@ -21,6 +21,7 @@ const tableNames = [
   "collection_items",
   "grading_companies",
   "graded_card_prices",
+  "sync_jobs",
 ];
 
 try {

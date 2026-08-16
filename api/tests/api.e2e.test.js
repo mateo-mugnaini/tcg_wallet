@@ -88,6 +88,7 @@ describe("API end-to-end contracts", () => {
     expect(body.openapi).toBe("3.0.3");
     expect(body.info.title).toBe("TCG Wallet API");
     expect(body.paths["/cards/{cardId}/prices"]).toBeDefined();
+    expect(body.paths["/sync/jobs"]).toBeDefined();
     expect(body.components.securitySchemes.bearerAuth.scheme).toBe("bearer");
   });
 

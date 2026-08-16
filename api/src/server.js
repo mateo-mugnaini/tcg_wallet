@@ -2,10 +2,12 @@ import app from "./app.js";
 import { testDatabaseConnection } from "./config/database.js";
 import env from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import { syncJobQueue } from "./jobs/sync-job.queue.js";
 
 const startServer = async () => {
   try {
     await testDatabaseConnection();
+    await syncJobQueue.start();
 
     app.listen(env.port, () => {
       logger.info("server_started", { port: env.port });

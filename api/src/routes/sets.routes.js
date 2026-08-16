@@ -7,8 +7,8 @@ import {
   getSetsController,
   updateSet,
   deleteSet,
-  syncPokemonSetsController,
 } from "../controllers/sets.controller.js";
+import { createSyncJobTypeController } from "../controllers/sync-jobs.controller.js";
 
 // MIDDLEWARES
 import { requireRole } from "../middlewares/role.middleware.js";
@@ -25,7 +25,9 @@ import {
   setResponseSchema,
   setsListResponseSchema,
 } from "../schemas/set.schema.js";
-import { pokemonSetsSyncResponseSchema } from "../schemas/sync.schema.js";
+import { syncJobResponseSchema } from "../schemas/sync-jobs.schema.js";
+import { syncRateLimiter } from "../middlewares/rate-limit.middleware.js";
+import { syncExecutionLock } from "../middlewares/sync-lock.middleware.js";
 
 const router = express.Router();
 
@@ -50,8 +52,10 @@ router.post(
   "/sync/pokemon",
   authenticate,
   requireRole("admin"),
-  validateResponse(pokemonSetsSyncResponseSchema),
-  syncPokemonSetsController,
+  syncRateLimiter,
+  syncExecutionLock,
+  validateResponse(syncJobResponseSchema),
+  createSyncJobTypeController("sets"),
 );
 
 /* ====================================

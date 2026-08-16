@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
 
 import pool from "../src/config/database.js";
 import {
@@ -25,6 +26,12 @@ import {
   countGradedCardPrices,
   findGradedCardPrices,
 } from "../src/repositories/graded-card-prices.repository.js";
+import {
+  claimNextSyncJob,
+  completeSyncJob,
+  createSyncJob,
+  findSyncJobById,
+} from "../src/repositories/sync-jobs.repository.js";
 
 const databaseTests = process.env.RUN_DB_TESTS === "true" ? describe : describe.skip;
 const EMPTY_USER_ID = "00000000-0000-4000-8000-000000000000";
@@ -121,5 +128,51 @@ databaseTests("repository integration against PostgreSQL", () => {
     expect(collectionItems).toEqual([]);
     expect(collectionTotal).toBe(0);
     expect(gradedTotal).toBeGreaterThanOrEqual(gradedPrices.length);
+  });
+
+  it("exposes the persistent sync jobs table and concurrency index", async () => {
+    const table = await pool.query(
+      `
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'sync_jobs'
+      `,
+    );
+    const index = await pool.query(
+      `
+        SELECT indexname
+        FROM pg_indexes
+        WHERE schemaname = 'public'
+          AND tablename = 'sync_jobs'
+          AND indexname = 'idx_sync_jobs_one_active'
+      `,
+    );
+
+    expect(table.rows).toHaveLength(1);
+    expect(index.rows).toHaveLength(1);
+  });
+
+  it("persists, claims and completes a sync job", async () => {
+    const id = randomUUID();
+
+    try {
+      const created = await createSyncJob({ id, type: "sets" });
+      const claimed = await claimNextSyncJob("integration-test-worker");
+      const completed = await completeSyncJob(id, {
+        status: "succeeded",
+        durationMs: 12,
+        result: { summary: { created: 0 } },
+      });
+
+      expect(created.status).toBe("queued");
+      expect(claimed.id).toBe(id);
+      expect(claimed.status).toBe("running");
+      expect(completed.status).toBe("succeeded");
+      expect((await findSyncJobById(id)).result).toEqual({
+        summary: { created: 0 },
+      });
+    } finally {
+      await pool.query("DELETE FROM sync_jobs WHERE id = $1", [id]);
+    }
   });
 });

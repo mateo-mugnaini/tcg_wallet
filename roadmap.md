@@ -2,7 +2,7 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 15 archivos y 78 tests; la suite de integración añade 3 tests PostgreSQL ejecutados correctamente.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 16 archivos y 81 tests; la suite de integración añade 5 tests PostgreSQL ejecutados correctamente.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
@@ -15,7 +15,7 @@
 - Se añadieron pruebas de contratos del catálogo y pruebas unitarias del `cards.service` con repositories mockeados.
 - Se añadieron pruebas unitarias del `collection-items.service` para reglas graded, filtros, paginación y ownership.
 - Se incorporó el comando oficial `pnpm lint` y ESLint ejecuta sin errores ni warnings.
-- Se amplió `api/check_schema.js` para auditar las nueve tablas principales, columnas, constraints e índices sin modificar datos.
+- Se amplió `api/check_schema.js` para auditar las diez tablas principales, columnas, constraints e índices sin modificar datos.
 - Se añadió `pnpm test:integration` con 3 pruebas de lectura de repositories contra PostgreSQL.
 - Se añadieron pruebas HTTP end-to-end para health, validación de login y autenticación de colección.
 - Se añadieron pruebas unitarias del servicio de precios para snapshots, paginación, estadísticas, variación y validaciones de alta.
@@ -25,8 +25,11 @@
 - Se implementó logging estructurado JSON con niveles, redacción de secretos, request IDs y trazabilidad de requests HTTP; se agregaron pruebas de logger y propagación de `x-request-id`.
 - Se migraron al logger los logs de infraestructura, sincronizadores, servicios de precios, sync lock y validación de responses; `api/src` ya no contiene logs directos fuera de `utils/logger.js`.
 - Se agregaron métricas HTTP agregadas por endpoint, liveness, readiness con consulta real a PostgreSQL y endpoint de métricas; los stack traces solo se registran fuera de producción.
-- Se publicó el contrato OpenAPI 3.0.3 en `/api/docs/openapi.json`, con 38 paths y 58 operaciones documentadas, esquemas de requests/responses y Bearer auth.
-- Validación realizada: `pnpm.cmd test:run` pasa con 15 archivos y 78 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
+- Se publicó el contrato OpenAPI 3.0.3 en `/api/docs/openapi.json`, con 40 paths y 61 operaciones documentadas, esquemas de requests/responses y Bearer auth.
+- Se implementó una cola interna de jobs de sincronización con estados queued/running/succeeded/failed, duración, resumen, error seguro y bloqueo de concurrencia; los endpoints asíncronos responden `202`.
+- Se implementó una cola persistente PostgreSQL de jobs de sincronización con estados, duración, resumen, error seguro, recuperación de jobs obsoletos y claim con `SKIP LOCKED`; los endpoints async responden `202`.
+- Los endpoints legacy de sets, cards, prices y pipeline ahora disparan jobs y conservan el advisory lock como protección adicional; ninguna sincronización larga queda dentro del ciclo HTTP.
+- Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 81 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
@@ -38,13 +41,13 @@
 | 05 | Catálogo avanzado | **En progreso** | Completar tests de integración y normalización restante de filtros en sets/TCGs. |
 | 06 | Validación Zod completa | **En progreso** | Auth, users y catálogo ya tienen schemas conectados; faltan responses menores y normalización adicional. |
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
-| 08 | Testing profesional | **En progreso** | 15 archivos y 78 tests normales + 3 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso** | 16 archivos y 81 tests normales + 5 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
 | 10 | Índices y optimización DB | **En progreso** | Migration aplicada y verificada; ampliar mediciones con volumen real y revisar planes de consultas graded/colección. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Finalizado** | Logger JSON, redacción, request IDs, métricas HTTP, liveness/readiness y stack traces controlados implementados y validados. |
 | 13 | Swagger/OpenAPI | **Finalizado** | Contrato OpenAPI 3.0.3 publicado en `/api/docs/openapi.json`, validado automáticamente y cubierto por test HTTP. |
-| 14 | Background Jobs | **Pendiente** | Extraer sincronizaciones del ciclo HTTP. |
+| 14 | Background Jobs | **Finalizado** | Cola persistente, recuperación, claim distribuido, bloqueo de concurrencia y endpoints async implementados; legacy convertido a disparador `202`. |
 | 15 | Production Readiness | **Pendiente** | Deploy, shutdown, backups, CI/CD y monitoring. |
 | 16 | Frontend | **Fuera del backend actual** | Iniciar después de estabilizar la API. |
 
@@ -612,7 +615,7 @@ POST /api/cards/sync/pokemon
 POST /api/sync/cards/prices
 ```
 
-Los endpoints costosos requieren rol admin, tienen rate limit específico y comparten un advisory lock de PostgreSQL entre instancias. La extracción a jobs sigue pendiente para no mantener requests HTTP abiertas durante todo el sync.
+Los endpoints costosos requieren rol admin, tienen rate limit específico y comparten un advisory lock de PostgreSQL entre instancias. Los endpoints async de jobs ya evitan mantener requests abiertas; los endpoints legacy síncronos se conservan por compatibilidad y quedan para retirada gradual.
 
 ## 9.3. Cookies y Refresh Tokens — ✅ IMPLEMENTADO EN CÓDIGO
 
@@ -958,7 +961,7 @@ La prioridad recomendada queda así:
 
 # 18. Siguiente bloque de implementación
 
-El siguiente bloque ejecutado fue testing unitario de catálogo, colección y precios, 3 pruebas de repositories contra PostgreSQL y 8 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 15 archivos y 78 tests normales ejecutados.
+El siguiente bloque ejecutado fue testing unitario de catálogo, colección y precios, 5 pruebas de repositories contra PostgreSQL y 8 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 16 archivos y 81 tests normales ejecutados.
 
 Por lo tanto, el siguiente bloque lógico es ampliar tests de operaciones de escritura aisladas y seguir con observabilidad/limpieza de capas; la optimización DB continúa con mediciones de volumen real.
 

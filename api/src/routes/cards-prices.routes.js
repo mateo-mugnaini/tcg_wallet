@@ -9,7 +9,7 @@ import {
   getCardPriceAggregationsController,
 } from "../controllers/cards-prices.controller.js";
 
-import { syncPokemonCardPricesController } from "../controllers/cards-prices-sync.controller.js";
+import { createSyncJobTypeController } from "../controllers/sync-jobs.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
@@ -32,7 +32,7 @@ import {
   cardPriceVariationResponseSchema,
   cardPriceAggregationsResponseSchema,
 } from "../schemas/cards-prices.schema.js";
-import { pokemonCardPricesSyncResponseSchema } from "../schemas/sync.schema.js";
+import { syncJobResponseSchema } from "../schemas/sync-jobs.schema.js";
 
 import {
   gradedCardPriceCardIdParamsSchema,
@@ -202,7 +202,7 @@ router.post(
   requireRole("admin"),
   syncRateLimiter,
   syncExecutionLock,
-  validateResponse(pokemonCardPricesSyncResponseSchema),
-  syncPokemonCardPricesController,
+  validateResponse(syncJobResponseSchema),
+  createSyncJobTypeController("prices"),
 );
 export default router;

@@ -11,17 +11,18 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
 - Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
 - Se agregaron pruebas de filtros y contratos del catálogo.
-- `pnpm.cmd test:run` pasó con 15 archivos y 78 tests, incluyendo 8 pruebas HTTP end-to-end, readiness, métricas, OpenAPI y pruebas de redacción del logger.
+- `pnpm.cmd test:run` pasó con 16 archivos y 81 tests, incluyendo 8 pruebas HTTP end-to-end, readiness, métricas, OpenAPI, jobs y pruebas de redacción del logger.
 - `pnpm.cmd db:explain` inspeccionó cuatro consultas críticas y dejó preparada una migration para los scans secuenciales detectados.
 - `pnpm db:migrate` fue ejecutado en desarrollo con runner versionado, advisory lock y transacciones; `001_critical_read_indexes.sql` quedó registrada en `schema_migrations`.
 - Se implementó logging JSON estructurado, redacción recursiva de secretos, request IDs y trazabilidad HTTP; `error.middleware` registra errores correlacionados sin exponer secretos.
 - Se migraron al logger los logs de infraestructura, sincronizadores, servicios de precios, sync lock y validación de responses; `api/src` ya no contiene logs directos fuera de `utils/logger.js`.
 - Se agregaron métricas HTTP agregadas por endpoint, liveness, readiness con PostgreSQL y stack traces controlados por entorno.
-- Se publicó `GET /api/docs/openapi.json` con un contrato OpenAPI 3.0.3 de 38 paths y 58 operaciones, y se agregó `pnpm.cmd check:openapi`.
-- Validación actual: `pnpm.cmd test:run` pasa con 15 archivos y 78 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd check:openapi` y `pnpm.cmd exec eslint src tests scripts` pasan sin errores ni warnings.
+- Se publicó `GET /api/docs/openapi.json` con un contrato OpenAPI 3.0.3 de 40 paths y 61 operaciones, y se agregó `pnpm.cmd check:openapi`.
+- Se implementó una cola interna de sync jobs para sets, cards, prices y pipeline, con `202 Accepted`, consulta de estado, resumen, duración, error seguro y bloqueo de concurrencia.
+- Validación actual: `pnpm.cmd test:run` pasa con 16 archivos y 81 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi` y `pnpm.cmd exec eslint src tests scripts` pasan sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
-- `pnpm.cmd db:check:schema` inventarió las nueve tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
-- `pnpm.cmd test:integration` pasó con 3 tests de lectura de repositories contra PostgreSQL.
+- `pnpm.cmd db:check:schema` inventarió las diez tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
+- `pnpm.cmd test:integration` pasó con 5 tests de repositories contra PostgreSQL, incluyendo persistir, reclamar y completar un job real.
 
 - Fase 0: en progreso avanzado. PostgreSQL está configurado en el puerto 2203 y el inventario completo de tablas, columnas, constraints e índices ya fue verificado; existe runner de migrations y `001_critical_read_indexes.sql` está aplicada en desarrollo.
 - Fase 1: en progreso. Ya existen los cinco endpoints de consulta, el registro manual, el importador batch administrativo y el fixture ejecutable de graded prices con repository, service, controller, routes y schemas Zod; el proveedor de sync automático sigue pendiente.
@@ -34,8 +35,8 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm.cmd test:run` OK con 15 archivos y 78 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones, logging y OpenAPI.
-- Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 3 tests de repositories contra PostgreSQL.
+- Validación adicional: `pnpm.cmd test:run` OK con 16 archivos y 81 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones, logging, OpenAPI y jobs.
+- Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 5 tests de repositories contra PostgreSQL.
 - Validación adicional: `pnpm.cmd db:explain` OK antes y después de la migration; los índices fueron verificados y las tablas pequeñas aún pueden elegir `Seq Scan` por coste estimado.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
@@ -67,7 +68,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - DDL/migrations, índices y constraints verificables.
 - Transacciones restantes.
 - Logging/observabilidad: **finalizada**; logger, métricas HTTP, health/readiness y logs de dominio implementados.
-- Jobs de background y production readiness.
+- Persistencia/distribución multiinstancia de jobs, production readiness y frontend.
 - Background Jobs.
 - Production readiness.
 - Frontend completo.
@@ -554,7 +555,7 @@ Un error de producción puede correlacionarse con request, usuario técnico, end
 
 ## 15. Fase 11 — Swagger/OpenAPI
 
-Estado: **Finalizado**. El contrato OpenAPI 3.0.3 está versionado en `src/docs/openapi.js`, se sirve desde `GET /api/docs/openapi.json` y se valida con `pnpm check:openapi`. Incluye 38 paths, 58 operaciones, autenticación Bearer, cookie de refresh, parámetros, bodies, respuestas y errores estándar.
+Estado: **Finalizado**. El contrato OpenAPI 3.0.3 está versionado en `src/docs/openapi.js`, se sirve desde `GET /api/docs/openapi.json` y se valida con `pnpm check:openapi`. Incluye 40 paths, 61 operaciones, autenticación Bearer, cookie de refresh, parámetros, bodies, respuestas y errores estándar.
 
 Documentar:
 
@@ -571,6 +572,8 @@ Documentar:
 Generar o servir la especificación desde un lugar versionado. Mantener OpenAPI sincronizado con los schemas Zod mediante una estrategia definida.
 
 ## 16. Fase 12 — Background Jobs
+
+Estado: **Finalizado**. La cola persistente PostgreSQL ejecuta jobs de sets, cards, prices y pipeline fuera del ciclo HTTP; usa claim con `FOR UPDATE SKIP LOCKED`, índice único para impedir jobs activos concurrentes y recuperación de jobs obsoletos al iniciar. Existen endpoints admin y tests de estados, concurrencia, persistencia de schema y flujo real persistir-reclamar-completar; los endpoints legacy fueron convertidos en disparadores `202`.
 
 Extraer syncs largos del request HTTP.
 

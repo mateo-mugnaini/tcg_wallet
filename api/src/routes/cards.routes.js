@@ -6,8 +6,8 @@ import {
   createCardController,
   updateCardController,
   deleteCardController,
-  syncPokemonCardsController,
 } from "../controllers/cards.controller.js";
+import { createSyncJobTypeController } from "../controllers/sync-jobs.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
@@ -25,7 +25,7 @@ import {
   getCardsQuerySchema,
   updateCardSchema,
 } from "../schemas/cards.schema.js";
-import { pokemonCardsSyncResponseSchema } from "../schemas/sync.schema.js";
+import { syncJobResponseSchema } from "../schemas/sync-jobs.schema.js";
 
 const router = Router();
 
@@ -103,8 +103,8 @@ router.post(
   requireRole("admin"),
   syncRateLimiter,
   syncExecutionLock,
-  validateResponse(pokemonCardsSyncResponseSchema),
-  syncPokemonCardsController,
+  validateResponse(syncJobResponseSchema),
+  createSyncJobTypeController("cards"),
 );
 
 export default router;

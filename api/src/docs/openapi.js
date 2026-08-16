@@ -270,7 +270,7 @@ export const openapiDocument = {
       get: operation({ operationId: "listSets", summary: "List sets", tag: "Sets", successSchema: "SetListResponse", query: [queryString("tcgId"), queryString("search"), queryString("page"), queryString("limit"), queryString("sortBy"), queryString("sortOrder")] }),
     },
     "/sets/sync/pokemon": {
-      post: operation({ operationId: "syncPokemonSets", summary: "Synchronize Pokémon sets (admin)", tag: "Sets", successSchema: "SyncSetsResponse", admin: true }),
+      post: operation({ operationId: "syncPokemonSets", summary: "Start asynchronous Pokémon sets sync (admin)", tag: "Sets", successSchema: "SyncJobResponse", successStatus: "202", admin: true }),
     },
     "/sets/{id}": {
       get: operation({ operationId: "getSet", summary: "Get a set", tag: "Sets", successSchema: "SetResponse", params: [parameter("id", "path", uuid, true)] }),
@@ -287,7 +287,7 @@ export const openapiDocument = {
       delete: operation({ operationId: "deleteCard", summary: "Delete a card (admin)", tag: "Cards", successSchema: "CardResponse", admin: true, params: [parameter("id", "path", uuid, true)] }),
     },
     "/cards/sync/pokemon": {
-      post: operation({ operationId: "syncPokemonCards", summary: "Synchronize Pokémon cards (admin)", tag: "Cards", successSchema: "SyncCardsResponse", admin: true }),
+      post: operation({ operationId: "syncPokemonCards", summary: "Start asynchronous Pokémon cards sync (admin)", tag: "Cards", successSchema: "SyncJobResponse", successStatus: "202", admin: true }),
     },
     "/cards/{cardId}/prices": {
       get: operation({ operationId: "listCardPrices", summary: "List normal price history", tag: "Prices", successSchema: "CardPriceListResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("source"), queryString("condition"), queryString("page"), queryString("limit"), queryString("sortOrder")] }),
@@ -306,7 +306,7 @@ export const openapiDocument = {
       get: operation({ operationId: "cardPriceAggregations", summary: "Get normal price aggregations", tag: "Prices", successSchema: "CardPriceAggregationsResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("source"), queryString("condition"), queryString("period")] }),
     },
     "/sync/cards/prices": {
-      post: operation({ operationId: "syncPokemonPrices", summary: "Synchronize Pokémon prices (admin)", tag: "Prices", successSchema: "SyncPricesResponse", admin: true }),
+      post: operation({ operationId: "syncPokemonPrices", summary: "Start asynchronous Pokémon prices sync (admin)", tag: "Prices", successSchema: "SyncJobResponse", successStatus: "202", admin: true }),
     },
     "/cards/{cardId}/graded-prices": {
       get: operation({ operationId: "listGradedPrices", summary: "List graded price history", tag: "Prices", successSchema: "GradedCardPriceListResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("source"), queryString("page"), queryString("limit"), queryString("sortOrder")] }),
@@ -349,7 +349,14 @@ export const openapiDocument = {
       delete: operation({ operationId: "deleteGradingCompany", summary: "Delete a grading company (admin)", tag: "Grading", successSchema: "GradingCompanyMutationResponse", admin: true, params: [parameter("id", "path", uuid, true)] }),
     },
     "/sync": {
-      post: operation({ operationId: "syncPipeline", summary: "Run the complete Pokémon sync pipeline (admin)", tag: "Sync", successSchema: "SyncPipelineResponse", admin: true }),
+      post: operation({ operationId: "syncPipeline", summary: "Start asynchronous complete Pokémon sync pipeline (admin)", tag: "Sync", successSchema: "SyncJobResponse", successStatus: "202", admin: true }),
+    },
+    "/sync/jobs": {
+      post: operation({ operationId: "createSyncJob", summary: "Start an asynchronous sync job (admin)", tag: "Sync", successSchema: "SyncJobResponse", successStatus: "202", admin: true, body: "CreateSyncJobRequest" }),
+      get: operation({ operationId: "listSyncJobs", summary: "List sync jobs (admin)", tag: "Sync", successSchema: "SyncJobsListResponse", admin: true }),
+    },
+    "/sync/jobs/{id}": {
+      get: operation({ operationId: "getSyncJob", summary: "Get an asynchronous sync job (admin)", tag: "Sync", successSchema: "SyncJobResponse", admin: true, params: [parameter("id", "path", uuid, true)] }),
     },
     "/sync/graded-prices": {
       post: operation({ operationId: "importGradedPrices", summary: "Import graded price snapshots (admin)", tag: "Sync", successSchema: "GradedPricesImportResponse", admin: true, body: "ImportGradedPricesRequest" }),
@@ -418,6 +425,25 @@ export const openapiDocument = {
       SyncPricesResponse: { type: "object", additionalProperties: true },
       SyncPipelineResponse: { type: "object", additionalProperties: true },
       GradedPricesImportResponse: { type: "object", additionalProperties: true },
+      SyncJob: {
+        type: "object",
+        required: ["id", "type", "status", "queuedAt"],
+        properties: {
+          id: uuid,
+          type: { type: "string", enum: ["sets", "cards", "prices", "pipeline"] },
+          status: { type: "string", enum: ["queued", "running", "succeeded", "failed"] },
+          attempts: { type: "integer", minimum: 0 },
+          queuedAt: { type: "string", format: "date-time" },
+          startedAt: { type: "string", format: "date-time", nullable: true },
+          finishedAt: { type: "string", format: "date-time", nullable: true },
+          durationMs: { type: "integer", minimum: 0, nullable: true },
+          result: { nullable: true },
+          error: { type: "object", nullable: true, properties: { code: { type: "string" }, message: { type: "string" } } },
+        },
+      },
+      SyncJobResponse: dataResponse("SyncJob"),
+      SyncJobsListResponse: { type: "object", properties: { activeJobId: { ...uuid, nullable: true }, data: { type: "array", items: ref("SyncJob") } } },
+      CreateSyncJobRequest: { type: "object", required: ["type"], properties: { type: { type: "string", enum: ["sets", "cards", "prices", "pipeline"] } } },
       LoginResponse: { type: "object", additionalProperties: true },
       RefreshResponse: { type: "object", additionalProperties: true },
       LoginRequest: { type: "object", required: ["email", "password"], properties: { email: { type: "string", format: "email" }, password: { type: "string", format: "password" } } },

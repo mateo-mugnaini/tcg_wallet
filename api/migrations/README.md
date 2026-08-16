@@ -23,4 +23,4 @@ Antes de aplicar una migration en producción hay que:
 3. aplicar el SQL mediante el runner de migrations elegido por el despliegue;
 4. verificar índices y constraints con `pnpm db:check:schema`.
 
-La migration `001_critical_read_indexes.sql` fue aplicada en desarrollo y quedó registrada en `schema_migrations`. Su rollback está documentado en el propio archivo.
+Las migrations `001_critical_read_indexes.sql` y `002_sync_jobs.sql` fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. Sus rollbacks están documentados en los propios archivos.
