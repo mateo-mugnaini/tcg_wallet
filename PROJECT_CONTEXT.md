@@ -111,6 +111,7 @@ Archivos centrales:
 - Se implementó la base de producción reproducible con workflow `.github/workflows/backend-ci.yml`, smoke test `check:smoke`, scripts `db:backup`/`db:restore` y `DEPLOYMENT_RUNBOOK.md`. Docker/Compose queda diferido por decisión de alcance; la ejecución real de staging, restore, rollback y alertas continúa pendiente.
 - La auditoría actual de dependencias de producción (`pnpm audit --prod`) no reportó vulnerabilidades conocidas.
 - Se añadió `scripts/monitor-health.js` para comprobaciones puntuales o continuas de liveness/readiness, con umbral de fallos consecutivos y webhook opcional.
+- La validación local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 - GitHub Actions ejecutó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.
 
@@ -656,7 +657,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 12 | Logging/Observabilidad | **Finalizado**; logger JSON, redacción de secretos, request IDs, métricas HTTP, liveness/readiness y stack traces controlados validados. |
 | 13 | Swagger/OpenAPI | **Finalizado**; contrato OpenAPI 3.0.3 publicado y validado con 40 paths y 61 operaciones. |
 | 14 | Background Jobs | **Finalizado**; cola persistente PostgreSQL, recuperación de jobs obsoletos, claim con `SKIP LOCKED`, bloqueo global y endpoints async validados; legacy convertido a disparador `202`. |
-| 15 | Production Readiness | **En progreso**; graceful shutdown y CI/CD base validados, runbook, backup/restore y monitor de health implementados. Docker/Compose diferido. Quedan despliegue staging real, restore/rollback ejecutados y alertas conectadas a infraestructura real. |
+| 15 | Production Readiness | **En progreso**; validación local y CI/CD base completadas, graceful shutdown, runbook, backup/restore y monitor de health implementados. Docker/Compose diferido. Quedan backup/restore, rollback y alertas conectadas a infraestructura real. |
 | 16 | Frontend | Fuera del alcance; existe client, estado no analizado. |
 
 roadmap.md todavía presenta Collection avanzada como siguiente bloque, pero el código actual ya contiene CRUD, joins, filtros, stats/value y grading companies. El código actual tiene prioridad.

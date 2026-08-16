@@ -38,6 +38,7 @@
 - Se añadió `pnpm monitor:health`, con modo puntual o continuo, umbral de fallos consecutivos y webhook opcional para alertas operativas.
 - GitHub Actions validó correctamente `Backend CI / test` después de versionar `api/pnpm-lock.yaml`; la ejecución completó migrations, fixture, lint, tests, integración, OpenAPI y smoke tests en 43 segundos.
 - Se añadió el entorno explícito `staging`, con las mismas políticas de SSL, secretos, CORS y cookies seguras que producción.
+- Validación confirmada: la suite local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 - Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 82 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
@@ -57,7 +58,7 @@
 | 12 | Logging/Observabilidad | **Finalizado** | Logger JSON, redacción, request IDs, métricas HTTP, liveness/readiness y stack traces controlados implementados y validados. |
 | 13 | Swagger/OpenAPI | **Finalizado** | Contrato OpenAPI 3.0.3 publicado en `/api/docs/openapi.json`, validado automáticamente y cubierto por test HTTP. |
 | 14 | Background Jobs | **Finalizado** | Cola persistente, recuperación, claim distribuido, bloqueo de concurrencia y endpoints async implementados; legacy convertido a disparador `202`. |
-| 15 | Production Readiness | **En progreso** | Shutdown y CI/CD base validados, runbook, scripts de backup/restore y monitor de health implementados; Docker/Compose diferido; quedan ejecutar staging real, probar restore/rollback y conectar alertas operativas reales. |
+| 15 | Production Readiness | **En progreso** | Validación local y CI/CD base completadas; shutdown, runbook, scripts de backup/restore y monitor de health implementados; Docker/Compose diferido; quedan ejecutar backup/restore, rollback y alertas operativas reales en staging. |
 | 16 | Frontend | **Fuera del backend actual** | Iniciar después de estabilizar la API. |
 
 ### Orden ejecutable actualizado
