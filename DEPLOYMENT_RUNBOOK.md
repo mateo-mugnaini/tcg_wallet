@@ -6,9 +6,9 @@ Este runbook define el procedimiento mínimo para staging y producción. Los com
 
 Los secretos se inyectan desde el gestor de secretos del entorno o desde variables protegidas del CI. No se deben commitear archivos `.env` reales.
 
-En producción son obligatorios:
+En staging y producción son obligatorios:
 
-- `NODE_ENV=production`;
+- `NODE_ENV=staging` para validar el entorno previo a producción, o `NODE_ENV=production` para producción;
 - `DATABASE_SSL=true`;
 - `DATABASE_SSL_REJECT_UNAUTHORIZED=true`, salvo una excepción documentada para una CA interna;
 - `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET` aleatorios de al menos 32 caracteres;

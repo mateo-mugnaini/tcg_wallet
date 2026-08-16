@@ -4,7 +4,7 @@ import { logger } from "../utils/logger.js";
 
 const envSchema = z.object({
   NODE_ENV: z
-    .enum(["development", "test", "production"])
+    .enum(["development", "test", "staging", "production"])
     .default("development"),
 
   PORT: z.coerce.number().int().positive().default(3000),
@@ -61,12 +61,15 @@ if (!parsedEnv.success) {
   process.exit(1);
 }
 
+const productionLikeEnvironments = new Set(["staging", "production"]);
+const isProductionLike = productionLikeEnvironments.has(parsedEnv.data.NODE_ENV);
+
 /* ====================================
-      VALIDACIONES DE PRODUCCIÓN
+      VALIDACIONES DE PRODUCCIÓN/STAGING
 ==================================== */
 
 if (
-  parsedEnv.data.NODE_ENV === "production" &&
+  isProductionLike &&
   (parsedEnv.data.JWT_ACCESS_SECRET ===
     "tu_access_secret_super_largo_y_aleatorio" ||
     parsedEnv.data.JWT_REFRESH_SECRET ===
@@ -76,8 +79,8 @@ if (
   process.exit(1);
 }
 
-if (parsedEnv.data.NODE_ENV === "production" && !parsedEnv.data.DATABASE_SSL) {
-  logger.error("database_ssl_required_for_production");
+if (isProductionLike && !parsedEnv.data.DATABASE_SSL) {
+  logger.error("database_ssl_required_for_staging_or_production");
   process.exit(1);
 }
 

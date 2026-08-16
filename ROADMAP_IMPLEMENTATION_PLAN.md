@@ -605,6 +605,8 @@ Se añadió `scripts/monitor-health.js` para comprobaciones puntuales o continua
 
 GitHub Actions validó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
 
+La configuración ahora acepta `NODE_ENV=staging` y aplica las mismas reglas de seguridad de producción, evitando que staging utilice CORS de desarrollo, cookies inseguras o conexiones PostgreSQL sin SSL.
+
 Pendiente para cerrar la fase: ejecutar staging reproducible, backup/restore real, rollback operativo, conectar monitoring/alertas y completar la revisión final de vulnerabilidades.
 
 Checklist:

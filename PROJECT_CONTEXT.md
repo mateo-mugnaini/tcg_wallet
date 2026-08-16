@@ -527,14 +527,14 @@ No expone code ni details. PostgreSQL solo recibe tratamiento especial en el del
 Nombres utilizados por código, sin valores:
 
 ~~~text
-NODE_ENV=development|test|production
+NODE_ENV=development|test|staging|production
 PORT=<positive integer, default 3000>
 DATABASE_HOST=<host>
 DATABASE_PORT=<positive integer, default 5432>
 DATABASE_NAME=<database>
 DATABASE_USER=<user>
 DATABASE_PASSWORD=<secret>
-DATABASE_SSL=true|false (obligatorio true en production)
+DATABASE_SSL=true|false (obligatorio true en staging/production)
 DATABASE_SSL_REJECT_UNAUTHORIZED=true|false (default true)
 DATABASE_CONNECTION_TIMEOUT_MS=<positive integer, default 5000>
 DATABASE_IDLE_TIMEOUT_MS=<positive integer, default 30000>
@@ -549,7 +549,7 @@ CORS_ORIGIN_PRODUCTION=<URL>
 POKEMON_TCG_API_KEY=<secret/API key>
 ~~~
 
-env.js valida al importar y termina el proceso si faltan/son inválidas. En producción rechaza placeholders inseguros de JWT y exige `DATABASE_SSL=true`. `database.js` usa los campos `DATABASE_*` y aplica timeouts de conexión, idle y sentencia. `server.js` usa `SHUTDOWN_TIMEOUT_MS` para evitar un apagado HTTP indefinidamente bloqueado. El cliente externo usa `POKEMON_TCG_API_KEY`. security.js elige origen CORS por NODE_ENV aunque CORS no está registrado en app.
+env.js valida al importar y termina el proceso si faltan/son inválidas. En staging y producción rechaza placeholders inseguros de JWT y exige `DATABASE_SSL=true`. `database.js` usa los campos `DATABASE_*` y aplica timeouts de conexión, idle y sentencia. `server.js` usa `SHUTDOWN_TIMEOUT_MS` para evitar un apagado HTTP indefinidamente bloqueado. El cliente externo usa `POKEMON_TCG_API_KEY`. security.js elige el origen y las cookies de producción para staging/production.
 
 ## 22. Scripts auxiliares
 

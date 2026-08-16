@@ -37,6 +37,7 @@
 - `pnpm audit --prod` no reportó vulnerabilidades conocidas en las dependencias de producción.
 - Se añadió `pnpm monitor:health`, con modo puntual o continuo, umbral de fallos consecutivos y webhook opcional para alertas operativas.
 - GitHub Actions validó correctamente `Backend CI / test` después de versionar `api/pnpm-lock.yaml`; la ejecución completó migrations, fixture, lint, tests, integración, OpenAPI y smoke tests en 43 segundos.
+- Se añadió el entorno explícito `staging`, con las mismas políticas de SSL, secretos, CORS y cookies seguras que producción.
 - Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 82 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
