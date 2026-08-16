@@ -564,6 +564,7 @@ Resultado real de esta revisión:
 - pnpm.cmd test:run: OK; 13 archivos y 66 tests de contratos, catálogo, servicios, colección, API HTTP, autorización, seguridad y operaciones.
 - pnpm.cmd test:integration: OK; 1 archivo y 3 tests de repositories contra PostgreSQL en el puerto 2203.
 - pnpm.cmd db:explain: OK; cuatro planes críticos inspeccionados y dos oportunidades de índices identificadas.
+- `pnpm db:migrate` está implementado con advisory lock y transacciones, pero no fue ejecutado; la base no fue modificada por esta revisión.
 - pnpm.cmd db:check:schema: OK; nueve tablas, constraints e índices inventariados.
 - pnpm.cmd exec eslint src tests: OK, sin errores ni warnings, después de declarar globals en devDependencies.
 - Import del shim legacy: conserva compatibilidad y delega al pipeline activo.
@@ -636,7 +637,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 07 | Limpieza Controller/Service/Repository | **En progreso**; pipeline duplicado resuelto con shim, queda retirar validación duplicada restante. |
 | 08 | Testing profesional | **En progreso**; 14 archivos y 69 tests ejecutados, incluyendo 3 de repositories PostgreSQL y 3 API HTTP; faltan operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies, Helmet/CORS y syncs costosos protegidos por admin; quedan rate limits distribuidos, CSRF y validación de producción. |
-| 10 | Índices y optimización DB | **En progreso**; inventario y EXPLAIN verificados, migration preparada; falta aplicación controlada y comparación posterior. |
+| 10 | Índices y optimización DB | **En progreso**; inventario y EXPLAIN verificados, runner/migration preparados; falta aplicación controlada y comparación posterior. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
 | 12 | Logging/Observabilidad | Pendiente; console logging. |
 | 13 | Swagger/OpenAPI | Pendiente. |

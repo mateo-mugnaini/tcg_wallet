@@ -13,6 +13,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se agregaron pruebas de filtros y contratos del catálogo.
 - `pnpm.cmd test:run` pasó con 13 archivos y 66 tests, incluyendo 3 pruebas HTTP end-to-end.
 - `pnpm.cmd db:explain` inspeccionó cuatro consultas críticas y dejó preparada una migration para los scans secuenciales detectados.
+- `pnpm db:migrate` ya cuenta con runner versionado, advisory lock y transacciones; no se ejecutó todavía sobre la base compartida.
 - Validación actual: `pnpm.cmd test:run` pasa con 13 archivos y 66 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
 - `pnpm.cmd db:check:schema` inventarió las nueve tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
@@ -34,7 +35,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Validación adicional: `pnpm.cmd db:explain` OK con cuatro planes críticos; la migration de índices está preparada, todavía no aplicada.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
-- Siguiente tarea: revisar/aplicar controladamente la migration de índices, comparar EXPLAIN posterior y ampliar tests de escritura aislados.
+- Siguiente tarea: revisar/aplicar controladamente `pnpm db:migrate`, comparar EXPLAIN posterior y ampliar tests de escritura aislados.
 
 ## 1. Estado inicial
 

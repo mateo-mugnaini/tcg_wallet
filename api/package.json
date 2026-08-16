@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "db:check:schema": "node check_schema.js",
     "db:explain": "node scripts/explain-critical-queries.js",
+    "db:migrate": "node scripts/run-migrations.js",
     "db:seed:graded": "node scripts/seed-graded-card-prices.js",
     "check:graded-value": "node scripts/check-graded-collection-value.js",
     "test": "vitest",

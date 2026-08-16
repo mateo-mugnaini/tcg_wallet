@@ -2,6 +2,14 @@
 
 Las migrations de esta carpeta se ejecutan contra el schema `public` existente.
 
+El runner oficial es:
+
+```bash
+pnpm db:migrate
+```
+
+El runner crea `schema_migrations`, bloquea ejecuciones concurrentes con un advisory lock, aplica cada archivo pendiente dentro de una transacción y registra su identificador solo después del `COMMIT`.
+
 El inventario de baseline se obtiene con:
 
 ```bash

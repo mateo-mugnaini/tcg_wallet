@@ -20,11 +20,12 @@
 - Se añadieron pruebas HTTP end-to-end para health, validación de login y autenticación de colección.
 - Se añadió `pnpm db:explain` para medir cuatro consultas críticas sin modificar datos.
 - Se preparó `api/migrations/001_critical_read_indexes.sql` para los dos scans secuenciales detectados; no se aplicó automáticamente.
+- Se implementó `pnpm db:migrate` con `schema_migrations`, advisory lock, transacción por migration y rollback ante errores; todavía no fue ejecutado sobre la base.
 - Validación realizada: `pnpm.cmd test:run` pasa con 13 archivos y 66 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd db:explain` y `pnpm.cmd lint` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
-| 00 | Baseline técnico y DB | **En progreso avanzado** | Versionar DDL/migrations y medir EXPLAIN de queries críticas. |
+| 00 | Baseline técnico y DB | **En progreso avanzado** | Revisar y ejecutar controladamente `pnpm db:migrate`; conservar DDL/baseline versionado. |
 | 01 | Collection avanzada | **Finalizado** | Ampliar cobertura de tests y response schemas generales. |
 | 02 | Grading Companies | **Finalizado** | Añadir tests y completar auditoría de FKs como tarea de calidad. |
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
@@ -34,7 +35,7 @@
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
 | 08 | Testing profesional | **En progreso** | 13 archivos y 66 tests normales + 3 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
-| 10 | Índices y optimización DB | **En progreso** | EXPLAIN ejecutado y migration preparada; falta revisión/aplicación controlada y comparar planes posteriores. |
+| 10 | Índices y optimización DB | **En progreso** | EXPLAIN y migration preparados; falta aplicar controladamente, verificar índices y comparar planes posteriores. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |
 | 13 | Swagger/OpenAPI | **Pendiente** | Publicar contrato de la API. |
