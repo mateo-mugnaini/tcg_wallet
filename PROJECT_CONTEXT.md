@@ -115,6 +115,7 @@ Archivos centrales:
 - Se añadió `api/.env.example` únicamente con los nombres de las variables requeridas; los valores y secretos reales continúan fuera del repositorio.
 - Se añadió `scripts/check-config.js` para validar el entorno y las políticas de configuración sin imprimir secretos ni conectarse a PostgreSQL.
 - Se añadió `scripts/check-data-integrity.js` para auditar precios negativos y grades fuera de rango antes de aplicar constraints adicionales.
+- Las nuevas implementaciones pasaron las pruebas manuales locales y GitHub Actions, incluyendo migration 003, auditoría de datos, tests, integración y smoke tests.
 - GitHub Actions volvió a pasar correctamente después del preflight staging, validando configuración, migrations, tests, integración PostgreSQL, OpenAPI y smoke tests.
 - GitHub Actions ejecutó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.

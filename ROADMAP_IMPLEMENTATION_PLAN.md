@@ -613,6 +613,8 @@ La ejecución posterior en GitHub Actions pasó correctamente con el preflight s
 
 La validación local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 
+Las nuevas implementaciones de integridad de precios también pasaron las pruebas manuales locales y GitHub Actions.
+
 Pendiente para cerrar la fase: ejecutar staging reproducible, backup/restore real, rollback operativo, conectar monitoring/alertas y completar la revisión final de vulnerabilidades.
 
 Checklist:

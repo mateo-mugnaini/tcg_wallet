@@ -41,6 +41,7 @@
 - Se añadió `pnpm check:config` y su validación en CI para detectar configuraciones staging incompletas sin exponer secretos.
 - Se añadió `pnpm db:check:data` para detectar precios negativos o grades fuera de rango antes de endurecer constraints SQL.
 - Se añadió y aplicó `003_price_integrity_constraints.sql`, que impide precios negativos y grades graded fuera de `0–10`.
+- Validación confirmada: las nuevas implementaciones pasaron las pruebas manuales locales y GitHub Actions, incluyendo migration 003, auditoría de datos, tests, integración y smoke tests.
 - GitHub Actions volvió a pasar correctamente después del preflight staging; quedaron validados el entorno, SSL, CORS, secretos mínimos, migrations, tests, integración, OpenAPI y smoke tests.
 - Validación confirmada: la suite local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 - Se añadió `api/.env.example` para hacer reproducible la configuración local sin incluir secretos.
@@ -58,7 +59,7 @@
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
 | 08 | Testing profesional | **En progreso** | 16 archivos y 82 tests normales + 5 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
-| 10 | Índices y optimización DB | **En progreso** | Migration aplicada y verificada; ampliar mediciones con volumen real y revisar planes de consultas graded/colección. |
+| 10 | Índices y optimización DB | **En progreso** | Migrations e integridad aplicadas y verificadas; ampliar mediciones con volumen real y revisar planes de consultas graded/colección. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
 | 12 | Logging/Observabilidad | **Finalizado** | Logger JSON, redacción, request IDs, métricas HTTP, liveness/readiness y stack traces controlados implementados y validados. |
 | 13 | Swagger/OpenAPI | **Finalizado** | Contrato OpenAPI 3.0.3 publicado en `/api/docs/openapi.json`, validado automáticamente y cubierto por test HTTP. |
