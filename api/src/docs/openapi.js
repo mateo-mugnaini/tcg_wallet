@@ -113,8 +113,10 @@ const resourceSchemas = {
   },
   User: {
     type: "object",
+    required: ["id", "role", "email", "username", "created_at", "updated_at"],
     properties: {
       id: uuid,
+      username: { type: "string", minLength: 3, maxLength: 50 },
       email: { type: "string", format: "email" },
       role: { type: "string", enum: ["user", "admin"] },
       created_at: { type: "string", format: "date-time" },
@@ -144,20 +146,22 @@ const resourceSchemas = {
     },
   },
   GradedCardPrice: {
-    allOf: [
-      { $ref: "#/components/schemas/CardPrice" },
-      {
-        type: "object",
-        required: ["grading_company_id", "grade"],
-        properties: {
-          grading_company_id: uuid,
-          grade: { type: "number", minimum: 0, maximum: 10 },
-        },
-      },
-    ],
+    type: "object",
+    required: ["id", "card_id", "grading_company_id", "grade", "price", "currency", "source", "recorded_at"],
+    properties: {
+      id: uuid,
+      card_id: uuid,
+      grading_company_id: uuid,
+      grade: { type: "number", minimum: 0, maximum: 10 },
+      price: { type: "number", format: "double", minimum: 0 },
+      currency: { type: "string" },
+      source: { type: "string" },
+      recorded_at: { type: "string", format: "date-time" },
+    },
   },
   CollectionItem: {
     type: "object",
+    required: ["id", "user_id", "card_id", "quantity", "condition", "is_graded", "grading_company_id", "grade", "created_at", "updated_at", "card", "set", "tcg", "grading_company"],
     properties: {
       id: uuid,
       user_id: uuid,
@@ -169,6 +173,41 @@ const resourceSchemas = {
       grade: { type: "number", minimum: 0, maximum: 10, nullable: true },
       created_at: { type: "string", format: "date-time" },
       updated_at: { type: "string", format: "date-time" },
+      card: {
+        type: "object",
+        required: ["id", "set_id", "external_id", "name", "card_number", "rarity", "image_url"],
+        properties: {
+          id: uuid,
+          set_id: uuid,
+          external_id: { type: "string", nullable: true },
+          name: { type: "string" },
+          card_number: { type: "string", nullable: true },
+          rarity: { type: "string", nullable: true },
+          image_url: { type: "string", nullable: true },
+        },
+      },
+      set: {
+        type: "object",
+        required: ["id", "tcg_id", "name", "code", "release_date"],
+        properties: {
+          id: uuid,
+          tcg_id: uuid,
+          name: { type: "string" },
+          code: { type: "string", nullable: true },
+          release_date: { type: "string", format: "date", nullable: true },
+        },
+      },
+      tcg: {
+        type: "object",
+        required: ["id", "name"],
+        properties: { id: uuid, name: { type: "string" } },
+      },
+      grading_company: {
+        type: "object",
+        nullable: true,
+        required: ["id", "name"],
+        properties: { id: uuid, name: { type: "string" } },
+      },
     },
   },
 };
@@ -232,6 +271,9 @@ export const openapiDocument = {
     "/metrics": {
       get: operation({ operationId: "metrics", summary: "Aggregated HTTP metrics", tag: "Health", successSchema: "MetricsResponse", auth: false }),
     },
+    "/docs": {
+      get: operation({ operationId: "docsIndex", summary: "Documentation entry point", tag: "Documentation", successSchema: "DocsIndexResponse", auth: false }),
+    },
     "/docs/openapi.json": {
       get: operation({ operationId: "openapiDocument", summary: "OpenAPI contract", tag: "Documentation", successSchema: "OpenApiDocument", auth: false }),
     },
@@ -252,9 +294,9 @@ export const openapiDocument = {
       get: operation({ operationId: "getUserByEmail", summary: "Get a user by email (admin)", tag: "Users", successSchema: "UserResponse", admin: true, params: [parameter("email", "path", { type: "string", format: "email" }, true)] }),
     },
     "/users/{id}": {
-      get: operation({ operationId: "getUser", summary: "Get a user", tag: "Users", successSchema: "UserResponse", params: [parameter("id", "path", uuid, true)] }),
-      patch: operation({ operationId: "updateUser", summary: "Update a user", tag: "Users", successSchema: "UserResponse", body: "UpdateUserRequest", params: [parameter("id", "path", uuid, true)] }),
-      delete: operation({ operationId: "deleteUser", summary: "Delete a user", tag: "Users", successSchema: "UserDeleteResponse", params: [parameter("id", "path", uuid, true)] }),
+      get: operation({ operationId: "getUser", summary: "Get own user or any user (admin)", tag: "Users", successSchema: "UserResponse", params: [parameter("id", "path", uuid, true)] }),
+      patch: operation({ operationId: "updateUser", summary: "Update own user or any user (admin)", tag: "Users", successSchema: "UserResponse", body: "UpdateUserRequest", params: [parameter("id", "path", uuid, true)] }),
+      delete: operation({ operationId: "deleteUser", summary: "Delete own user or any user (admin)", tag: "Users", successSchema: "UserDeleteResponse", params: [parameter("id", "path", uuid, true)] }),
     },
     "/tcgs": {
       post: operation({ operationId: "createTcg", summary: "Create a TCG (admin)", tag: "TCGs", successSchema: "TcgResponse", successStatus: "201", admin: true, body: "CreateTcgRequest" }),
@@ -309,20 +351,20 @@ export const openapiDocument = {
       post: operation({ operationId: "syncPokemonPrices", summary: "Start asynchronous Pokémon prices sync (admin)", tag: "Prices", successSchema: "SyncJobResponse", successStatus: "202", admin: true }),
     },
     "/cards/{cardId}/graded-prices": {
-      get: operation({ operationId: "listGradedPrices", summary: "List graded price history", tag: "Prices", successSchema: "GradedCardPriceListResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("source"), queryString("page"), queryString("limit"), queryString("sortOrder")] }),
+      get: operation({ operationId: "listGradedPrices", summary: "List graded price history", tag: "Prices", successSchema: "GradedCardPriceListResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("page"), queryString("limit"), queryString("sortOrder")] }),
       post: operation({ operationId: "createGradedPrice", summary: "Register a graded price (admin)", tag: "Prices", successSchema: "GradedCardPriceResponse", successStatus: "201", admin: true, params: [parameter("cardId", "path", uuid, true)], body: "CreateGradedCardPriceRequest" }),
     },
     "/cards/{cardId}/graded-prices/latest": {
-      get: operation({ operationId: "latestGradedPrice", summary: "Get latest graded price", tag: "Prices", successSchema: "GradedCardPriceResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("source")] }),
+      get: operation({ operationId: "latestGradedPrice", summary: "Get latest graded price", tag: "Prices", successSchema: "GradedCardPriceResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade")] }),
     },
     "/cards/{cardId}/graded-prices/stats": {
-      get: operation({ operationId: "gradedPriceStats", summary: "Get graded price statistics", tag: "Prices", successSchema: "GradedPriceStatisticsResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("source")] }),
+      get: operation({ operationId: "gradedPriceStats", summary: "Get graded price statistics", tag: "Prices", successSchema: "GradedPriceStatisticsResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade")] }),
     },
     "/cards/{cardId}/graded-prices/variation": {
-      get: operation({ operationId: "gradedPriceVariation", summary: "Get graded price variation", tag: "Prices", successSchema: "GradedPriceVariationResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("source")] }),
+      get: operation({ operationId: "gradedPriceVariation", summary: "Get graded price variation", tag: "Prices", successSchema: "GradedPriceVariationResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade")] }),
     },
     "/cards/{cardId}/graded-prices/aggregations": {
-      get: operation({ operationId: "gradedPriceAggregations", summary: "Get graded price aggregations", tag: "Prices", successSchema: "GradedPriceAggregationsResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("source"), queryString("period")] }),
+      get: operation({ operationId: "gradedPriceAggregations", summary: "Get graded price aggregations", tag: "Prices", successSchema: "GradedPriceAggregationsResponse", params: [parameter("cardId", "path", uuid, true)], query: [queryString("gradingCompanyId"), queryString("grade"), queryString("period")] }),
     },
     "/collection-items": {
       get: operation({ operationId: "listCollectionItems", summary: "List the authenticated collection", tag: "Collection", successSchema: "CollectionListResponse", query: [queryString("cardId"), queryString("condition"), queryString("isGraded"), queryString("setId"), queryString("tcgId"), queryString("rarity"), queryString("gradingCompanyId"), queryString("minGrade"), queryString("maxGrade"), queryString("limit"), queryString("offset"), queryString("sortBy"), queryString("sortOrder")] }),
@@ -379,6 +421,7 @@ export const openapiDocument = {
       },
       EmptyResponse: { type: "object", nullable: true },
       HealthResponse: { type: "object", properties: { status: { type: "string", example: "ok" } } },
+      DocsIndexResponse: { type: "object", required: ["status", "openapi"], properties: { status: { type: "string", enum: ["ok"] }, openapi: { type: "string", example: "/api/docs/openapi.json" } } },
       ReadinessResponse: { type: "object", properties: { status: { type: "string", example: "ready" }, checks: { type: "object", properties: { database: { type: "string", example: "ok" } } }, durationMs: { type: "number" } } },
       ReadinessFailureResponse: { type: "object", properties: { status: { type: "string", example: "not_ready" }, checks: { type: "object", properties: { database: { type: "string", example: "unavailable" } } } } },
       Pagination: { type: "object", properties: { page: { type: "integer" }, limit: { type: "integer" }, offset: { type: "integer" }, total: { type: "integer" }, totalPages: { type: "integer" } } },
@@ -397,11 +440,46 @@ export const openapiDocument = {
       SetResponse: dataResponse("Set"),
       SetListResponse: paginated("Set"),
       CardResponse: dataResponse("Card"),
-      CardDetailResponse: dataResponse("Card"),
+      CardDetailResponse: {
+        type: "object",
+        required: ["data"],
+        properties: {
+          data: {
+            allOf: [
+              ref("Card"),
+              {
+                type: "object",
+                required: ["set", "tcg", "latest_prices", "collection"],
+                properties: {
+                  set: ref("Set"),
+                  tcg: ref("Tcg"),
+                  latest_prices: { type: "array", items: ref("CardPrice") },
+                  collection: {
+                    type: "object",
+                    required: ["item_count", "total_quantity", "graded_quantity"],
+                    properties: {
+                      item_count: { type: "integer", minimum: 0 },
+                      total_quantity: { type: "integer", minimum: 0 },
+                      graded_quantity: { type: "integer", minimum: 0 },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
       CardListResponse: paginated("Card"),
       UserResponse: dataResponse("User"),
       UserListResponse: paginated("User"),
-      UserDeleteResponse: mutationResponse("User"),
+      UserDeleteResponse: {
+        type: "object",
+        required: ["status", "message"],
+        properties: {
+          status: { type: "string", enum: ["success"] },
+          message: { type: "string" },
+        },
+      },
       GradingCompanyResponse: dataResponse("GradingCompany"),
       GradingCompanyListResponse: { type: "object", properties: { data: { type: "array", items: ref("GradingCompany") } } },
       GradingCompanyMutationResponse: mutationResponse("GradingCompany"),
@@ -409,22 +487,67 @@ export const openapiDocument = {
       CardPriceListResponse: paginated("CardPrice"),
       GradedCardPriceResponse: dataResponse("GradedCardPrice"),
       GradedCardPriceListResponse: paginated("GradedCardPrice"),
-      CardPriceStatisticsResponse: { type: "object", properties: { data: { type: "object", additionalProperties: true } } },
-      CardPriceVariationResponse: { type: "object", properties: { data: { type: "object", additionalProperties: true } } },
-      CardPriceAggregationsResponse: { type: "object", properties: { data: { type: "array", items: { type: "object", additionalProperties: true } } } },
-      GradedPriceStatisticsResponse: { type: "object", properties: { data: { type: "object", additionalProperties: true } } },
-      GradedPriceVariationResponse: { type: "object", properties: { data: { type: "object", additionalProperties: true } } },
-      GradedPriceAggregationsResponse: { type: "object", properties: { data: { type: "array", items: { type: "object", additionalProperties: true } } } },
+      CardPriceStatisticsResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: ref("PriceStatistics") },
+      },
+      CardPriceVariationResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: ref("CardPriceVariation") },
+      },
+      CardPriceAggregationsResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: { type: "array", items: ref("PriceAggregation") } },
+      },
+      GradedPriceStatisticsResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: ref("PriceStatistics") },
+      },
+      GradedPriceVariationResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: ref("GradedPriceVariation") },
+      },
+      GradedPriceAggregationsResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: { type: "array", items: ref("PriceAggregation") } },
+      },
       CollectionItemResponse: dataResponse("CollectionItem"),
       CollectionListResponse: paginated("CollectionItem"),
       CollectionMutationResponse: mutationResponse("CollectionItem"),
-      CollectionStatsResponse: { type: "object", properties: { data: { type: "object", additionalProperties: true } } },
-      CollectionValueResponse: { type: "object", properties: { data: { type: "object", additionalProperties: true } } },
+      CollectionStatsResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: ref("CollectionStats") },
+      },
+      CollectionValueResponse: {
+        type: "object",
+        required: ["data"],
+        properties: { data: ref("CollectionValue") },
+      },
       SyncSetsResponse: { type: "object", additionalProperties: true },
       SyncCardsResponse: { type: "object", additionalProperties: true },
       SyncPricesResponse: { type: "object", additionalProperties: true },
       SyncPipelineResponse: { type: "object", additionalProperties: true },
-      GradedPricesImportResponse: { type: "object", additionalProperties: true },
+      GradedPricesImportResponse: {
+        type: "object",
+        required: ["summary"],
+        properties: {
+          summary: {
+            type: "object",
+            required: ["received", "created"],
+            properties: {
+              received: { type: "integer", minimum: 0 },
+              created: { type: "integer", minimum: 0 },
+            },
+          },
+        },
+      },
       SyncJob: {
         type: "object",
         required: ["id", "type", "status", "queuedAt"],
@@ -444,11 +567,36 @@ export const openapiDocument = {
       SyncJobResponse: dataResponse("SyncJob"),
       SyncJobsListResponse: { type: "object", properties: { activeJobId: { ...uuid, nullable: true }, data: { type: "array", items: ref("SyncJob") } } },
       CreateSyncJobRequest: { type: "object", required: ["type"], properties: { type: { type: "string", enum: ["sets", "cards", "prices", "pipeline"] } } },
-      LoginResponse: { type: "object", additionalProperties: true },
-      RefreshResponse: { type: "object", additionalProperties: true },
+      LoginResponse: {
+        type: "object",
+        required: ["status", "data"],
+        properties: {
+          status: { type: "string", enum: ["success"] },
+          data: {
+            type: "object",
+            required: ["accessToken", "user"],
+            properties: {
+              accessToken: { type: "string", minLength: 1 },
+              user: {
+                type: "object",
+                required: ["id", "username", "email"],
+                properties: { id: uuid, username: { type: "string" }, email: { type: "string", format: "email" } },
+              },
+            },
+          },
+        },
+      },
+      RefreshResponse: {
+        type: "object",
+        required: ["status", "data"],
+        properties: {
+          status: { type: "string", enum: ["success"] },
+          data: { type: "object", required: ["accessToken"], properties: { accessToken: { type: "string", minLength: 1 } } },
+        },
+      },
       LoginRequest: { type: "object", required: ["email", "password"], properties: { email: { type: "string", format: "email" }, password: { type: "string", format: "password" } } },
-      CreateUserRequest: { type: "object", required: ["email", "password"], properties: { email: { type: "string", format: "email" }, password: { type: "string", format: "password" }, role: { type: "string", enum: ["user", "admin"], default: "user" } } },
-      UpdateUserRequest: { type: "object", properties: { email: { type: "string", format: "email" }, role: { type: "string", enum: ["user", "admin"] }, password: { type: "string", format: "password" } } },
+      CreateUserRequest: { type: "object", required: ["username", "email", "password"], additionalProperties: false, properties: { username: { type: "string", minLength: 3, maxLength: 50 }, email: { type: "string", format: "email", maxLength: 255 }, password: { type: "string", format: "password", minLength: 8, maxLength: 255 } } },
+      UpdateUserRequest: { type: "object", minProperties: 1, additionalProperties: false, properties: { username: { type: "string", minLength: 3, maxLength: 50 }, email: { type: "string", format: "email", maxLength: 255 }, password: { type: "string", format: "password", minLength: 8, maxLength: 255 } } },
       CreateTcgRequest: { type: "object", required: ["name"], properties: { name: { type: "string", maxLength: 100 } } },
       UpdateTcgRequest: { type: "object", properties: { name: { type: "string", maxLength: 100 } } },
       CreateSetRequest: { type: "object", required: ["tcgId", "externalId", "name"], properties: { tcgId: uuid, externalId: { type: "string" }, name: { type: "string" }, code: { type: "string", nullable: true }, releaseDate: { type: "string", format: "date", nullable: true } } },
@@ -456,12 +604,24 @@ export const openapiDocument = {
       CreateCardRequest: { type: "object", required: ["setId", "externalId", "name", "cardNumber"], properties: { setId: uuid, externalId: { type: "string" }, name: { type: "string" }, cardNumber: { type: "string" }, rarity: { type: "string", nullable: true }, imageUrl: { type: "string", format: "uri", nullable: true } } },
       UpdateCardRequest: { type: "object", properties: { setId: uuid, externalId: { type: "string", nullable: true }, name: { type: "string" }, cardNumber: { type: "string", nullable: true }, rarity: { type: "string", nullable: true }, imageUrl: { type: "string", format: "uri", nullable: true } } },
       CreateCardPriceRequest: { type: "object", required: ["condition", "price", "currency", "source"], properties: { condition: { type: "string" }, price: { type: "number", minimum: 0 }, currency: { type: "string" }, source: { type: "string" } } },
-      CreateGradedCardPriceRequest: { type: "object", required: ["gradingCompanyId", "grade", "condition", "price", "currency", "source"], properties: { gradingCompanyId: uuid, grade: { type: "number", minimum: 0, maximum: 10 }, condition: { type: "string" }, price: { type: "number", minimum: 0 }, currency: { type: "string" }, source: { type: "string" } } },
+      CreateGradedCardPriceRequest: { type: "object", required: ["gradingCompanyId", "grade", "price", "currency", "source"], additionalProperties: false, properties: { gradingCompanyId: uuid, grade: { type: "number", minimum: 0, maximum: 10 }, price: { type: "number", minimum: 0 }, currency: { type: "string", minLength: 1, maxLength: 10 }, source: { type: "string", minLength: 1, maxLength: 100 } } },
       CreateCollectionItemRequest: { type: "object", required: ["cardId", "quantity", "condition"], properties: { cardId: uuid, quantity: { type: "integer", minimum: 1 }, condition: { type: "string" }, isGraded: { type: "boolean", default: false }, gradingCompanyId: { ...uuid, nullable: true }, grade: { type: "number", minimum: 0, maximum: 10, nullable: true } } },
       UpdateCollectionItemRequest: { type: "object", properties: { quantity: { type: "integer", minimum: 1 }, condition: { type: "string" }, isGraded: { type: "boolean" }, gradingCompanyId: { ...uuid, nullable: true }, grade: { type: "number", minimum: 0, maximum: 10, nullable: true } } },
       CreateGradingCompanyRequest: { type: "object", required: ["name"], properties: { name: { type: "string", maxLength: 50 } } },
       UpdateGradingCompanyRequest: { type: "object", properties: { name: { type: "string", maxLength: 50 } } },
-      ImportGradedPricesRequest: { type: "object", required: ["prices"], properties: { prices: { type: "array", items: { $ref: "#/components/schemas/CreateGradedCardPriceRequest" } } } },
+      ImportGradedPricesRequest: { type: "object", required: ["prices"], additionalProperties: false, properties: { prices: { type: "array", minItems: 1, maxItems: 1000, items: ref("ImportGradedPriceItem") } } },
+      ImportGradedPriceItem: { type: "object", required: ["cardId", "gradingCompanyId", "grade", "price", "currency", "source"], additionalProperties: false, properties: { cardId: uuid, gradingCompanyId: uuid, grade: { type: "number", minimum: 0, maximum: 10 }, price: { type: "number", minimum: 0 }, currency: { type: "string", minLength: 1, maxLength: 10 }, source: { type: "string", minLength: 1, maxLength: 100 }, recordedAt: { type: "string", format: "date-time" } } },
+      PriceStatistics: { type: "object", required: ["total", "minimumPrice", "maximumPrice", "averagePrice"], properties: { total: { type: "integer", minimum: 0 }, minimumPrice: { type: "number", nullable: true }, maximumPrice: { type: "number", nullable: true }, averagePrice: { type: "number", nullable: true } } },
+      PriceAggregation: { type: "object", required: ["period", "total", "minimumPrice", "maximumPrice", "averagePrice"], properties: { period: { type: "string" }, total: { type: "integer", minimum: 0 }, minimumPrice: { type: "number", nullable: true }, maximumPrice: { type: "number", nullable: true }, averagePrice: { type: "number", nullable: true } } },
+      CardPriceVariation: { type: "object", required: ["currentPrice", "previousPrice", "absoluteVariation", "percentageVariation", "direction", "currency", "source", "condition", "currentRecordedAt", "previousRecordedAt"], properties: { currentPrice: { type: "number" }, previousPrice: { type: "number" }, absoluteVariation: { type: "number" }, percentageVariation: { type: "number", nullable: true }, direction: { type: "string", enum: ["up", "down", "unchanged"] }, currency: { type: "string" }, source: { type: "string" }, condition: { type: "string" }, currentRecordedAt: { type: "string", format: "date-time" }, previousRecordedAt: { type: "string", format: "date-time" } } },
+      GradedPriceVariation: { type: "object", required: ["currentPrice", "previousPrice", "absoluteVariation", "percentageVariation", "direction", "currency", "source", "currentGradingCompanyId", "previousGradingCompanyId", "currentGrade", "previousGrade", "currentRecordedAt", "previousRecordedAt"], properties: { currentPrice: { type: "number" }, previousPrice: { type: "number" }, absoluteVariation: { type: "number" }, percentageVariation: { type: "number", nullable: true }, direction: { type: "string", enum: ["up", "down", "unchanged"] }, currency: { type: "string" }, source: { type: "string" }, currentGradingCompanyId: uuid, previousGradingCompanyId: uuid, currentGrade: { type: "number", minimum: 0, maximum: 10 }, previousGrade: { type: "number", minimum: 0, maximum: 10 }, currentRecordedAt: { type: "string", format: "date-time" }, previousRecordedAt: { type: "string", format: "date-time" } } },
+      CollectionStats: { type: "object", required: ["summary", "byCondition", "bySet", "byTcg", "byGradingCompany"], properties: { summary: { type: "object", required: ["totalDistinctCards", "totalQuantity", "gradedQuantity", "ungradedQuantity"], properties: { totalDistinctCards: { type: "integer", minimum: 0 }, totalQuantity: { type: "integer", minimum: 0 }, gradedQuantity: { type: "integer", minimum: 0 }, ungradedQuantity: { type: "integer", minimum: 0 } } }, byCondition: { type: "array", items: { $ref: "#/components/schemas/CollectionStatsBreakdown" } }, bySet: { type: "array", items: { allOf: [{ $ref: "#/components/schemas/CollectionStatsBreakdown" }, { type: "object", properties: { setId: uuid, setName: { type: "string" }, setCode: { type: "string", nullable: true } } }] } }, byTcg: { type: "array", items: { allOf: [{ $ref: "#/components/schemas/CollectionStatsBreakdown" }, { type: "object", properties: { tcgId: uuid, tcgName: { type: "string" } } }] } }, byGradingCompany: { type: "array", items: { allOf: [{ $ref: "#/components/schemas/CollectionStatsBreakdown" }, { type: "object", properties: { gradingCompanyId: uuid, gradingCompanyName: { type: "string" } } }] } } } },
+      CollectionStatsBreakdown: { type: "object", required: ["distinctCards", "totalQuantity"], properties: { distinctCards: { type: "integer", minimum: 0 }, totalQuantity: { type: "integer", minimum: 0 }, condition: { type: "string" }, setId: uuid, setName: { type: "string" }, setCode: { type: "string", nullable: true }, tcgId: uuid, tcgName: { type: "string" }, gradingCompanyId: uuid, gradingCompanyName: { type: "string" } } },
+      CollectionValue: { type: "object", required: ["summary", "topValuedItems", "bySet", "byTcg", "byGradingCompany"], properties: { summary: { type: "object", required: ["totalEstimatedValue", "currency", "itemsEvaluatedCount", "itemsMissingPriceCount", "gradedItemsEvaluatedCount", "gradedItemsMissingPriceCount"], properties: { totalEstimatedValue: { type: "number" }, currency: { type: "string" }, itemsEvaluatedCount: { type: "integer" }, itemsMissingPriceCount: { type: "integer" }, gradedItemsEvaluatedCount: { type: "integer" }, gradedItemsMissingPriceCount: { type: "integer" } } }, topValuedItems: { type: "array", items: { $ref: "#/components/schemas/CollectionValueItem" } }, bySet: { type: "array", items: { $ref: "#/components/schemas/CollectionValueBySet" } }, byTcg: { type: "array", items: { $ref: "#/components/schemas/CollectionValueByTcg" } }, byGradingCompany: { type: "array", items: { $ref: "#/components/schemas/CollectionValueByGradingCompany" } } } },
+      CollectionValueItem: { type: "object", properties: { id: uuid, cardId: uuid, cardName: { type: "string" }, cardNumber: { type: "string", nullable: true }, imageUrl: { type: "string", nullable: true }, setName: { type: "string" }, tcgName: { type: "string" }, quantity: { type: "integer" }, condition: { type: "string" }, isGraded: { type: "boolean" }, gradingCompanyId: { ...uuid, nullable: true }, gradingCompanyName: { type: "string", nullable: true }, grade: { type: "number", nullable: true }, unitPrice: { type: "number" }, totalItemValue: { type: "number" } } },
+      CollectionValueBySet: { type: "object", properties: { setId: uuid, setName: { type: "string" }, setCode: { type: "string", nullable: true }, estimatedValue: { type: "number" }, totalQuantity: { type: "integer" } } },
+      CollectionValueByTcg: { type: "object", properties: { tcgId: uuid, tcgName: { type: "string" }, estimatedValue: { type: "number" }, totalQuantity: { type: "integer" } } },
+      CollectionValueByGradingCompany: { type: "object", properties: { gradingCompanyId: uuid, gradingCompanyName: { type: "string" }, estimatedValue: { type: "number" }, totalQuantity: { type: "integer" } } },
     },
   },
 };
