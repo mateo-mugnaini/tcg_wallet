@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getUserById, getUsers } from "../actions/users/get/users.actions.js";
+import { createUser } from "../actions/users/post/users.actions.js";
 
 const usersSlice = createSlice({
   name: "users",
@@ -19,6 +20,12 @@ const usersSlice = createSlice({
       state.error = action.payload;
     };
     builder
+      .addCase(createUser.pending, pending)
+      .addCase(createUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.current = action.payload?.data || null;
+      })
+      .addCase(createUser.rejected, rejected)
       .addCase(getUsers.pending, pending)
       .addCase(getUsers.fulfilled, (state, action) => {
         state.status = "succeeded";

@@ -4,7 +4,15 @@ Frontend base built with Vite, React, React Redux and CSS Modules.
 
 ## Architecture
 
-The application is organized as pages, reusable components and backend domains under `src/redux/actions`:
+The application is organized as routes, pages, reusable components and backend domains under `src/redux/actions`:
+
+- `/auth`: public authentication page with login and registration.
+- `/dashboard`: protected initial application page.
+- `/catalog`: TCGs, sets, cards and card prices.
+- `/collection`: collection items, stats and estimated value.
+- `/grading`: grading companies.
+- `/profile`: authenticated user profile.
+- `/admin/sync` and `/admin/users`: protected operational/admin views.
 
 - `auth`: login, refresh and logout.
 - `users`: profile and administrative user operations.
