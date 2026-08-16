@@ -1,4 +1,5 @@
 import pool from "../config/database.js";
+import { logger } from "../utils/logger.js";
 
 const COLLECTION_VALUATION_CURRENCY = "USD";
 
@@ -34,7 +35,7 @@ export async function createCollectionItem({
       condition,
       is_graded,
       grading_company_id,
-      grade,
+      grade::double precision AS grade,
       created_at,
       updated_at
   `;
@@ -207,7 +208,7 @@ export async function findCollectionItems({
       ci.condition,
       ci.is_graded,
       ci.grading_company_id,
-      ci.grade,
+      ci.grade::double precision AS grade,
       ci.created_at,
       ci.updated_at,
       json_build_object(
@@ -267,7 +268,7 @@ export async function findCollectionItemById(id, userId) {
       ci.condition,
       ci.is_graded,
       ci.grading_company_id,
-      ci.grade,
+      ci.grade::double precision AS grade,
       ci.created_at,
       ci.updated_at,
       json_build_object(
@@ -339,7 +340,7 @@ export async function updateCollectionItem(
       condition,
       is_graded,
       grading_company_id,
-      grade,
+      grade::double precision AS grade,
       created_at,
       updated_at
   `;
@@ -376,7 +377,7 @@ export async function deleteCollectionItem(id, userId) {
       condition,
       is_graded,
       grading_company_id,
-      grade,
+      grade::double precision AS grade,
       created_at,
       updated_at
   `;
@@ -661,6 +662,7 @@ export async function getCollectionValue(userId) {
         price,
         currency
       FROM card_prices
+      WHERE TRIM(currency) = $2
       ORDER BY card_id, condition, recorded_at DESC
     ),
     latest_graded_prices AS (
@@ -671,7 +673,18 @@ export async function getCollectionValue(userId) {
         price,
         currency
       FROM graded_card_prices
+      WHERE TRIM(currency) = $2
       ORDER BY card_id, grading_company_id, grade, recorded_at DESC
+    ),
+    latest_card_prices AS (
+      SELECT DISTINCT ON (card_id)
+        card_id,
+        condition,
+        price,
+        currency
+      FROM card_prices
+      WHERE TRIM(currency) = $2
+      ORDER BY card_id, recorded_at DESC, price DESC
     ),
     evaluated_items AS (
       SELECT
@@ -684,20 +697,20 @@ export async function getCollectionValue(userId) {
         ci.grading_company_id,
         gc.name AS grading_company_name,
         CASE
-          WHEN ci.is_graded = true AND TRIM(lgp.currency) = $2 THEN lgp.price
-          WHEN ci.is_graded = false AND TRIM(lp.currency) = $2 THEN lp.price
-          ELSE NULL
+          WHEN ci.is_graded = true THEN COALESCE(lgp.price, lcp.price)
+          ELSE COALESCE(lp.price, lcp.price)
         END AS unit_price,
         CASE
-          WHEN ci.is_graded = true THEN COALESCE(lgp.currency, 'USD')
-          ELSE COALESCE(lp.currency, 'USD')
-        END AS currency,
+          WHEN ci.is_graded = true AND lgp.price IS NOT NULL THEN 'exact'
+          WHEN ci.is_graded = false AND lp.price IS NOT NULL THEN 'exact'
+          WHEN lcp.price IS NOT NULL THEN 'fallback'
+          ELSE NULL
+        END AS price_match,
         (
           ci.quantity * COALESCE(
             CASE
-              WHEN ci.is_graded = true AND TRIM(lgp.currency) = $2 THEN lgp.price
-              WHEN ci.is_graded = false AND TRIM(lp.currency) = $2 THEN lp.price
-              ELSE NULL
+              WHEN ci.is_graded = true THEN COALESCE(lgp.price, lcp.price)
+              ELSE COALESCE(lp.price, lcp.price)
             END,
             0
           )
@@ -718,6 +731,8 @@ export async function getCollectionValue(userId) {
         ON ci.is_graded = false
         AND ci.card_id = lp.card_id
         AND ci.condition = lp.condition
+      LEFT JOIN latest_card_prices lcp
+        ON ci.card_id = lcp.card_id
       LEFT JOIN latest_graded_prices lgp
         ON ci.is_graded = true
         AND ci.card_id = lgp.card_id
@@ -732,6 +747,8 @@ export async function getCollectionValue(userId) {
       (SELECT COUNT(*) FROM evaluated_items WHERE unit_price IS NULL) AS items_missing_price_count,
       (SELECT COUNT(*) FROM evaluated_items WHERE is_graded = true AND unit_price IS NOT NULL) AS graded_items_evaluated_count,
       (SELECT COUNT(*) FROM evaluated_items WHERE is_graded = true AND unit_price IS NULL) AS graded_items_missing_price_count,
+      (SELECT COUNT(*) FROM evaluated_items WHERE price_match = 'fallback') AS items_using_fallback_price_count,
+      (SELECT COUNT(*) FROM evaluated_items WHERE is_graded = true AND price_match = 'fallback') AS graded_items_using_fallback_price_count,
       (
         SELECT COALESCE(json_agg(t), '[]'::json)
         FROM (
@@ -750,6 +767,7 @@ export async function getCollectionValue(userId) {
             grading_company_name AS "gradingCompanyName",
             grade,
             unit_price::numeric AS "unitPrice",
+            price_match AS "priceMatch",
             total_item_value::numeric AS "totalItemValue"
           FROM evaluated_items
           WHERE unit_price IS NOT NULL
@@ -809,20 +827,108 @@ export async function getCollectionValue(userId) {
     items_missing_price_count: 0,
     graded_items_evaluated_count: 0,
     graded_items_missing_price_count: 0,
+    items_using_fallback_price_count: 0,
+    graded_items_using_fallback_price_count: 0,
     top_valued_items: [],
     by_set: [],
     by_tcg: [],
     by_grading_company: [],
   };
 
+  const summary = {
+    totalEstimatedValue: Number(row.total_estimated_value),
+    itemsEvaluatedCount: Number(row.items_evaluated_count),
+    itemsMissingPriceCount: Number(row.items_missing_price_count),
+    gradedItemsEvaluatedCount: Number(row.graded_items_evaluated_count),
+    gradedItemsMissingPriceCount: Number(row.graded_items_missing_price_count),
+    itemsUsingFallbackPriceCount: Number(row.items_using_fallback_price_count),
+    gradedItemsUsingFallbackPriceCount: Number(row.graded_items_using_fallback_price_count),
+  };
+
+  logger.info("collection_value_repository_completed", {
+    userId,
+    currency: COLLECTION_VALUATION_CURRENCY,
+    ...summary,
+  });
+
+  if (process.env.COLLECTION_VALUE_DEBUG === "true") {
+    const diagnosticResult = await pool.query(
+      `
+        SELECT
+          ci.id AS "itemId",
+          ci.card_id AS "cardId",
+          ci.quantity,
+          ci.condition,
+          ci.is_graded AS "isGraded",
+          ci.grading_company_id AS "gradingCompanyId",
+          ci.grade,
+          normal_match.price AS "normalMatchedPrice",
+          normal_match.currency AS "normalMatchedCurrency",
+          graded_match.price AS "gradedMatchedPrice",
+          graded_match.currency AS "gradedMatchedCurrency",
+          COALESCE(normal_available.prices, '[]'::json) AS "normalAvailablePrices",
+          COALESCE(graded_available.prices, '[]'::json) AS "gradedAvailablePrices"
+        FROM collection_items ci
+        LEFT JOIN LATERAL (
+          SELECT price, currency
+          FROM card_prices
+          WHERE card_id = ci.card_id
+            AND condition = ci.condition
+          ORDER BY recorded_at DESC
+          LIMIT 1
+        ) normal_match ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT price, currency
+          FROM graded_card_prices
+          WHERE card_id = ci.card_id
+            AND grading_company_id = ci.grading_company_id
+            AND grade = ci.grade
+          ORDER BY recorded_at DESC
+          LIMIT 1
+        ) graded_match ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT json_agg(price_data) AS prices
+          FROM (
+            SELECT condition, price, currency, recorded_at
+            FROM card_prices
+            WHERE card_id = ci.card_id
+            ORDER BY recorded_at DESC
+            LIMIT 20
+          ) price_data
+        ) normal_available ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT json_agg(price_data) AS prices
+          FROM (
+            SELECT grading_company_id, grade, price, currency, recorded_at
+            FROM graded_card_prices
+            WHERE card_id = ci.card_id
+            ORDER BY recorded_at DESC
+            LIMIT 20
+          ) price_data
+        ) graded_available ON TRUE
+        WHERE ci.user_id = $1
+        ORDER BY ci.created_at DESC
+      `,
+      [userId],
+    );
+
+    logger.debug("collection_value_diagnostics", {
+      userId,
+      valuationCurrency: COLLECTION_VALUATION_CURRENCY,
+      items: diagnosticResult.rows,
+    });
+  }
+
   return {
     summary: {
-      totalEstimatedValue: Number(row.total_estimated_value),
+      totalEstimatedValue: summary.totalEstimatedValue,
       currency: "USD",
-      itemsEvaluatedCount: Number(row.items_evaluated_count),
-      itemsMissingPriceCount: Number(row.items_missing_price_count),
-      gradedItemsEvaluatedCount: Number(row.graded_items_evaluated_count),
-      gradedItemsMissingPriceCount: Number(row.graded_items_missing_price_count),
+      itemsEvaluatedCount: summary.itemsEvaluatedCount,
+      itemsMissingPriceCount: summary.itemsMissingPriceCount,
+      gradedItemsEvaluatedCount: summary.gradedItemsEvaluatedCount,
+      gradedItemsMissingPriceCount: summary.gradedItemsMissingPriceCount,
+      itemsUsingFallbackPriceCount: summary.itemsUsingFallbackPriceCount,
+      gradedItemsUsingFallbackPriceCount: summary.gradedItemsUsingFallbackPriceCount,
     },
     topValuedItems: (row.top_valued_items || []).map((item) => ({
       ...item,

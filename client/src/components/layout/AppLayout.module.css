@@ -1,7 +1,7 @@
 .layout {
   min-height: 100vh;
   color: var(--color-text-primary);
-  background: var(--color-bg);
+  background: transparent;
 }
 
 .skipLink {
@@ -11,7 +11,7 @@
   left: 10px;
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  color: var(--color-bg);
+  color: var(--color-text-primary);
   background: var(--color-accent);
   transform: translateY(-150%);
   transition: transform var(--transition-fast);
@@ -27,8 +27,9 @@
   gap: 28px;
   min-height: 72px;
   padding: 14px clamp(18px, 5vw, 68px);
-  border-bottom: 1px solid var(--color-border);
-  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 3px solid var(--color-text-primary);
+  background: var(--color-brand);
+  box-shadow: 0 5px 0 rgba(24, 36, 51, 0.14);
 }
 
 .brand {
@@ -36,20 +37,37 @@
   align-items: center;
   flex-shrink: 0;
   gap: 9px;
-  color: var(--color-text-primary);
+  color: var(--color-brand-contrast);
   font-weight: 800;
   text-decoration: none;
 }
 
 .brandMark {
+  position: relative;
   display: grid;
   width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: var(--radius-md);
-  color: var(--color-bg);
-  background: var(--color-accent);
-  font-weight: 900;
+  overflow: hidden;
+  border: 2px solid var(--color-text-primary);
+  border-radius: 50%;
+  color: transparent;
+  background: linear-gradient(
+    to bottom,
+    var(--color-brand) 0 44%,
+    var(--color-text-primary) 44% 56%,
+    var(--color-brand-contrast) 56% 100%
+  );
+  box-shadow: 2px 2px 0 rgba(24, 36, 51, 0.28);
+}
+
+.brandMark::after {
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--color-text-primary);
+  border-radius: 50%;
+  background: var(--color-brand-contrast);
+  content: "";
 }
 
 .navigation {
@@ -66,7 +84,7 @@
   padding: 7px 10px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-brand-contrast);
   background: transparent;
 }
 
@@ -75,7 +93,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--color-text-muted);
+  color: rgba(255, 250, 240, 0.76);
   font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
@@ -90,7 +108,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--color-text-muted);
+  color: var(--color-brand-contrast);
   font-size: 0.8rem;
 }
 
@@ -103,9 +121,10 @@
 
 .role {
   padding: 3px 7px;
-  border: 1px solid rgba(94, 234, 212, 0.35);
-  border-radius: var(--radius-pill);
-  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-accent);
   font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -115,15 +134,15 @@
   padding: 7px 10px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-brand-contrast);
   background: transparent;
   cursor: pointer;
   font-size: 0.78rem;
 }
 
 .account button:hover {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .content {
@@ -160,7 +179,7 @@
   .link,
   .activeLink {
     padding: 11px 4px;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid rgba(255, 250, 240, 0.25);
   }
 }
 

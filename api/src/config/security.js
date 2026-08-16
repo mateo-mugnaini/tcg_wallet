@@ -30,7 +30,8 @@ export const helmetOptions = {
 export const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: isProductionLike,
-  sameSite: isProductionLike ? "strict" : "lax",
+  sameSite: isProductionLike ? env.refreshCookie.sameSite : "lax",
+  ...(env.refreshCookie.domain ? { domain: env.refreshCookie.domain } : {}),
   path: "/api/auth",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };

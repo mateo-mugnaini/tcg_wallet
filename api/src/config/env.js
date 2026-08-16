@@ -43,6 +43,13 @@ const envSchema = z.object({
 
   CORS_ORIGIN_DEV: z.string().url(),
   CORS_ORIGIN_PRODUCTION: z.string().url(),
+  REFRESH_COOKIE_SAME_SITE: z
+    .enum(["strict", "lax", "none"])
+    .default("strict"),
+  REFRESH_COOKIE_DOMAIN: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().optional(),
+  ),
 
   POKEMON_TCG_API_KEY: z.string().min(1),
 });
@@ -111,6 +118,10 @@ const env = {
   cors: {
     dev: parsedEnv.data.CORS_ORIGIN_DEV,
     production: parsedEnv.data.CORS_ORIGIN_PRODUCTION,
+  },
+  refreshCookie: {
+    sameSite: parsedEnv.data.REFRESH_COOKIE_SAME_SITE,
+    domain: parsedEnv.data.REFRESH_COOKIE_DOMAIN,
   },
 
   jwt: {

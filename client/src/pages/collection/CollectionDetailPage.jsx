@@ -55,6 +55,7 @@ function CollectionDetailPage() {
       {editing ? (
         <CollectionItemForm
           cards={selectedItem.card ? [selectedItem.card] : []}
+          sets={selectedItem.set ? [selectedItem.set] : []}
           companies={companies}
           item={selectedItem}
           loading={mutationStatus === "loading"}

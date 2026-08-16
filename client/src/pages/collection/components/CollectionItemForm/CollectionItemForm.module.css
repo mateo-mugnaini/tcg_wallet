@@ -4,7 +4,7 @@
   padding: clamp(20px, 4vw, 32px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(15, 23, 42, 0.78);
+  background: var(--color-panel);
 }
 
 .formHeader {
@@ -89,14 +89,20 @@
 
 .submit {
   border: 1px solid var(--color-accent);
-  color: var(--color-bg);
+  color: var(--color-text-primary);
   background: var(--color-accent);
 }
 
 .error {
   margin: 0;
-  color: #fecdd3;
+  color: var(--color-danger);
   font-size: 0.82rem;
+}
+
+.help {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 @media (max-width: 520px) {

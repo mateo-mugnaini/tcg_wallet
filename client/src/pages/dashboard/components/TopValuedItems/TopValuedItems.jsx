@@ -27,7 +27,10 @@ function TopValuedItems({ items, currency, formatCurrency }) {
                 <tr key={item.id}>
                   <td>
                     <strong>{item.cardName}</strong>
-                    <span>{item.setName} · {item.condition}</span>
+                    <span>
+                      {item.setName} · {item.condition}
+                      {item.priceMatch === "fallback" ? " · Estimación base" : ""}
+                    </span>
                   </td>
                   <td>{item.quantity}</td>
                   <td>{formatCurrency(item.totalItemValue, currency)}</td>

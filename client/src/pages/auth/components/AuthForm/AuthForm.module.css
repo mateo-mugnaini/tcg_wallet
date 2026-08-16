@@ -5,7 +5,7 @@
   margin-bottom: var(--space-6);
   padding: var(--space-1);
   border-radius: var(--radius-md);
-  background: rgba(30, 41, 59, 0.8);
+  background: var(--color-surface-raised);
 }
 
 .tab,
@@ -20,8 +20,8 @@
 }
 
 .activeTab {
-  color: var(--color-surface);
-  background: var(--color-text-primary);
+  color: var(--color-text-primary);
+  background: var(--color-accent);
 }
 
 .tab:hover {
@@ -48,13 +48,13 @@
   border-radius: var(--radius-md);
   outline: 0;
   color: var(--color-text-primary);
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--color-input);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .field input:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.1);
+  box-shadow: 0 0 0 3px rgba(23, 105, 170, 0.16);
 }
 
 .field input[aria-invalid="true"] {
@@ -83,14 +83,14 @@ small,
   padding: 13px 16px;
   border: 0;
   border-radius: var(--radius-md);
-  color: var(--color-bg);
+  color: var(--color-text-primary);
   background: var(--color-accent);
   font-weight: 800;
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
 .submit:hover:not(:disabled) {
-  background: #99f6e4;
+  background: var(--color-accent-strong);
   transform: translateY(-1px);
 }
 

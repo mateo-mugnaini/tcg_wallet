@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.vercel/
 FRONTEND_ROADMAP.md
 .env
 .env.local

@@ -24,7 +24,7 @@
   margin: 0 auto var(--space-4);
   place-items: center;
   border-radius: var(--radius-pill);
-  color: var(--color-bg);
+  color: var(--color-brand-contrast);
   background: var(--color-danger);
   font-size: 1.5rem;
   font-weight: 900;
@@ -57,7 +57,7 @@
   padding: 10px 18px;
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-sm);
-  color: var(--color-bg);
+  color: var(--color-text-primary);
   background: var(--color-accent);
   font-weight: 800;
 }

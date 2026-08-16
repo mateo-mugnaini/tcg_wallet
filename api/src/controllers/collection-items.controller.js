@@ -9,6 +9,7 @@ import {
 } from "../services/collection-items.service.js";
 
 import { createAppError } from "../errors/app.errors.js";
+import { logger } from "../utils/logger.js";
 
 /* ====================================
         LISTAR COLECCIÓN
@@ -313,7 +314,14 @@ export async function getCollectionValueController(req, res, next) {
   try {
     const userId = req.user.id;
 
+    logger.debug("collection_value_request_started", { userId });
+
     const value = await getCollectionValueService({ userId });
+
+    logger.info("collection_value_request_completed", {
+      userId,
+      summary: value.summary,
+    });
 
     res.status(200).json({
       data: value,

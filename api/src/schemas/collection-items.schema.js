@@ -69,6 +69,7 @@ const collectionValueItemSchema = z.object({
   gradingCompanyName: z.string().nullable(),
   grade: z.number().nullable(),
   unitPrice: z.number(),
+  priceMatch: z.enum(["exact", "fallback"]),
   totalItemValue: z.number(),
 });
 
@@ -81,6 +82,8 @@ export const collectionValueResponseSchema = z.object({
       itemsMissingPriceCount: z.number().int(),
       gradedItemsEvaluatedCount: z.number().int(),
       gradedItemsMissingPriceCount: z.number().int(),
+      itemsUsingFallbackPriceCount: z.number().int(),
+      gradedItemsUsingFallbackPriceCount: z.number().int(),
     }),
     topValuedItems: z.array(collectionValueItemSchema),
     bySet: z.array(

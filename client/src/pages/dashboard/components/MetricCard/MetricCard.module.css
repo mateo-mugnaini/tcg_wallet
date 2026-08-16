@@ -5,13 +5,13 @@
   padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-panel);
   box-shadow: var(--shadow-card);
 }
 
 .accent {
-  border-color: rgba(94, 234, 212, 0.35);
-  background: linear-gradient(145deg, rgba(20, 78, 74, 0.58), rgba(15, 23, 42, 0.78));
+  border-color: rgba(244, 197, 66, 0.7);
+  background: linear-gradient(145deg, rgba(244, 197, 66, 0.32), var(--color-panel));
 }
 
 .label,

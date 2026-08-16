@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
@@ -22,6 +22,15 @@ function formatCurrency(value, currency = "USD") {
   }
 }
 
+function formatValueCaption(summary) {
+  const missing = summary?.itemsMissingPriceCount ?? 0;
+  const fallback = summary?.itemsUsingFallbackPriceCount ?? 0;
+
+  return fallback > 0
+    ? `${missing} sin precio · ${fallback} estimados con precio base`
+    : `${missing} sin precio`;
+}
+
 function CollectionPage() {
   const dispatch = useDispatch();
   const collection = useSelector((state) => state.collection);
@@ -40,7 +49,6 @@ function CollectionPage() {
     dispatch(getCollectionValue());
     dispatch(getTcgs({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
     dispatch(getSets({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
-    dispatch(getCards({ query: { limit: 100, sortBy: "name", sortOrder: "ASC" } }));
     dispatch(getGradingCompanies());
   }, [dispatch]);
 
@@ -61,6 +69,33 @@ function CollectionPage() {
     refreshCollection();
   };
 
+  const handleSetChange = useCallback((setId) => {
+    if (!setId) return;
+
+    dispatch(getCards({
+      query: {
+        limit: 100,
+        setId,
+        sortBy: "card_number",
+        sortOrder: "ASC",
+      },
+    }));
+  }, [dispatch]);
+
+  const handleCardSearch = useCallback((setId, search) => {
+    if (!setId) return;
+
+    dispatch(getCards({
+      query: {
+        limit: 100,
+        search: search || undefined,
+        setId,
+        sortBy: "card_number",
+        sortOrder: "ASC",
+      },
+    }));
+  }, [dispatch]);
+
   const summary = collection.stats?.summary;
   const valueSummary = collection.value?.summary;
   const isLoading = collection.status === "loading";
@@ -78,14 +113,20 @@ function CollectionPage() {
       </PageHeader>
 
       {collection.error && <p className={styles.error} role="alert">{collection.error.message}</p>}
+      {collection.valueError && <p className={styles.error} role="alert">{collection.valueError.message}</p>}
       {collection.mutationError && <p className={styles.error} role="alert">{collection.mutationError.message}</p>}
 
       {showForm && (
         <CollectionItemForm
           cards={catalog.cards}
+          sets={catalog.sets}
           companies={grading.companies}
           loading={collection.mutationStatus === "loading"}
+          setsLoading={catalog.resourceStatus.sets === "loading"}
+          cardsLoading={catalog.resourceStatus.cards === "loading"}
           onCancel={() => setShowForm(false)}
+          onCardSearch={handleCardSearch}
+          onSetChange={handleSetChange}
           onSubmit={handleCreate}
         />
       )}
@@ -93,7 +134,12 @@ function CollectionPage() {
       <div className={styles.metrics}>
         <Metric label="Cartas distintas" value={summary?.totalDistinctCards ?? "—"} />
         <Metric label="Unidades" value={summary?.totalQuantity ?? "—"} caption={`${summary?.gradedQuantity ?? 0} gradadas`} />
-        <Metric accent label="Valor estimado" value={formatCurrency(valueSummary?.totalEstimatedValue, valueSummary?.currency)} caption={`${valueSummary?.itemsMissingPriceCount ?? 0} sin precio`} />
+        <Metric
+          accent
+          label="Valor estimado"
+          value={collection.valueStatus === "loading" ? "Calculando..." : formatCurrency(valueSummary?.totalEstimatedValue, valueSummary?.currency)}
+          caption={formatValueCaption(valueSummary)}
+        />
       </div>
 
       {collection.value && (

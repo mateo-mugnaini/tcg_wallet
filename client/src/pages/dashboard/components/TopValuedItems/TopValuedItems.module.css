@@ -3,7 +3,7 @@
   padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-panel);
 }
 
 .header {

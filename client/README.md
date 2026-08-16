@@ -63,3 +63,9 @@ VITE_API_BASE_URL=https://api.example.com/api pnpm build
 The production build stops at startup with a visible configuration error when this variable is missing or does not use `http://` or `https://`. Only public configuration belongs in `VITE_*` variables; never put passwords, refresh tokens or private API keys in the frontend.
 
 Deploy the contents of `dist/` with SPA fallback enabled so unknown paths serve `index.html`. The backend must allow the frontend origin through its CORS configuration and support credentials for the refresh cookie.
+
+### Vercel
+
+For this monorepo, import the repository in Vercel and set `client` as the project Root Directory. The committed `client/vercel.json` configures Vite, the frozen PNPM install, the `dist` output and the SPA rewrite. Define `VITE_API_BASE_URL` in Vercel for Preview and Production, then redeploy after changing it.
+
+Configure the backend with the exact production Vercel origin in `CORS_ORIGIN_PRODUCTION`. If the API is hosted on a different site from the Vercel frontend, use `REFRESH_COOKIE_SAME_SITE=none` over HTTPS; `credentials: include`, `Secure` and the exact CORS origin are required for session restoration. Keep `strict` when both services share the same site.

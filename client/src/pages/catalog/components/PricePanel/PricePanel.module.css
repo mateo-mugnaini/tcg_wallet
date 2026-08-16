@@ -3,7 +3,7 @@
   padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-panel);
 }
 
 .header {
@@ -47,7 +47,7 @@
   gap: 5px;
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: rgba(30, 41, 59, 0.55);
+  background: var(--color-panel-soft);
 }
 
 .summary strong {

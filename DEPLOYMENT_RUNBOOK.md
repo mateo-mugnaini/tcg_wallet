@@ -40,10 +40,12 @@ En staging y producción son obligatorios:
 1. Desde `client`, instalar dependencias con `pnpm install --frozen-lockfile`.
 2. Inyectar `VITE_API_BASE_URL` en el entorno de build; debe contener únicamente la URL pública del backend, por ejemplo `https://api.example.com/api`.
 3. Ejecutar `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm check:build`.
-4. Publicar el contenido de `client/dist/` en el hosting estático elegido.
-5. Configurar fallback SPA: las rutas que no sean assets deben servir `index.html`.
-6. Configurar en el backend `CORS_ORIGIN_PRODUCTION` con el origen exacto del frontend y conservar credenciales habilitadas para la cookie de refresh.
-7. Verificar manualmente login, refresh tras recargar, catálogo, colección y logout en staging.
+4. Importar el repositorio en Vercel y establecer `client` como **Root Directory**.
+5. Definir `VITE_API_BASE_URL` en los entornos Preview y Production de Vercel y redeployar después de cambiarlo.
+6. Mantener `client/vercel.json`: configura el build Vite, `dist` como salida y el fallback SPA hacia `index.html`.
+7. Configurar en el backend `CORS_ORIGIN_PRODUCTION` con el origen exacto del frontend y conservar credenciales habilitadas para la cookie de refresh.
+8. Si frontend y API están en sitios diferentes, configurar `REFRESH_COOKIE_SAME_SITE=none` y mantener HTTPS; si comparten el mismo sitio, conservar `strict`. `REFRESH_COOKIE_DOMAIN` solo debe definirse cuando el dominio de cookie sea intencional y válido.
+9. Verificar manualmente login, refresh tras recargar, catálogo, colección y logout en staging.
 
 El frontend no contiene secretos. Si `VITE_API_BASE_URL` falta o no utiliza `http://` o `https://`, la aplicación muestra una pantalla de configuración incompleta y no inicia el cliente API.
 

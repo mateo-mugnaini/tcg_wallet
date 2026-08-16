@@ -4,7 +4,7 @@
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-panel);
   box-shadow: var(--shadow-card);
 }
 
@@ -26,7 +26,7 @@
   display: grid;
   place-items: center;
   color: var(--color-accent);
-  background: linear-gradient(145deg, rgba(20, 78, 74, 0.55), var(--color-surface));
+  background: linear-gradient(145deg, rgba(244, 197, 66, 0.42), var(--color-surface));
   font-size: 2rem;
   font-weight: 900;
 }

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./CollectionItemForm.module.css";
 
 function getInitialForm(item) {
   return {
     cardId: item?.card_id || "",
+    setId: item?.set_id || item?.set?.id || item?.card?.set_id || "",
     quantity: item?.quantity || 1,
     condition: item?.condition || "Near Mint",
     isGraded: item?.is_graded || false,
@@ -12,13 +13,53 @@ function getInitialForm(item) {
   };
 }
 
-function CollectionItemForm({ item, cards, companies, loading, onCancel, onSubmit }) {
+function CollectionItemForm({
+  item,
+  cards,
+  sets,
+  companies,
+  loading,
+  setsLoading = false,
+  cardsLoading = false,
+  onCancel,
+  onCardSearch,
+  onSetChange,
+  onSubmit,
+}) {
   const [form, setForm] = useState(() => getInitialForm(item));
+  const [cardSearch, setCardSearch] = useState("");
   const [error, setError] = useState(null);
   const isEditing = Boolean(item);
 
+  useEffect(() => {
+    if (isEditing || !form.setId || !onCardSearch) return undefined;
+
+    const normalizedSearch = cardSearch.trim();
+    if (normalizedSearch && normalizedSearch.length < 2) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      onCardSearch(form.setId, normalizedSearch);
+    }, normalizedSearch ? 300 : 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cardSearch, form.setId, isEditing, onCardSearch]);
+
   const change = (name, value) => {
     setForm((current) => ({ ...current, [name]: value }));
+    setError(null);
+  };
+
+  const handleSetChange = (event) => {
+    const setId = event.target.value;
+    setCardSearch("");
+    setForm((current) => ({ ...current, setId, cardId: "" }));
+    setError(null);
+    onSetChange?.(setId);
+  };
+
+  const handleCardSearchChange = (event) => {
+    setCardSearch(event.target.value);
+    setForm((current) => ({ ...current, cardId: "" }));
     setError(null);
   };
 
@@ -58,11 +99,46 @@ function CollectionItemForm({ item, cards, companies, loading, onCancel, onSubmi
       </div>
 
       <label>
-        Carta
-        <select disabled={isEditing} onChange={(event) => change("cardId", event.target.value)} required value={form.cardId}>
-          <option value="">Selecciona una carta</option>
-          {cards.map((card) => <option key={card.id} value={card.id}>{card.name} · {card.card_number || "Sin número"}</option>)}
+        Set
+        <select disabled={isEditing || setsLoading} onChange={handleSetChange} required value={form.setId}>
+          <option value="">{setsLoading ? "Cargando sets..." : "Selecciona primero un set"}</option>
+          {sets.map((set) => <option key={set.id} value={set.id}>{set.name}{set.code ? ` · ${set.code}` : ""}</option>)}
         </select>
+      </label>
+      {!isEditing && form.setId && (
+        <label>
+          Buscar carta dentro del set
+          <input
+            onChange={handleCardSearchChange}
+            placeholder="Nombre o número de carta"
+            type="search"
+            value={cardSearch}
+          />
+          <small className={styles.help}>Escribe al menos 2 caracteres para buscar en todo el set.</small>
+        </label>
+      )}
+      <label>
+        Carta
+        <select
+          disabled={isEditing || !form.setId || cardsLoading}
+          onChange={(event) => change("cardId", event.target.value)}
+          required
+          value={form.cardId}
+        >
+          <option value="">
+            {cardsLoading
+              ? "Cargando cartas del set..."
+              : form.setId ? "Selecciona una carta" : "Selecciona primero un set"}
+          </option>
+          {cards.map((card) => (
+            <option key={card.id} value={card.id}>
+              {card.name} · {card.card_number || "Sin número"}
+            </option>
+          ))}
+        </select>
+        {form.setId && !cardsLoading && cards.length === 0 && (
+          <small className={styles.help}>No hay cartas disponibles para este set.</small>
+        )}
       </label>
       <div className={styles.row}>
         <label>

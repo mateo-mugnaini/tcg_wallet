@@ -106,7 +106,7 @@
 }
 
 .error {
-  color: #fecdd3;
+  color: var(--color-danger);
   background: var(--color-danger-surface);
 }
 

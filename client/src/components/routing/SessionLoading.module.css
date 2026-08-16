@@ -2,6 +2,6 @@
   display: grid;
   min-height: 100vh;
   place-items: center;
-  color: #cbd5e1;
-  background: #0b1020;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
 }

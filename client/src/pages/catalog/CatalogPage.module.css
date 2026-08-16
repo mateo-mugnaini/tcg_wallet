@@ -8,7 +8,7 @@
   padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-panel);
 }
 
 .sectionHeader {
@@ -75,7 +75,7 @@
 
 .applyButton {
   border: 1px solid var(--color-accent);
-  color: var(--color-bg);
+  color: var(--color-text-primary);
   background: var(--color-accent);
 }
 
@@ -97,7 +97,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
-  background: rgba(30, 41, 59, 0.45);
+  background: var(--color-panel-soft);
   text-decoration: none;
   transition: border-color var(--transition-fast), transform var(--transition-fast);
 }
@@ -150,7 +150,7 @@
   display: grid;
   place-items: center;
   color: var(--color-accent);
-  background: linear-gradient(145deg, rgba(20, 78, 74, 0.55), var(--color-surface));
+  background: linear-gradient(145deg, rgba(244, 197, 66, 0.42), var(--color-surface));
   font-size: 1.4rem;
   font-weight: 900;
 }
@@ -163,7 +163,7 @@
 
 .error {
   margin: 0 0 var(--space-4);
-  color: #fecdd3;
+  color: var(--color-danger);
   font-size: 0.86rem;
 }
 

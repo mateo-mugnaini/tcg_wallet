@@ -32,6 +32,11 @@ export function validateResponse(schema) {
         issues: result.error.issues,
       });
 
+      // El errorMiddleware también responde con res.json(). Restauramos la
+      // implementación original para no intentar validar la respuesta de error
+      // contra el contrato exitoso y evitar que Express termine devolviendo HTML.
+      res.json = originalJson;
+
       return next(
         createAppError(
           "La respuesta generada por el servidor no cumple con el contrato esperado",

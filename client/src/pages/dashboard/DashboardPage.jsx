@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
 import { getCollectionStats, getCollectionValue } from "../../redux/actions/collection/get/collection.actions.js";
+import { debugLog } from "../../lib/debug/logger.js";
 import BreakdownCard from "./components/BreakdownCard/BreakdownCard.jsx";
 import MetricCard from "./components/MetricCard/MetricCard.jsx";
 import TopValuedItems from "./components/TopValuedItems/TopValuedItems.jsx";
@@ -19,6 +20,15 @@ function formatCurrency(value, currency = "USD") {
   } catch {
     return `${value} ${currency}`;
   }
+}
+
+function formatValueCaption(summary) {
+  const missing = summary?.itemsMissingPriceCount ?? 0;
+  const fallback = summary?.itemsUsingFallbackPriceCount ?? 0;
+
+  return fallback > 0
+    ? `${missing} sin precio · ${fallback} estimados con precio base`
+    : `${missing} items sin precio disponible`;
 }
 
 function DashboardPage() {
@@ -40,6 +50,20 @@ function DashboardPage() {
     dispatch(getCollectionStats());
     dispatch(getCollectionValue());
   }, [dispatch]);
+
+  useEffect(() => {
+    debugLog("dashboard_collection_value_state", {
+      status: valueStatus,
+      summary: valueSummary,
+      error: valueError
+        ? {
+          message: valueError.message,
+          code: valueError.code,
+          status: valueError.status,
+        }
+        : null,
+    });
+  }, [valueError, valueStatus, valueSummary]);
 
   const refreshDashboard = () => {
     dispatch(getCollectionStats());
@@ -78,7 +102,7 @@ function DashboardPage() {
         />
         <MetricCard
           accent
-          caption={`${valueSummary?.itemsMissingPriceCount ?? 0} items sin precio disponible`}
+          caption={formatValueCaption(valueSummary)}
           label="Valor estimado"
           value={formatCurrency(valueSummary?.totalEstimatedValue, valueSummary?.currency)}
         />
