@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   BrowserRouter,
@@ -11,20 +11,21 @@ import {
 import SessionLoading from "../../components/routing/SessionLoading.jsx";
 import AdminRoute from "../../components/routing/AdminRoute.jsx";
 import AppLayout from "../../components/layout/AppLayout.jsx";
-import AuthPages from "../../pages/auth/authPages.jsx";
-import DashboardPage from "../../pages/dashboard/DashboardPage.jsx";
-import CatalogPage from "../../pages/catalog/CatalogPage.jsx";
-import CatalogDetailPage from "../../pages/catalog/CatalogDetailPage.jsx";
-import CardPricesPage from "../../pages/catalog/CardPricesPage.jsx";
-import CollectionPage from "../../pages/collection/CollectionPage.jsx";
-import CollectionDetailPage from "../../pages/collection/CollectionDetailPage.jsx";
-import GradingCompaniesPage from "../../pages/grading/GradingCompaniesPage.jsx";
-import ProfilePage from "../../pages/profile/ProfilePage.jsx";
-import SyncJobsPage from "../../pages/admin/SyncJobsPage.jsx";
-import UsersPage from "../../pages/admin/UsersPage.jsx";
-import NotFoundPage from "../../pages/not-found/NotFoundPage.jsx";
 import { getAccessTokenExpiration } from "../../lib/auth/access-token.js";
 import { refreshSession } from "../../redux/actions/auth/post/auth.actions.js";
+
+const AuthPages = lazy(() => import("../../pages/auth/authPages.jsx"));
+const DashboardPage = lazy(() => import("../../pages/dashboard/DashboardPage.jsx"));
+const CatalogPage = lazy(() => import("../../pages/catalog/CatalogPage.jsx"));
+const CatalogDetailPage = lazy(() => import("../../pages/catalog/CatalogDetailPage.jsx"));
+const CardPricesPage = lazy(() => import("../../pages/catalog/CardPricesPage.jsx"));
+const CollectionPage = lazy(() => import("../../pages/collection/CollectionPage.jsx"));
+const CollectionDetailPage = lazy(() => import("../../pages/collection/CollectionDetailPage.jsx"));
+const GradingCompaniesPage = lazy(() => import("../../pages/grading/GradingCompaniesPage.jsx"));
+const ProfilePage = lazy(() => import("../../pages/profile/ProfilePage.jsx"));
+const SyncJobsPage = lazy(() => import("../../pages/admin/SyncJobsPage.jsx"));
+const UsersPage = lazy(() => import("../../pages/admin/UsersPage.jsx"));
+const NotFoundPage = lazy(() => import("../../pages/not-found/NotFoundPage.jsx"));
 
 function SessionBootstrap({ children }) {
   const dispatch = useDispatch();
@@ -84,30 +85,32 @@ function AppRouter() {
     <BrowserRouter>
       <RouteFocus />
       <SessionBootstrap>
-        <Routes>
-          <Route path="/auth" element={<AuthRoute />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="catalog" element={<CatalogPage />} />
-              <Route path="catalog/tcgs/:tcgId" element={<CatalogDetailPage type="tcg" />} />
-              <Route path="catalog/sets/:setId" element={<CatalogDetailPage type="set" />} />
-              <Route path="catalog/cards/:cardId" element={<CatalogDetailPage type="card" />} />
-              <Route path="catalog/cards/:cardId/prices" element={<CardPricesPage />} />
-              <Route path="collection" element={<CollectionPage />} />
-              <Route path="collection/:itemId" element={<CollectionDetailPage />} />
-              <Route path="grading" element={<GradingCompaniesPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route element={<AdminRoute />}>
-                <Route path="admin/sync" element={<SyncJobsPage />} />
-                <Route path="admin/users" element={<UsersPage />} />
+        <Suspense fallback={<SessionLoading />}>
+          <Routes>
+            <Route path="/auth" element={<AuthRoute />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="catalog" element={<CatalogPage />} />
+                <Route path="catalog/tcgs/:tcgId" element={<CatalogDetailPage type="tcg" />} />
+                <Route path="catalog/sets/:setId" element={<CatalogDetailPage type="set" />} />
+                <Route path="catalog/cards/:cardId" element={<CatalogDetailPage type="card" />} />
+                <Route path="catalog/cards/:cardId/prices" element={<CardPricesPage />} />
+                <Route path="collection" element={<CollectionPage />} />
+                <Route path="collection/:itemId" element={<CollectionDetailPage />} />
+                <Route path="grading" element={<GradingCompaniesPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route element={<AdminRoute />}>
+                  <Route path="admin/sync" element={<SyncJobsPage />} />
+                  <Route path="admin/users" element={<UsersPage />} />
+                </Route>
+                <Route path="*" element={<NotFoundPage />} />
               </Route>
-              <Route path="*" element={<NotFoundPage />} />
             </Route>
-          </Route>
-          <Route path="*" element={<Navigate to="/auth" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/auth" replace />} />
+          </Routes>
+        </Suspense>
       </SessionBootstrap>
     </BrowserRouter>
   );

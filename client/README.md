@@ -50,3 +50,15 @@ pnpm build
 Copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL` when the API is ready to be connected. Do not commit `.env.local` or secrets.
 
 Component-scoped styles use the `*.module.css` convention. Global resets and design tokens belong in `src/styles/global.css`.
+
+## Release
+
+The frontend is a static Vite application. Configure the public backend URL at build time:
+
+```bash
+VITE_API_BASE_URL=https://api.example.com/api pnpm build
+```
+
+The production build stops at startup with a visible configuration error when this variable is missing or does not use `http://` or `https://`. Only public configuration belongs in `VITE_*` variables; never put passwords, refresh tokens or private API keys in the frontend.
+
+Deploy the contents of `dist/` with SPA fallback enabled so unknown paths serve `index.html`. The backend must allow the frontend origin through its CORS configuration and support credentials for the refresh cookie.
