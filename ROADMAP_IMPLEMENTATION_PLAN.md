@@ -13,8 +13,10 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se agregaron pruebas de filtros y contratos del catálogo.
 - Validación actual: `pnpm.cmd test:run` pasa con 12 archivos y 63 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
+- `pnpm.cmd db:check:schema` inventarió las nueve tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
+- `pnpm.cmd test:integration` pasó con 3 tests de lectura de repositories contra PostgreSQL.
 
-- Fase 0: parcialmente completada. PostgreSQL está configurado en el puerto 2203 y el schema de graded_card_prices ya fue verificado en la base activa. La auditoría completa de tablas, índices y constraints sigue pendiente.
+- Fase 0: en progreso avanzado. PostgreSQL está configurado en el puerto 2203 y el inventario completo de tablas, columnas, constraints e índices ya fue verificado; falta versionar el DDL/migrations.
 - Fase 1: en progreso. Ya existen los cinco endpoints de consulta, el registro manual, el importador batch administrativo y el fixture ejecutable de graded prices con repository, service, controller, routes y schemas Zod; el proveedor de sync automático sigue pendiente.
 - Fase 2: **finalizada en alcance funcional**. `GET /api/collection-items/value` separa precios normales y graded, incluye contadores y desglose por grading company; para graded usa card, grading company y grade, sin fallback al precio normal. La política actual evalúa exclusivamente precios USD; la conversión multicurrency queda como ampliación futura.
 - Fase 3: en progreso. `GET /api/cards` ya admite filtros por TCG, set, nombre, rareza, número y external ID; el detalle de card incluye set, TCG, últimos precios normales y resumen de la colección del usuario. Se ampliaron las pruebas y se normalizó `sortOrder` en TCGs, sets, cards, colección y usuarios.
@@ -26,9 +28,10 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
 - Validación adicional: `pnpm.cmd test:run` OK con 12 archivos y 63 tests de contratos, catálogo, servicios, colección, autorización, JWT, refresh rotation, hardening y operaciones.
+- Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 3 tests de repositories contra PostgreSQL.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
-- Siguiente tarea: ampliar tests de repository/API con PostgreSQL y continuar la limpieza de capas.
+- Siguiente tarea: ampliar tests API end-to-end, medir EXPLAIN de queries críticas y preparar migrations versionadas.
 
 ## 1. Estado inicial
 
