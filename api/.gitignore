@@ -4,6 +4,7 @@
 
 node_modules/
 *.yaml
+!pnpm-lock.yaml
 # ==========================================
 # Environment variables
 # ==========================================
