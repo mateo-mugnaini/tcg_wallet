@@ -16,6 +16,7 @@
 - Se añadieron pruebas unitarias del `collection-items.service` para reglas graded, filtros, paginación y ownership.
 - Se incorporó el comando oficial `pnpm lint` y ESLint ejecuta sin errores ni warnings.
 - Se amplió `api/check_schema.js` para auditar las diez tablas principales, columnas, constraints e índices sin modificar datos.
+- Se añadió `000_baseline_schema.sql` para que CI y entornos limpios puedan crear el schema base antes de las migrations incrementales; en la base existente se verificó como idempotente.
 - Se añadió `pnpm test:integration` con 3 pruebas de lectura de repositories contra PostgreSQL.
 - Se añadieron pruebas HTTP end-to-end para health, validación de login y autenticación de colección.
 - Se añadieron pruebas unitarias del servicio de precios para snapshots, paginación, estadísticas, variación y validaciones de alta.

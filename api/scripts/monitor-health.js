@@ -50,6 +50,33 @@ async function checkHealth() {
   }
 }
 
+async function sendWebhook(payload, event) {
+  if (!webhookUrl) {
+    return;
+  }
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`webhook returned HTTP ${response.status}`);
+    }
+  } catch (webhookError) {
+    console.error(
+      JSON.stringify({
+        event: "health_alert_delivery_failed",
+        alertEvent: event,
+        message: webhookError.message,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+  }
+}
+
 async function notifyFailure(failureCount, error) {
   const payload = {
     status: "degraded",
@@ -61,22 +88,23 @@ async function notifyFailure(failureCount, error) {
 
   console.error(JSON.stringify({ event: "health_check_failed", ...payload }));
 
-  if (webhookUrl && failureCount >= failureThreshold) {
-    try {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch (webhookError) {
-      console.error(
-        JSON.stringify({
-          event: "health_alert_delivery_failed",
-          message: webhookError.message,
-          timestamp: new Date().toISOString(),
-        }),
-      );
-    }
+  if (failureCount >= failureThreshold) {
+    await sendWebhook(payload, "degraded");
+  }
+}
+
+async function notifyRecovery(previousFailures, shouldNotify) {
+  const payload = {
+    status: "recovered",
+    service: "tcg-wallet-api",
+    previousFailures,
+    timestamp: new Date().toISOString(),
+  };
+
+  console.log(JSON.stringify({ event: "health_check_recovered", ...payload }));
+
+  if (shouldNotify) {
+    await sendWebhook(payload, "recovered");
   }
 }
 
@@ -89,13 +117,7 @@ async function runCheck() {
     const { readyBody } = await checkHealth();
 
     if (failureCount > 0) {
-      console.log(
-        JSON.stringify({
-          event: "health_check_recovered",
-          previousFailures: failureCount,
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      await notifyRecovery(failureCount, alertSent);
     } else {
       console.log(
         JSON.stringify({

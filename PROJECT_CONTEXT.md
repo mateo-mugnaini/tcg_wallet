@@ -144,7 +144,7 @@ Excepciones reales:
 
 ## 5. PostgreSQL y esquema
 
-El runner de migrations está versionado en `api/scripts/run-migrations.js`; `001_critical_read_indexes.sql` y `002_sync_jobs.sql` ya fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. `check_schema.js` continúa auditando las diez tablas principales, columnas, defaults, constraints e índices. Falta validar el proceso en producción y ampliar mediciones con volumen real.
+El runner de migrations está versionado en `api/scripts/run-migrations.js`; `000_baseline_schema.sql`, `001_critical_read_indexes.sql` y `002_sync_jobs.sql` ya fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. `check_schema.js` continúa auditando las diez tablas principales, columnas, defaults, constraints e índices. Falta validar el proceso en producción y ampliar mediciones con volumen real.
 
 Auditoría actual de PostgreSQL: existen `users`, `refresh_tokens`, `tcgs`, `sets`, `cards`, `card_prices`, `collection_items`, `grading_companies` y `graded_card_prices`. Se confirmaron PKs, FKs, uniques de users/TCGs/grading companies, uniques compuestos de sets/cards y checks de quantity/grade/coherencia graded. `collection_items` y `graded_card_prices` solo muestran su índice de PK en el inventario actual; no se agregan índices sin EXPLAIN y migration versionada.
 

@@ -12,6 +12,7 @@
     "db:backup": "node scripts/backup-database.js",
     "db:restore": "node scripts/restore-database.js",
     "db:seed:graded": "node scripts/seed-graded-card-prices.js",
+    "db:seed:ci": "node scripts/seed-ci-fixture.js",
     "check:graded-value": "node scripts/check-graded-collection-value.js",
     "check:openapi": "node scripts/check-openapi.js",
     "check:smoke": "node scripts/check-smoke.js",

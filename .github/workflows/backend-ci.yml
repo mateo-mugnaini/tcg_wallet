@@ -73,6 +73,9 @@ jobs:
       - name: Apply database migrations
         run: pnpm db:migrate
 
+      - name: Seed isolated CI fixture
+        run: pnpm db:seed:ci
+
       - name: Run lint
         run: pnpm lint
 
@@ -89,6 +92,16 @@ jobs:
         run: |
           pnpm start > /tmp/tcg-wallet-api.log 2>&1 &
           echo $! > /tmp/tcg-wallet-api.pid
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health/live > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/tcg-wallet-api.log
+          exit 1
 
       - name: Run deployment smoke tests
         run: pnpm check:smoke

@@ -50,7 +50,7 @@ Después de un rollback se deben repetir migrations pendientes, readiness, smoke
 - `GET /api/health/live` confirma que el proceso está vivo.
 - `GET /api/health/ready` confirma que PostgreSQL está disponible y que la instancia acepta tráfico.
 - `GET /api/metrics` expone métricas HTTP agregadas para scraping o adaptación al sistema de monitoring.
-- `pnpm monitor:health` ejecuta una comprobación única; con `MONITOR_CONTINUOUS=true` mantiene un monitor periódico y puede notificar un webhook mediante `ALERT_WEBHOOK_URL` después del umbral configurado.
+- `pnpm monitor:health` ejecuta una comprobación única; con `MONITOR_CONTINUOUS=true` mantiene un monitor periódico y puede notificar degradación y recuperación mediante `ALERT_WEBHOOK_URL` después del umbral configurado.
 - Las alertas mínimas deben cubrir readiness 503 sostenido, liveness fallido, errores 5xx, latencia elevada, jobs fallidos y espacio de backup.
 - Los logs JSON deben conservar `requestId` y no deben incluir secretos o tokens.
 

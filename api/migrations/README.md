@@ -8,7 +8,7 @@ El runner oficial es:
 pnpm db:migrate
 ```
 
-El runner crea `schema_migrations`, bloquea ejecuciones concurrentes con un advisory lock, aplica cada archivo pendiente dentro de una transacción y registra su identificador solo después del `COMMIT`.
+El runner crea `schema_migrations`, bloquea ejecuciones concurrentes con un advisory lock, aplica cada archivo pendiente dentro de una transacción y registra su identificador solo después del `COMMIT`. `000_baseline_schema.sql` permite arrancar una base limpia; en una base existente utiliza `IF NOT EXISTS` y no reemplaza el DDL original.
 
 El inventario de baseline se obtiene con:
 
@@ -23,4 +23,4 @@ Antes de aplicar una migration en producción hay que:
 3. aplicar el SQL mediante el runner de migrations elegido por el despliegue;
 4. verificar índices y constraints con `pnpm db:check:schema`.
 
-Las migrations `001_critical_read_indexes.sql` y `002_sync_jobs.sql` fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. Sus rollbacks están documentados en los propios archivos.
+Las migrations `000_baseline_schema.sql`, `001_critical_read_indexes.sql` y `002_sync_jobs.sql` fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. El baseline no reemplaza tablas existentes; permite inicializar entornos limpios. Sus rollbacks están documentados en los propios archivos.
