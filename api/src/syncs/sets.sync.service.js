@@ -8,6 +8,7 @@ import { findTcgByName } from "../repositories/tcg.repository.js";
 import { getPokemonTcgSets } from "../integrations/pokemon-tcg/pokemon-tcg.client.js";
 
 import { createAppError } from "../errors/app.errors.js";
+import { logger } from "../utils/logger.js";
 
 /* ====================================
         CONFIGURACIÓN SYNC
@@ -43,10 +44,7 @@ function normalizeReleaseDate(releaseDate) {
 export async function syncPokemonSets() {
   const syncStartedAt = Date.now();
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON SET SYNC] STARTING");
-  console.log("============================================================");
+  logger.info("pokemon_set_sync_started");
 
   /* ====================================
           BUSCAR TCG
@@ -58,7 +56,10 @@ export async function syncPokemonSets() {
     throw createAppError("El TCG Pokémon no existe en la base de datos", 404);
   }
 
-  console.log(`[POKÉMON SET SYNC] TCG: ${pokemonTcg.name}`);
+  logger.info("pokemon_set_sync_tcg_resolved", {
+    tcgId: pokemonTcg.id,
+    tcgName: pokemonTcg.name,
+  });
 
   /* ====================================
           CONTADORES
@@ -80,9 +81,10 @@ export async function syncPokemonSets() {
   let page = 1;
 
   while (true) {
-    console.log(
-      `[POKÉMON SET SYNC] Fetching page=${page} | pageSize=${POKEMON_TCG_PAGE_SIZE}`,
-    );
+    logger.debug("pokemon_set_sync_page_requested", {
+      page,
+      pageSize: POKEMON_TCG_PAGE_SIZE,
+    });
 
     const response = await getPokemonTcgSets({
       page,
@@ -110,9 +112,10 @@ export async function syncPokemonSets() {
       if (!externalId || !pokemonSet.name) {
         skipped++;
 
-        console.warn(
-          `[POKÉMON SET SYNC] SET ${received} | SKIPPED | incomplete data`,
-        );
+        logger.warn("pokemon_set_sync_set_skipped", {
+          received,
+          reason: "incomplete_data",
+        });
 
         continue;
       }
@@ -138,13 +141,10 @@ export async function syncPokemonSets() {
       if (existingSet) {
         stoppedAtExisting = true;
 
-        console.log("");
-        console.log(
-          `[POKÉMON SET SYNC] STOP | existing set found: ${existingSet.name} | external_id=${externalId}`,
-        );
-        console.log(
-          "[POKÉMON SET SYNC] Remaining older Sets were not requested.",
-        );
+        logger.info("pokemon_set_sync_stopped_at_existing", {
+          setName: existingSet.name,
+          externalId,
+        });
 
         break;
       }
@@ -169,9 +169,11 @@ export async function syncPokemonSets() {
 
       created++;
 
-      console.log(
-        `[POKÉMON SET SYNC] CREATED | ${pokemonSet.name} | external_id=${externalId} | release=${setData.releaseDate ?? "unknown"}`,
-      );
+      logger.info("pokemon_set_sync_set_created", {
+        name: pokemonSet.name,
+        externalId,
+        releaseDate: setData.releaseDate,
+      });
     }
 
     /*
@@ -220,31 +222,7 @@ export async function syncPokemonSets() {
           LOG FINAL
   ==================================== */
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON SET SYNC] COMPLETED");
-  console.log("============================================================");
-
-  console.log(`[POKÉMON SET SYNC] Received: ${summary.received}`);
-
-  console.log(`[POKÉMON SET SYNC] Created: ${summary.created}`);
-
-  console.log(`[POKÉMON SET SYNC] Updated: ${summary.updated}`);
-
-  console.log(`[POKÉMON SET SYNC] Unchanged: ${summary.unchanged}`);
-
-  console.log(`[POKÉMON SET SYNC] Skipped: ${summary.skipped}`);
-
-  console.log(`[POKÉMON SET SYNC] Pages processed: ${summary.pagesProcessed}`);
-
-  console.log(
-    `[POKÉMON SET SYNC] Stopped at existing: ${summary.stoppedAtExisting}`,
-  );
-
-  console.log(`[POKÉMON SET SYNC] Duration: ${summary.durationSeconds}s`);
-
-  console.log("============================================================");
-  console.log("");
+  logger.info("pokemon_set_sync_completed", summary);
 
   return {
     tcg: {

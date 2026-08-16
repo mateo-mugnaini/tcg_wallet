@@ -1,4 +1,5 @@
 import { createAppError } from "../errors/app.errors.js";
+import { logger } from "../utils/logger.js";
 
 /* ====================================
         VALIDAR RESPONSE
@@ -23,17 +24,13 @@ export function validateResponse(schema) {
             RESPONSE INVÁLIDA
       ==================================== */
 
-      console.error("");
-      console.error("====================================");
-      console.error("[RESPONSE VALIDATION ERROR]");
-      console.error("====================================");
-      console.error("Method:", req.method);
-      console.error("Path:", req.originalUrl);
-      console.error("Status:", res.statusCode);
-      console.error("Zod issues:");
-      console.error(result.error.issues);
-      console.error("====================================");
-      console.error("");
+      logger.error("response_validation_failed", {
+        requestId: req.requestId,
+        method: req.method,
+        path: req.originalUrl,
+        status: res.statusCode,
+        issues: result.error.issues,
+      });
 
       return next(
         createAppError(

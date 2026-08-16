@@ -1,5 +1,6 @@
 import pool from "../config/database.js";
 import { createAppError } from "../errors/app.errors.js";
+import { logger } from "../utils/logger.js";
 
 const ACTIVE_SYNC_LOCKS = new Set();
 const POKEMON_SYNC_LOCK = "pokemon-sync";
@@ -67,7 +68,10 @@ export async function syncExecutionLock(req, res, next) {
 
     const releaseOnResponseEnd = () => {
       releaseLock().catch((error) => {
-        console.error("Failed to release sync advisory lock", error);
+        logger.error("sync_advisory_lock_release_failed", {
+          requestId: req.requestId,
+          message: error.message,
+        });
       });
     };
 

@@ -12,31 +12,25 @@ import cardsPricesRoutes from "./routes/cards-prices.routes.js";
 import collectionItemsRoutes from "./routes/collection-items.routes.js";
 import gradingCompaniesRoutes from "./routes/grading-companies.routes.js";
 import syncRoutes from "./routes/sync.pipeline.routes.js";
+import healthRoutes from "./routes/health.routes.js";
 
 import { corsOptions, helmetOptions } from "./config/security.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
+import { requestLogging } from "./middlewares/request-logging.middleware.js";
 
 const app = express();
 
+app.use(requestLogging);
 app.use(helmet(helmetOptions));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
 /* ====================================
-              HEALTH CHECK
-==================================== */
-
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-  });
-});
-
-/* ====================================
                 ROUTES
 ==================================== */
 
+app.use("/api", healthRoutes);
 app.use("/api", cardsPricesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);

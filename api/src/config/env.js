@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { z } from "zod";
+import { logger } from "../utils/logger.js";
 
 const envSchema = z.object({
   NODE_ENV: z
@@ -48,8 +49,13 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-  console.error("Invalid environment configuration:");
-  console.error(parsedEnv.error.issues);
+  logger.error("invalid_environment_configuration", {
+    issues: parsedEnv.error.issues.map(({ path, code, message }) => ({
+      path,
+      code,
+      message,
+    })),
+  });
 
   process.exit(1);
 }
@@ -65,7 +71,7 @@ if (
     parsedEnv.data.JWT_REFRESH_SECRET ===
       "tu_refresh_secret_super_largo_y_aleatorio")
 ) {
-  console.error("JWT secrets inseguros para producción");
+  logger.error("insecure_jwt_secrets_for_production");
   process.exit(1);
 }
 

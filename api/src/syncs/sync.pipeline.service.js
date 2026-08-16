@@ -1,6 +1,7 @@
 import { syncPokemonSets } from "./sets.sync.service.js";
 import { syncPokemonCards } from "./cards.sync.service.js";
 import { syncPokemonCardPrices } from "./cards-prices-sync.service.js";
+import { logger } from "../utils/logger.js";
 
 /* ====================================
         SYNC PIPELINE
@@ -9,18 +10,14 @@ import { syncPokemonCardPrices } from "./cards-prices-sync.service.js";
 export async function syncPokemonPipeline() {
   const startedAt = Date.now();
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON SYNC PIPELINE] STARTING");
-  console.log("============================================================");
+  logger.info("pokemon_sync_pipeline_started");
 
   try {
     /* ====================================
             1. SYNC SETS
     ==================================== */
 
-    console.log("");
-    console.log("[POKÉMON SYNC PIPELINE] STEP 1/3 | SETS");
+    logger.info("pokemon_sync_pipeline_step_started", { step: "sets" });
 
     const setsResult = await syncPokemonSets();
 
@@ -28,8 +25,7 @@ export async function syncPokemonPipeline() {
             2. SYNC CARDS
     ==================================== */
 
-    console.log("");
-    console.log("[POKÉMON SYNC PIPELINE] STEP 2/3 | CARDS");
+    logger.info("pokemon_sync_pipeline_step_started", { step: "cards" });
 
     const cardsResult = await syncPokemonCards();
 
@@ -37,8 +33,7 @@ export async function syncPokemonPipeline() {
             3. SYNC PRICES
     ==================================== */
 
-    console.log("");
-    console.log("[POKÉMON SYNC PIPELINE] STEP 3/3 | PRICES");
+    logger.info("pokemon_sync_pipeline_step_started", { step: "prices" });
 
     const pricesResult = await syncPokemonCardPrices();
 
@@ -49,15 +44,12 @@ export async function syncPokemonPipeline() {
     const durationMs = Date.now() - startedAt;
     const durationSeconds = Math.round(durationMs / 1000);
 
-    console.log("");
-    console.log("============================================================");
-    console.log("[POKÉMON SYNC PIPELINE] COMPLETED");
-    console.log("============================================================");
-
-    console.log(`[POKÉMON SYNC PIPELINE] Duration: ${durationSeconds}s`);
-
-    console.log("============================================================");
-    console.log("");
+    logger.info("pokemon_sync_pipeline_completed", {
+      durationSeconds,
+      sets: setsResult.summary,
+      cards: cardsResult.summary,
+      prices: pricesResult.summary,
+    });
 
     return {
       status: "completed",
@@ -74,23 +66,11 @@ export async function syncPokemonPipeline() {
     const durationMs = Date.now() - startedAt;
     const durationSeconds = Math.round(durationMs / 1000);
 
-    console.error("");
-    console.error(
-      "============================================================",
-    );
-    console.error("[POKÉMON SYNC PIPELINE] FAILED");
-    console.error(
-      "============================================================",
-    );
-
-    console.error(`[POKÉMON SYNC PIPELINE] Duration: ${durationSeconds}s`);
-
-    console.error(`[POKÉMON SYNC PIPELINE] Error: ${error.message}`);
-
-    console.error(
-      "============================================================",
-    );
-    console.error("");
+    logger.error("pokemon_sync_pipeline_failed", {
+      durationSeconds,
+      message: error.message,
+      code: error.code,
+    });
 
     throw error;
   }

@@ -12,6 +12,7 @@ import { getPokemonTcgCards } from "../integrations/pokemon-tcg/pokemon-tcg.clie
 import { findTcgByName } from "../repositories/tcg.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
+import { logger } from "../utils/logger.js";
 
 /* ====================================
         CONFIGURACIÓN SYNC
@@ -82,18 +83,21 @@ async function getPokemonTcgCardsWithRetry(options) {
       }
 
       if (attempt === MAX_RETRIES) {
-        console.error(
-          `[POKÉMON PRICE SYNC] API request failed after ${MAX_RETRIES} attempts`,
-        );
+        logger.error("pokemon_price_sync_api_request_failed", {
+          attempts: MAX_RETRIES,
+        });
 
         throw error;
       }
 
       const waitTime = Math.min(RETRY_BASE_DELAY * attempt, RETRY_MAX_DELAY);
 
-      console.warn(
-        `[POKÉMON PRICE SYNC] API error ${error.code ?? "unknown"} | attempt=${attempt}/${MAX_RETRIES} | waiting=${waitTime}ms`,
-      );
+      logger.warn("pokemon_price_sync_api_retry", {
+        code: error.code ?? "unknown",
+        attempt,
+        maxRetries: MAX_RETRIES,
+        retryDelayMs: waitTime,
+      });
 
       await delay(waitTime);
     }
@@ -135,10 +139,7 @@ async function createCardPricesInBatches(cardPrices) {
 export async function syncPokemonCardPrices() {
   const syncStartedAt = Date.now();
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON PRICE SYNC] STARTING");
-  console.log("============================================================");
+  logger.info("pokemon_price_sync_started");
 
   /* ====================================
           BUSCAR TCG
@@ -150,7 +151,10 @@ export async function syncPokemonCardPrices() {
     throw createAppError("El TCG Pokémon no existe en la base de datos", 404);
   }
 
-  console.log(`[POKÉMON PRICE SYNC] TCG: ${pokemonTcg.name}`);
+  logger.info("pokemon_price_sync_tcg_resolved", {
+    tcgId: pokemonTcg.id,
+    tcgName: pokemonTcg.name,
+  });
 
   /* ====================================
           OBTENER SETS
@@ -168,7 +172,7 @@ export async function syncPokemonCardPrices() {
     throw createAppError("No existen Sets de Pokémon sincronizados", 404);
   }
 
-  console.log(`[POKÉMON PRICE SYNC] Sets found: ${sets.length}`);
+  logger.info("pokemon_price_sync_sets_loaded", { count: sets.length });
 
   /* ====================================
           CONTADORES
@@ -200,17 +204,22 @@ export async function syncPokemonCardPrices() {
     if (!set.external_id) {
       skippedSets++;
 
-      console.warn(
-        `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} | ${set.name} | SKIPPED | missing external_id`,
-      );
+      logger.warn("pokemon_price_sync_set_skipped", {
+        currentSet,
+        totalSets: sets.length,
+        setName: set.name,
+        reason: "missing_external_id",
+      });
 
       continue;
     }
 
-    console.log("");
-    console.log(
-      `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} | ${set.name} | external_id=${set.external_id}`,
-    );
+    logger.info("pokemon_price_sync_set_started", {
+      currentSet,
+      totalSets: sets.length,
+      setName: set.name,
+      externalId: set.external_id,
+    });
 
     /* ====================================
           OBTENER PRIMERA PÁGINA
@@ -228,9 +237,12 @@ export async function syncPokemonCardPrices() {
 
     const totalPages = Math.ceil(totalCount / POKEMON_TCG_PAGE_SIZE);
 
-    console.log(
-      `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} | API cards=${totalCount} | pages=${totalPages}`,
-    );
+    logger.debug("pokemon_price_sync_set_api_result", {
+      currentSet,
+      totalSets: sets.length,
+      totalCards: totalCount,
+      totalPages,
+    });
 
     /* ====================================
           OBTENER TODAS LAS CARDS DEL SET
@@ -442,9 +454,14 @@ export async function syncPokemonCardPrices() {
           LOG DEL SET
     ==================================== */
 
-    console.log(
-      `[POKÉMON PRICE SYNC] SET ${currentSet}/${sets.length} COMPLETED | cards=${pokemonCards.length} | pricesCreated=${setPricesCreated} | pricesSkipped=${setPricesSkipped} | cardsMissing=${setSkippedCards}`,
-    );
+    logger.info("pokemon_price_sync_set_completed", {
+      currentSet,
+      totalSets: sets.length,
+      cards: pokemonCards.length,
+      pricesCreated: setPricesCreated,
+      pricesSkipped: setPricesSkipped,
+      cardsMissing: setSkippedCards,
+    });
   }
 
   /* ====================================
@@ -471,29 +488,10 @@ export async function syncPokemonCardPrices() {
           LOG FINAL
   ==================================== */
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON PRICE SYNC] COMPLETED");
-  console.log("============================================================");
-
-  console.log(
-    `[POKÉMON PRICE SYNC] Sets processed: ${summary.setsProcessed}/${sets.length}`,
-  );
-
-  console.log(`[POKÉMON PRICE SYNC] Sets skipped: ${summary.skippedSets}`);
-
-  console.log(`[POKÉMON PRICE SYNC] Cards received: ${summary.received}`);
-
-  console.log(`[POKÉMON PRICE SYNC] Prices created: ${summary.pricesCreated}`);
-
-  console.log(`[POKÉMON PRICE SYNC] Prices skipped: ${summary.pricesSkipped}`);
-
-  console.log(`[POKÉMON PRICE SYNC] Cards skipped: ${summary.skippedCards}`);
-
-  console.log(`[POKÉMON PRICE SYNC] Duration: ${summary.durationSeconds}s`);
-
-  console.log("============================================================");
-  console.log("");
+  logger.info("pokemon_price_sync_completed", {
+    ...summary,
+    totalSets: sets.length,
+  });
 
   return {
     tcg: {

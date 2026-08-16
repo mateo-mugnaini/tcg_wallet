@@ -1,5 +1,6 @@
 import pg from "pg";
 import env from "./env.js";
+import { logger } from "../utils/logger.js";
 
 const { Pool } = pg;
 
@@ -22,7 +23,7 @@ export const testDatabaseConnection = async () => {
 
   try {
     await client.query("SELECT 1");
-    console.log("Database connection successful");
+    logger.info("database_connection_successful");
   } finally {
     client.release();
   }

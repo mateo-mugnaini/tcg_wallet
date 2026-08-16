@@ -10,6 +10,7 @@ import { getPokemonTcgCards } from "../integrations/pokemon-tcg/pokemon-tcg.clie
 import { findTcgByName } from "../repositories/tcg.repository.js";
 
 import { createAppError } from "../errors/app.errors.js";
+import { logger } from "../utils/logger.js";
 
 /* ====================================
         CONFIGURACIÓN SYNC
@@ -77,9 +78,9 @@ async function getPokemonTcgCardsWithRetry(options) {
       }
 
       if (attempt > MAX_RETRIES) {
-        console.error(
-          `[POKÉMON CARD SYNC] API request failed after ${MAX_RETRIES} retries`,
-        );
+        logger.error("pokemon_card_sync_api_request_failed", {
+          retries: MAX_RETRIES,
+        });
 
         throw error;
       }
@@ -89,9 +90,12 @@ async function getPokemonTcgCardsWithRetry(options) {
         30_000,
       );
 
-      console.warn(
-        `[POKÉMON CARD SYNC] API error ${error.status} | retry=${attempt}/${MAX_RETRIES} | waiting=${retryDelay}ms`,
-      );
+      logger.warn("pokemon_card_sync_api_retry", {
+        status: error.status,
+        attempt,
+        maxRetries: MAX_RETRIES,
+        retryDelayMs: retryDelay,
+      });
 
       await sleep(retryDelay);
     }
@@ -105,10 +109,7 @@ async function getPokemonTcgCardsWithRetry(options) {
 export async function syncPokemonCards() {
   const syncStartedAt = Date.now();
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON CARD SYNC] STARTING");
-  console.log("============================================================");
+  logger.info("pokemon_card_sync_started");
 
   /* ====================================
           BUSCAR TCG
@@ -120,7 +121,10 @@ export async function syncPokemonCards() {
     throw createAppError("El TCG Pokémon no existe en la base de datos", 404);
   }
 
-  console.log(`[POKÉMON CARD SYNC] TCG: ${pokemonTcg.name}`);
+  logger.info("pokemon_card_sync_tcg_resolved", {
+    tcgId: pokemonTcg.id,
+    tcgName: pokemonTcg.name,
+  });
 
   /* ====================================
           OBTENER SETS
@@ -138,7 +142,7 @@ export async function syncPokemonCards() {
     throw createAppError("No existen Sets de Pokémon sincronizados", 404);
   }
 
-  console.log(`[POKÉMON CARD SYNC] Sets found: ${sets.length}`);
+  logger.info("pokemon_card_sync_sets_loaded", { count: sets.length });
 
   /* ====================================
           CONTADORES
@@ -169,9 +173,12 @@ export async function syncPokemonCards() {
     if (!set.external_id) {
       setsSkipped++;
 
-      console.warn(
-        `[POKÉMON CARD SYNC] SET ${currentSet}/${sets.length} | ${set.name} | SKIPPED | missing external_id`,
-      );
+      logger.warn("pokemon_card_sync_set_skipped", {
+        currentSet,
+        totalSets: sets.length,
+        setName: set.name,
+        reason: "missing_external_id",
+      });
 
       continue;
     }
@@ -182,10 +189,12 @@ export async function syncPokemonCards() {
     let setUnchanged = 0;
     let setSkippedCards = 0;
 
-    console.log("");
-    console.log(
-      `[POKÉMON CARD SYNC] SET ${currentSet}/${sets.length} | ${set.name} | external_id=${set.external_id}`,
-    );
+    logger.info("pokemon_card_sync_set_started", {
+      currentSet,
+      totalSets: sets.length,
+      setName: set.name,
+      externalId: set.external_id,
+    });
 
     /* ====================================
           PRIMERA PÁGINA
@@ -203,9 +212,12 @@ export async function syncPokemonCards() {
 
     const totalPages = Math.ceil(totalCount / POKEMON_TCG_PAGE_SIZE);
 
-    console.log(
-      `[POKÉMON CARD SYNC] SET ${currentSet}/${sets.length} | API cards=${totalCount} | pages=${totalPages}`,
-    );
+    logger.debug("pokemon_card_sync_set_api_result", {
+      currentSet,
+      totalSets: sets.length,
+      totalCards: totalCount,
+      totalPages,
+    });
 
     /* ====================================
           PROCESAR PRIMERA PÁGINA
@@ -285,9 +297,15 @@ export async function syncPokemonCards() {
           LOG DEL SET
     ==================================== */
 
-    console.log(
-      `[POKÉMON CARD SYNC] SET ${currentSet}/${sets.length} COMPLETED | cards=${setReceived} | created=${setCreated} | updated=${setUpdated} | unchanged=${setUnchanged} | skipped=${setSkippedCards}`,
-    );
+    logger.info("pokemon_card_sync_set_completed", {
+      currentSet,
+      totalSets: sets.length,
+      cardsReceived: setReceived,
+      created: setCreated,
+      updated: setUpdated,
+      unchanged: setUnchanged,
+      skipped: setSkippedCards,
+    });
 
     await sleep(SET_DELAY_MS);
   }
@@ -317,31 +335,10 @@ export async function syncPokemonCards() {
           LOG FINAL
   ==================================== */
 
-  console.log("");
-  console.log("============================================================");
-  console.log("[POKÉMON CARD SYNC] COMPLETED");
-  console.log("============================================================");
-
-  console.log(
-    `[POKÉMON CARD SYNC] Sets processed: ${summary.setsProcessed}/${sets.length}`,
-  );
-
-  console.log(`[POKÉMON CARD SYNC] Sets skipped: ${summary.setsSkipped}`);
-
-  console.log(`[POKÉMON CARD SYNC] Cards received: ${summary.received}`);
-
-  console.log(`[POKÉMON CARD SYNC] Cards created: ${summary.created}`);
-
-  console.log(`[POKÉMON CARD SYNC] Cards updated: ${summary.updated}`);
-
-  console.log(`[POKÉMON CARD SYNC] Cards unchanged: ${summary.unchanged}`);
-
-  console.log(`[POKÉMON CARD SYNC] Cards skipped: ${summary.skipped}`);
-
-  console.log(`[POKÉMON CARD SYNC] Duration: ${summary.durationSeconds}s`);
-
-  console.log("============================================================");
-  console.log("");
+  logger.info("pokemon_card_sync_completed", {
+    ...summary,
+    totalSets: sets.length,
+  });
 
   return {
     tcg: {

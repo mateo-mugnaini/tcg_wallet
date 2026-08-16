@@ -11,15 +11,18 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
 - Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
 - Se agregaron pruebas de filtros y contratos del catálogo.
-- `pnpm.cmd test:run` pasó con 13 archivos y 66 tests, incluyendo 3 pruebas HTTP end-to-end.
+- `pnpm.cmd test:run` pasó con 15 archivos y 77 tests, incluyendo 7 pruebas HTTP end-to-end, readiness, métricas y pruebas de redacción del logger.
 - `pnpm.cmd db:explain` inspeccionó cuatro consultas críticas y dejó preparada una migration para los scans secuenciales detectados.
-- `pnpm db:migrate` ya cuenta con runner versionado, advisory lock y transacciones; no se ejecutó todavía sobre la base compartida.
-- Validación actual: `pnpm.cmd test:run` pasa con 13 archivos y 66 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
+- `pnpm db:migrate` fue ejecutado en desarrollo con runner versionado, advisory lock y transacciones; `001_critical_read_indexes.sql` quedó registrada en `schema_migrations`.
+- Se implementó logging JSON estructurado, redacción recursiva de secretos, request IDs y trazabilidad HTTP; `error.middleware` registra errores correlacionados sin exponer secretos.
+- Se migraron al logger los logs de infraestructura, sincronizadores, servicios de precios, sync lock y validación de responses; `api/src` ya no contiene logs directos fuera de `utils/logger.js`.
+- Se agregaron métricas HTTP agregadas por endpoint, liveness, readiness con PostgreSQL y stack traces controlados por entorno.
+- Validación actual: `pnpm.cmd test:run` pasa con 15 archivos y 77 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd exec eslint src tests scripts` pasa sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
 - `pnpm.cmd db:check:schema` inventarió las nueve tablas principales, columnas, constraints e índices de PostgreSQL sin modificar datos.
 - `pnpm.cmd test:integration` pasó con 3 tests de lectura de repositories contra PostgreSQL.
 
-- Fase 0: en progreso avanzado. PostgreSQL está configurado en el puerto 2203 y el inventario completo de tablas, columnas, constraints e índices ya fue verificado; falta versionar el DDL/migrations.
+- Fase 0: en progreso avanzado. PostgreSQL está configurado en el puerto 2203 y el inventario completo de tablas, columnas, constraints e índices ya fue verificado; existe runner de migrations y `001_critical_read_indexes.sql` está aplicada en desarrollo.
 - Fase 1: en progreso. Ya existen los cinco endpoints de consulta, el registro manual, el importador batch administrativo y el fixture ejecutable de graded prices con repository, service, controller, routes y schemas Zod; el proveedor de sync automático sigue pendiente.
 - Fase 2: **finalizada en alcance funcional**. `GET /api/collection-items/value` separa precios normales y graded, incluye contadores y desglose por grading company; para graded usa card, grading company y grade, sin fallback al precio normal. La política actual evalúa exclusivamente precios USD; la conversión multicurrency queda como ampliación futura.
 - Fase 3: en progreso. `GET /api/cards` ya admite filtros por TCG, set, nombre, rareza, número y external ID; el detalle de card incluye set, TCG, últimos precios normales y resumen de la colección del usuario. Se ampliaron las pruebas y se normalizó `sortOrder` en TCGs, sets, cards, colección y usuarios.
@@ -30,12 +33,12 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm.cmd test:run` OK con 12 archivos y 63 tests de contratos, catálogo, servicios, colección, autorización, JWT, refresh rotation, hardening y operaciones.
+- Validación adicional: `pnpm.cmd test:run` OK con 15 archivos y 77 tests de contratos, catálogo, servicios, colección, precios, API HTTP, autorización, JWT, refresh rotation, hardening, operaciones y logging.
 - Validación adicional: `pnpm.cmd test:integration` OK con 1 archivo y 3 tests de repositories contra PostgreSQL.
-- Validación adicional: `pnpm.cmd db:explain` OK con cuatro planes críticos; la migration de índices está preparada, todavía no aplicada.
+- Validación adicional: `pnpm.cmd db:explain` OK antes y después de la migration; los índices fueron verificados y las tablas pequeñas aún pueden elegir `Seq Scan` por coste estimado.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
-- Siguiente tarea: revisar/aplicar controladamente `pnpm db:migrate`, comparar EXPLAIN posterior y ampliar tests de escritura aislados.
+- Siguiente tarea: ampliar tests de escritura aislados y continuar la limpieza de capas; optimizar consultas restantes con volumen real.
 
 ## 1. Estado inicial
 
@@ -62,7 +65,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Activación de Helmet/CORS y protección adicional de endpoints costosos.
 - DDL/migrations, índices y constraints verificables.
 - Transacciones restantes.
-- Logging/observabilidad.
+- Logging/observabilidad: **finalizada**; logger, métricas HTTP, health/readiness y logs de dominio implementados.
 - OpenAPI.
 - Background Jobs.
 - Production readiness.
@@ -70,7 +73,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 
 ### Bloqueadores iniciales
 
-Antes de confiar en cualquier cambio de persistencia se necesita una PostgreSQL disponible y el DDL real. El repositorio no contiene migrations ni schema SQL y el diagnóstico local falló con ECONNREFUSED.
+Antes de confiar en cualquier cambio de persistencia se necesita una PostgreSQL disponible y el DDL real. El repositorio ya contiene un runner de migrations y una migration aplicada en desarrollo; falta ampliar el DDL reproducible y validar producción.
 
 ## 2. Principios de ejecución
 
@@ -515,6 +518,8 @@ Revisar operaciones multi-escritura:
 Definir aislamiento, manejo de deadlocks, rollback y límites de transacción. No envolver todo en transacciones por defecto: solo operaciones que lo necesiten.
 
 ## 14. Fase 10 — Logging y observabilidad
+
+Estado: **Finalizado**. Logger estructurado, redacción de secretos, request IDs, request logging HTTP, métricas agregadas, liveness/readiness y stack traces controlados están implementados y cubiertos por tests.
 
 ### Logger
 

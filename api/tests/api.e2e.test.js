@@ -42,6 +42,43 @@ describe("API end-to-end contracts", () => {
     expect(response.status).toBe(200);
     expect(body).toEqual({ status: "ok" });
     expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("x-request-id")).toMatch(/^[a-f0-9-]{36}$/);
+  });
+
+  it("propagates a safe incoming request id", async () => {
+    const { response } = await request("/api/health", {
+      headers: { "x-request-id": "test-request-123" },
+    });
+
+    expect(response.headers.get("x-request-id")).toBe("test-request-123");
+  });
+
+  it("serves the liveness check without requiring the database", async () => {
+    const { response, body } = await request("/api/health/live");
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ status: "ok" });
+  });
+
+  it("reports database readiness", async () => {
+    const { response, body } = await request("/api/health/ready");
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ready");
+    expect(body.checks.database).toBe("ok");
+  });
+
+  it("exposes aggregated HTTP metrics", async () => {
+    const { response, body } = await request("/api/metrics");
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
+    expect(body.metrics.requests.total).toBeGreaterThan(0);
+    expect(body.metrics.endpoints).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ endpoint: "GET /health" }),
+      ]),
+    );
   });
 
   it("rejects invalid login input before reaching the database", async () => {

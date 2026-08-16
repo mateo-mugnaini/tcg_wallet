@@ -2,7 +2,7 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 13 archivos y 66 tests; la suite de integración añade 3 tests PostgreSQL ejecutados correctamente.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite normal tiene 15 archivos y 77 tests; la suite de integración añade 3 tests PostgreSQL ejecutados correctamente.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
@@ -18,14 +18,18 @@
 - Se amplió `api/check_schema.js` para auditar las nueve tablas principales, columnas, constraints e índices sin modificar datos.
 - Se añadió `pnpm test:integration` con 3 pruebas de lectura de repositories contra PostgreSQL.
 - Se añadieron pruebas HTTP end-to-end para health, validación de login y autenticación de colección.
+- Se añadieron pruebas unitarias del servicio de precios para snapshots, paginación, estadísticas, variación y validaciones de alta.
 - Se añadió `pnpm db:explain` para medir cuatro consultas críticas sin modificar datos.
-- Se preparó `api/migrations/001_critical_read_indexes.sql` para los dos scans secuenciales detectados; no se aplicó automáticamente.
-- Se implementó `pnpm db:migrate` con `schema_migrations`, advisory lock, transacción por migration y rollback ante errores; todavía no fue ejecutado sobre la base.
-- Validación realizada: `pnpm.cmd test:run` pasa con 13 archivos y 66 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd db:explain` y `pnpm.cmd lint` pasan correctamente.
+- Se preparó y aplicó `api/migrations/001_critical_read_indexes.sql` en desarrollo para los dos scans secuenciales detectados.
+- `pnpm db:migrate` creó `schema_migrations`, aplicó la migration con advisory lock/transacción y registró el identificador correctamente.
+- Se implementó logging estructurado JSON con niveles, redacción de secretos, request IDs y trazabilidad de requests HTTP; se agregaron pruebas de logger y propagación de `x-request-id`.
+- Se migraron al logger los logs de infraestructura, sincronizadores, servicios de precios, sync lock y validación de responses; `api/src` ya no contiene logs directos fuera de `utils/logger.js`.
+- Se agregaron métricas HTTP agregadas por endpoint, liveness, readiness con consulta real a PostgreSQL y endpoint de métricas; los stack traces solo se registran fuera de producción.
+- Validación realizada: `pnpm.cmd test:run` pasa con 15 archivos y 77 tests; `pnpm.cmd test:integration` pasa con 3 tests; `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
-| 00 | Baseline técnico y DB | **En progreso avanzado** | Revisar y ejecutar controladamente `pnpm db:migrate`; conservar DDL/baseline versionado. |
+| 00 | Baseline técnico y DB | **En progreso avanzado** | Conservar DDL/baseline versionado y repetir la validación en un entorno de producción controlado. |
 | 01 | Collection avanzada | **Finalizado** | Ampliar cobertura de tests y response schemas generales. |
 | 02 | Grading Companies | **Finalizado** | Añadir tests y completar auditoría de FKs como tarea de calidad. |
 | 03 | Graded Card Prices | **En progreso** | Conectar proveedor real al importador batch y ampliar pruebas automatizadas. |
@@ -33,11 +37,11 @@
 | 05 | Catálogo avanzado | **En progreso** | Completar tests de integración y normalización restante de filtros en sets/TCGs. |
 | 06 | Validación Zod completa | **En progreso** | Auth, users y catálogo ya tienen schemas conectados; faltan responses menores y normalización adicional. |
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
-| 08 | Testing profesional | **En progreso** | 13 archivos y 66 tests normales + 3 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
+| 08 | Testing profesional | **En progreso** | 15 archivos y 77 tests normales + 3 tests PostgreSQL; ampliar operaciones de escritura aisladas. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
-| 10 | Índices y optimización DB | **En progreso** | EXPLAIN y migration preparados; falta aplicar controladamente, verificar índices y comparar planes posteriores. |
+| 10 | Índices y optimización DB | **En progreso** | Migration aplicada y verificada; ampliar mediciones con volumen real y revisar planes de consultas graded/colección. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
-| 12 | Logging/Observabilidad | **Pendiente** | Logger estructurado, request IDs y métricas. |
+| 12 | Logging/Observabilidad | **Finalizado** | Logger JSON, redacción, request IDs, métricas HTTP, liveness/readiness y stack traces controlados implementados y validados. |
 | 13 | Swagger/OpenAPI | **Pendiente** | Publicar contrato de la API. |
 | 14 | Background Jobs | **Pendiente** | Extraer sincronizaciones del ciclo HTTP. |
 | 15 | Production Readiness | **Pendiente** | Deploy, shutdown, backups, CI/CD y monitoring. |
@@ -646,13 +650,11 @@ La configuración se monta en la aplicación con origin por entorno, métodos ex
 
 # 10. Fase 9 — Observabilidad
 
-Actualmente existe logging mediante `console.log`.
-
-Debe evolucionar a un sistema estructurado.
+Estado actual: **Finalizado**. Existe un logger JSON estructurado en `api/src/utils/logger.js`, con niveles `debug`, `info`, `warn` y `error`, redacción recursiva de secretos y logging HTTP correlacionado por `requestId`. Toda la capa `api/src` utiliza el logger; además existen métricas agregadas, liveness, readiness con PostgreSQL y endpoint de métricas.
 
 ## 10.1. Logger
 
-Implementar un logger profesional:
+Implementar y extender un logger profesional:
 
 ```text
 info
@@ -663,7 +665,7 @@ debug
 
 ## 10.2. Request logging
 
-Registrar:
+Implementado para cada request:
 
 ```text
 method
@@ -674,9 +676,11 @@ request id
 user id
 ```
 
+El middleware acepta un `x-request-id` seguro o genera un UUID, lo devuelve en la respuesta y registra el evento `http_request` al finalizar.
+
 ## 10.3. Error logging
 
-Registrar errores con:
+Los errores del middleware global registran:
 
 ```text
 error code
@@ -685,6 +689,8 @@ request id
 user id
 endpoint
 ```
+
+Los metadatos sensibles se redactan antes de escribirlos. Los stack traces se registran únicamente fuera de producción y no se devuelven al cliente.
 
 sin exponer información sensible al cliente.
 
@@ -951,9 +957,9 @@ La prioridad recomendada queda así:
 
 # 18. Siguiente bloque de implementación
 
-El siguiente bloque ejecutado fue testing unitario de catálogo y colección, 3 pruebas de repositories contra PostgreSQL y 3 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 14 archivos y 69 tests ejecutados.
+El siguiente bloque ejecutado fue testing unitario de catálogo, colección y precios, 3 pruebas de repositories contra PostgreSQL y 7 pruebas HTTP end-to-end. Actualmente existe evidencia reproducible de 15 archivos y 77 tests normales ejecutados.
 
-Por lo tanto, el siguiente bloque lógico es revisar/aplicar controladamente la migration de índices, comparar EXPLAIN posterior y ampliar tests de operaciones de escritura aisladas.
+Por lo tanto, el siguiente bloque lógico es ampliar tests de operaciones de escritura aisladas y seguir con observabilidad/limpieza de capas; la optimización DB continúa con mediciones de volumen real.
 
 ## Módulo siguiente — Testing de repository/API y limpieza de capas
 
