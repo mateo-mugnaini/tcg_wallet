@@ -16,6 +16,7 @@
     "check:graded-value": "node scripts/check-graded-collection-value.js",
     "check:openapi": "node scripts/check-openapi.js",
     "check:smoke": "node scripts/check-smoke.js",
+    "check:config": "node scripts/check-config.js",
     "monitor:health": "node scripts/monitor-health.js",
     "test": "vitest",
     "test:run": "vitest run --exclude tests/repositories.integration.test.js",

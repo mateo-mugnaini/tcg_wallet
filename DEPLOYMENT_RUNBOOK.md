@@ -34,6 +34,12 @@ En staging y producción son obligatorios:
 7. Ejecutar un smoke test autenticado de login, catálogo y colección.
 8. Ejecutar `pnpm audit --prod` y revisar el resultado antes de promover la versión.
 
+Antes de iniciar staging también se puede validar la configuración sin abrir conexiones:
+
+```powershell
+pnpm check:config
+```
+
 ## Rollback
 
 El rollback de aplicación consiste en redeployar la imagen anterior identificada por su digest. Las migrations deben ser backward-compatible; si una migration no puede revertirse de forma segura, el rollback de schema se realiza restaurando un backup en una base aislada y con una ventana de mantenimiento aprobada.

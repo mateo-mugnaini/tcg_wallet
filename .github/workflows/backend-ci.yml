@@ -70,6 +70,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate staging configuration policy
+        run: pnpm check:config
+        env:
+          EXPECTED_NODE_ENV: staging
+          NODE_ENV: staging
+          DATABASE_SSL: "true"
+
       - name: Apply database migrations
         run: pnpm db:migrate
 

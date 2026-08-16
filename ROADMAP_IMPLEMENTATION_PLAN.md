@@ -607,6 +607,8 @@ GitHub Actions validó correctamente `Backend CI / test` en 43 segundos, incluye
 
 La configuración ahora acepta `NODE_ENV=staging` y aplica las mismas reglas de seguridad de producción, evitando que staging utilice CORS de desarrollo, cookies inseguras o conexiones PostgreSQL sin SSL.
 
+El workflow ejecuta `pnpm check:config` con `NODE_ENV=staging` y `DATABASE_SSL=true` para detectar errores de configuración antes de iniciar servicios.
+
 La validación local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 
 Pendiente para cerrar la fase: ejecutar staging reproducible, backup/restore real, rollback operativo, conectar monitoring/alertas y completar la revisión final de vulnerabilidades.
