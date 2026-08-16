@@ -39,6 +39,8 @@
 - GitHub Actions validó correctamente `Backend CI / test` después de versionar `api/pnpm-lock.yaml`; la ejecución completó migrations, fixture, lint, tests, integración, OpenAPI y smoke tests en 43 segundos.
 - Se añadió el entorno explícito `staging`, con las mismas políticas de SSL, secretos, CORS y cookies seguras que producción.
 - Se añadió `pnpm check:config` y su validación en CI para detectar configuraciones staging incompletas sin exponer secretos.
+- Se añadió `pnpm db:check:data` para detectar precios negativos o grades fuera de rango antes de endurecer constraints SQL.
+- Se añadió y aplicó `003_price_integrity_constraints.sql`, que impide precios negativos y grades graded fuera de `0–10`.
 - GitHub Actions volvió a pasar correctamente después del preflight staging; quedaron validados el entorno, SSL, CORS, secretos mínimos, migrations, tests, integración, OpenAPI y smoke tests.
 - Validación confirmada: la suite local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 - Se añadió `api/.env.example` para hacer reproducible la configuración local sin incluir secretos.

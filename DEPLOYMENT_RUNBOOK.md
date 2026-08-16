@@ -33,6 +33,7 @@ En staging y producción son obligatorios:
 6. Ejecutar `pnpm check:smoke` con `BASE_URL` apuntando a la API desplegada.
 7. Ejecutar un smoke test autenticado de login, catálogo y colección.
 8. Ejecutar `pnpm audit --prod` y revisar el resultado antes de promover la versión.
+9. Ejecutar `pnpm db:check:data` antes de aplicar constraints de integridad sobre datos existentes.
 
 Antes de iniciar staging también se puede validar la configuración sin abrir conexiones:
 

@@ -114,6 +114,7 @@ Archivos centrales:
 - La validación local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
 - Se añadió `api/.env.example` únicamente con los nombres de las variables requeridas; los valores y secretos reales continúan fuera del repositorio.
 - Se añadió `scripts/check-config.js` para validar el entorno y las políticas de configuración sin imprimir secretos ni conectarse a PostgreSQL.
+- Se añadió `scripts/check-data-integrity.js` para auditar precios negativos y grades fuera de rango antes de aplicar constraints adicionales.
 - GitHub Actions volvió a pasar correctamente después del preflight staging, validando configuración, migrations, tests, integración PostgreSQL, OpenAPI y smoke tests.
 - GitHub Actions ejecutó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.
@@ -149,7 +150,7 @@ Excepciones reales:
 
 ## 5. PostgreSQL y esquema
 
-El runner de migrations está versionado en `api/scripts/run-migrations.js`; `000_baseline_schema.sql`, `001_critical_read_indexes.sql` y `002_sync_jobs.sql` ya fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. `check_schema.js` continúa auditando las diez tablas principales, columnas, defaults, constraints e índices. Falta validar el proceso en producción y ampliar mediciones con volumen real.
+El runner de migrations está versionado en `api/scripts/run-migrations.js`; `000_baseline_schema.sql`, `001_critical_read_indexes.sql`, `002_sync_jobs.sql` y `003_price_integrity_constraints.sql` ya fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. `check_schema.js` continúa auditando las diez tablas principales, columnas, defaults, constraints e índices. Falta validar el proceso en producción y ampliar mediciones con volumen real.
 
 Auditoría actual de PostgreSQL: existen `users`, `refresh_tokens`, `tcgs`, `sets`, `cards`, `card_prices`, `collection_items`, `grading_companies` y `graded_card_prices`. Se confirmaron PKs, FKs, uniques de users/TCGs/grading companies, uniques compuestos de sets/cards y checks de quantity/grade/coherencia graded. `collection_items` y `graded_card_prices` solo muestran su índice de PK en el inventario actual; no se agregan índices sin EXPLAIN y migration versionada.
 

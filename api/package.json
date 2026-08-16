@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "db:check:schema": "node check_schema.js",
+    "db:check:data": "node scripts/check-data-integrity.js",
     "db:explain": "node scripts/explain-critical-queries.js",
     "db:migrate": "node scripts/run-migrations.js",
     "db:backup": "node scripts/backup-database.js",
