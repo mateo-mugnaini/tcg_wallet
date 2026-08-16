@@ -2,7 +2,7 @@
 
 > **Proyecto:** TCG Wallet API
 > **Stack:** Node.js 20 · Express 5 · PostgreSQL · JWT · Zod · bcrypt · PNPM
-> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite actual tiene 11 archivos y 58 tests pasando; la cobertura completa y el esquema activo de PostgreSQL aún no están verificados.
+> **Estado:** Backend funcional con autenticación, catálogo, precios, sincronización, colección avanzada y grading companies implementados en código. La suite actual tiene 12 archivos y 63 tests pasando; la cobertura completa y el esquema activo de PostgreSQL aún no están verificados.
 
 > **Fuente de verdad:** `PROJECT_CONTEXT.md` documenta el estado comprobado del repositorio. Este archivo define prioridades y estados del roadmap; el código actual tiene prioridad sobre cualquier sección histórica.
 
@@ -13,8 +13,9 @@
 - Se consolidó el pipeline de sincronización: `api/src/services/sync.pipeline.service.js` quedó como shim hacia la única implementación activa en `api/src/syncs`.
 - Se centralizó la normalización de `sortOrder` (`ASC`/`DESC`) para TCGs, sets, cards, colección y usuarios.
 - Se añadieron pruebas de contratos del catálogo y pruebas unitarias del `cards.service` con repositories mockeados.
+- Se añadieron pruebas unitarias del `collection-items.service` para reglas graded, filtros, paginación y ownership.
 - Se incorporó el comando oficial `pnpm lint` y ESLint ejecuta sin errores ni warnings.
-- Validación realizada: `pnpm.cmd test:run` pasa con 11 archivos y 58 tests; `pnpm.cmd lint` pasa correctamente.
+- Validación realizada: `pnpm.cmd test:run` pasa con 12 archivos y 63 tests; `pnpm.cmd lint` pasa correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
 |---:|---|---|---|
@@ -25,7 +26,7 @@
 | 05 | Catálogo avanzado | **En progreso** | Completar tests de integración y normalización restante de filtros en sets/TCGs. |
 | 06 | Validación Zod completa | **En progreso** | Auth, users y catálogo ya tienen schemas conectados; faltan responses menores y normalización adicional. |
 | 07 | Separación de capas | **En progreso** | Pipeline legacy consolidado; revisar validación duplicada restante y homogeneizar controllers/services. |
-| 08 | Testing profesional | **En progreso** | 11 archivos y 58 tests; ampliar repository/API tests con PostgreSQL. |
+| 08 | Testing profesional | **En progreso** | 12 archivos y 63 tests, incluyendo cards y colección; ampliar repository/API tests con PostgreSQL. |
 | 09 | Seguridad avanzada | **Parcial** | Completar rate limits distribuidos, CSRF/revocación de sesiones y validación de producción. |
 | 10 | Índices y optimización DB | **No verificable** | Obtener DDL, medir queries y crear migraciones. |
 | 11 | Transacciones | **Parcial** | Revisar collection, sync y operaciones multi-tabla. |
@@ -943,7 +944,7 @@ La prioridad recomendada queda así:
 
 # 18. Siguiente bloque de implementación
 
-El siguiente bloque ejecutado fue testing unitario y contratos del catálogo. Actualmente existe evidencia reproducible de 11 archivos y 58 tests pasando.
+El siguiente bloque ejecutado fue testing unitario de catálogo y colección. Actualmente existe evidencia reproducible de 12 archivos y 63 tests pasando.
 
 Por lo tanto, el siguiente bloque lógico es ampliar pruebas de repository/API con PostgreSQL y continuar la limpieza de capas.
 

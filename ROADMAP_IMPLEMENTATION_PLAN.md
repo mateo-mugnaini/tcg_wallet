@@ -11,7 +11,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Se cerró la inconsistencia del pipeline legacy: `src/services/sync.pipeline.service.js` ahora re-exporta el pipeline único de `src/syncs`.
 - Se centralizó la normalización de `sortOrder` mediante `src/schemas/common.schema.js` para TCGs, sets, cards, colección y usuarios.
 - Se agregaron pruebas de filtros y contratos del catálogo.
-- Validación actual: `pnpm.cmd test:run` pasa con 11 archivos y 58 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
+- Validación actual: `pnpm.cmd test:run` pasa con 12 archivos y 63 tests; `pnpm.cmd exec eslint src tests` pasa sin errores ni warnings.
 - Se agregó `globals` a las dependencias de desarrollo para hacer ejecutable ESLint.
 
 - Fase 0: parcialmente completada. PostgreSQL está configurado en el puerto 2203 y el schema de graded_card_prices ya fue verificado en la base activa. La auditoría completa de tablas, índices y constraints sigue pendiente.
@@ -25,7 +25,7 @@ Este documento convierte el roadmap en un plan ejecutable. No implementa código
 - Datos actuales: 20.479 cards, 1 grading company de desarrollo y 2 registros en graded_card_prices creados por el fixture.
 - Validación adicional: la valoración de colección ejecutó correctamente contra la base activa; el ítem existente no tenía precio y quedó contabilizado como missing.
 - Fixture validado: `pnpm db:seed:graded` crea, de forma opt-in e idempotente, dos capturas históricas para una card y grading company existentes; las cinco consultas graded respondieron y pasaron sus schemas.
-- Validación adicional: `pnpm.cmd test:run` OK con 11 archivos y 58 tests de contratos, catálogo, servicios, autorización, JWT, refresh rotation, hardening y operaciones.
+- Validación adicional: `pnpm.cmd test:run` OK con 12 archivos y 63 tests de contratos, catálogo, servicios, colección, autorización, JWT, refresh rotation, hardening y operaciones.
 - Validación adicional: `pnpm.cmd exec eslint src tests` OK sin errores ni warnings.
 - Smoke test validado: `pnpm check:graded-value` creó temporalmente un item graded, comprobó valor total `250` y desglose por grading company, y limpió los datos al finalizar.
 - Siguiente tarea: ampliar tests de repository/API con PostgreSQL y continuar la limpieza de capas.

@@ -1,6 +1,6 @@
 # TCG Wallet API — Project Context
 
-> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 11 archivos y 58 tests pasando.
+> Documento maestro generado a partir del código actual del backend. Revisión: 2026-08-16. La evidencia de esta revisión incluye 12 archivos y 63 tests pasando.
 >
 > Regla de evidencia: si un dato no puede comprobarse en código o mediante una ejecución reproducible, se marca **NO VERIFICADO**. Si aparece solamente en roadmap/historial y no en código actual, se marca **PLANIFICADO / NO VERIFICADO EN CÓDIGO**.
 
@@ -39,7 +39,7 @@ El módulo graded_card_prices tiene implementados sus cinco endpoints de consult
 | helmet | ^8.3.0 | Headers de seguridad activos en app.js. |
 | cors | ^2.8.6 | CORS por entorno activo en app.js. |
 | dotenv | ^17.4.2 | Carga de .env. |
-| vitest | ^4.1.10 | Runner; 11 archivos y 58 tests pasando en la última ejecución. |
+| vitest | ^4.1.10 | Runner; 12 archivos y 63 tests pasando en la última ejecución. |
 | nodemon | ^3.1.14 | Desarrollo. |
 | ESLint | ^10.8.1 | Lint ejecutable; globals está declarado como dependencia de desarrollo. |
 | Prettier | ^3.9.6 | Formato. |
@@ -104,7 +104,7 @@ Archivos centrales:
 
 - Se consolidó el pipeline de sincronización: `src/services/sync.pipeline.service.js` ahora es únicamente un re-export de compatibilidad hacia `src/syncs`.
 - Se creó `src/schemas/common.schema.js` y se normaliza `sortOrder` como `ASC`/`DESC` en TCGs, sets, cards, colección y usuarios.
-- La suite pasó de 47 a 58 tests en 11 archivos.
+- La suite pasó de 47 a 63 tests en 12 archivos.
 - ESLint ya ejecuta correctamente después de declarar `globals` en `api/package.json`; la ejecución final no tuvo errores ni warnings.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático, migraciones y observabilidad continúan pendientes.
 
@@ -555,7 +555,7 @@ check_schema.js es diagnóstico de solo lectura. Consulta columnas y FKs de grad
 Resultado real de esta revisión:
 
 - Import de src/app.js: OK; verifica carga de módulos, no endpoints ni DB.
-- pnpm.cmd test:run: OK; 11 archivos y 58 tests de contratos, catálogo, servicios, autorización, seguridad y operaciones.
+- pnpm.cmd test:run: OK; 12 archivos y 63 tests de contratos, catálogo, servicios, colección, autorización, seguridad y operaciones.
 - node check_schema.js: falló con ECONNREFUSED en localhost:5432.
 - pnpm.cmd exec eslint src tests: OK, sin errores ni warnings, después de declarar globals en devDependencies.
 - Import del shim legacy: conserva compatibilidad y delega al pipeline activo.
@@ -626,7 +626,7 @@ No son propuestas nuevas; son decisiones que ya aparecen en el código.
 | 05 | Catálogo avanzado | **En progreso**; filtros y normalización de orden cubiertos, faltan tests de integración y normalización restante. |
 | 06 | Validación Zod completa | **En progreso**; auth/users y catálogo tienen schemas conectados, faltan respuestas menores y normalización adicional. |
 | 07 | Limpieza Controller/Service/Repository | **En progreso**; pipeline duplicado resuelto con shim, queda retirar validación duplicada restante. |
-| 08 | Testing profesional | **En progreso**; 11 archivos y 58 tests automatizados, faltan suites de repository/API con PostgreSQL. |
+| 08 | Testing profesional | **En progreso**; 12 archivos y 63 tests automatizados, incluyendo reglas de cards y colección; faltan suites de repository/API con PostgreSQL. |
 | 09 | Seguridad avanzada | Parcial; JWT/rate/cookies, Helmet/CORS y syncs costosos protegidos por admin; quedan rate limits distribuidos, CSRF y validación de producción. |
 | 10 | Índices y optimización DB | No verificable sin DDL/DB activa. |
 | 11 | Transacciones | Parcial; rotation sí, pipeline global no. |
