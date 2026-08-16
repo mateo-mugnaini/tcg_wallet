@@ -6,6 +6,8 @@ Este runbook define el procedimiento mínimo para staging y producción. Los com
 
 Los secretos se inyectan desde el gestor de secretos del entorno o desde variables protegidas del CI. No se deben commitear archivos `.env` reales.
 
+Para desarrollo local se puede copiar `api/.env.example` como `api/.env` y completar los valores locales. Para staging y producción, las variables deben inyectarse desde el entorno de despliegue o un gestor de secretos.
+
 En staging y producción son obligatorios:
 
 - `NODE_ENV=staging` para validar el entorno previo a producción, o `NODE_ENV=production` para producción;

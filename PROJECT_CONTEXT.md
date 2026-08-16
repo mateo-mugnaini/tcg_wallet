@@ -112,6 +112,7 @@ Archivos centrales:
 - La auditoría actual de dependencias de producción (`pnpm audit --prod`) no reportó vulnerabilidades conocidas.
 - Se añadió `scripts/monitor-health.js` para comprobaciones puntuales o continuas de liveness/readiness, con umbral de fallos consecutivos y webhook opcional.
 - La validación local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
+- Se añadió `api/.env.example` únicamente con los nombres de las variables requeridas; los valores y secretos reales continúan fuera del repositorio.
 - GitHub Actions ejecutó correctamente `Backend CI / test` en 43 segundos, incluyendo migrations, fixture aislado, lint, tests normales, integración PostgreSQL, OpenAPI y smoke tests.
 - El siguiente bloque sigue siendo testing de integración/repository y limpieza de capas; graded price sync automático y observabilidad operativa completa continúan pendientes.
 

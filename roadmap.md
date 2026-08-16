@@ -39,6 +39,7 @@
 - GitHub Actions validó correctamente `Backend CI / test` después de versionar `api/pnpm-lock.yaml`; la ejecución completó migrations, fixture, lint, tests, integración, OpenAPI y smoke tests en 43 segundos.
 - Se añadió el entorno explícito `staging`, con las mismas políticas de SSL, secretos, CORS y cookies seguras que producción.
 - Validación confirmada: la suite local completa y GitHub Actions pasan correctamente, incluyendo migrations, fixture CI, lint, 82 tests normales, 5 integraciones PostgreSQL, OpenAPI y smoke tests.
+- Se añadió `api/.env.example` para hacer reproducible la configuración local sin incluir secretos.
 - Validación realizada: `pnpm.cmd test:run` pasa con 16 archivos y 82 tests; `pnpm.cmd test:integration` pasa con 5 tests; `pnpm.cmd check:openapi`, `pnpm.cmd db:explain`, `pnpm.cmd lint` y ESLint sobre `src`, `tests` y `scripts` pasan correctamente.
 
 | Nº | Área | Estado | Siguiente acción |
