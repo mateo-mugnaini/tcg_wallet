@@ -1,6 +1,24 @@
 # TCG Wallet frontend
 
-Frontend base built with Vite, React and CSS Modules.
+Frontend base built with Vite, React, React Redux and CSS Modules.
+
+## Architecture
+
+The application is organized as pages, reusable components and backend domains under `src/redux/actions`:
+
+- `auth`: login, refresh and logout.
+- `users`: profile and administrative user operations.
+- `catalog`: TCGs, sets and cards.
+- `prices`: normal and graded card prices.
+- `collection`: collection items, stats and estimated value.
+- `grading`: grading companies.
+- `sync`: background jobs and synchronization triggers.
+- `health`: liveness and readiness checks.
+- `platform`: OpenAPI and operational metrics endpoints.
+
+Each domain exposes Redux Toolkit async actions under `src/redux/actions/<domain>/<http-method>/`. Reducers live in `src/redux/slices/`, and the shared HTTP client in `src/lib/http` handles query parameters, JSON, cookies, access-token refresh and normalized API errors.
+
+The access token stays in memory. Only the current user is persisted locally; refresh remains delegated to the backend `httpOnly` cookie.
 
 ## Development
 
