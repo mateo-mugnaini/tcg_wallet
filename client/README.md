@@ -45,6 +45,7 @@ The development server runs at `http://localhost:5173`.
 pnpm lint
 pnpm test
 pnpm build
+pnpm check:build
 ```
 
 Copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL` when the API is ready to be connected. Do not commit `.env.local` or secrets.

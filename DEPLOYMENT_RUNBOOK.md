@@ -35,6 +35,18 @@ En staging y producción son obligatorios:
 8. Ejecutar `pnpm audit --prod` y revisar el resultado antes de promover la versión.
 9. Ejecutar `pnpm db:check:data` antes de aplicar constraints de integridad sobre datos existentes.
 
+## Despliegue del frontend
+
+1. Desde `client`, instalar dependencias con `pnpm install --frozen-lockfile`.
+2. Inyectar `VITE_API_BASE_URL` en el entorno de build; debe contener únicamente la URL pública del backend, por ejemplo `https://api.example.com/api`.
+3. Ejecutar `pnpm lint`, `pnpm test`, `pnpm build` y `pnpm check:build`.
+4. Publicar el contenido de `client/dist/` en el hosting estático elegido.
+5. Configurar fallback SPA: las rutas que no sean assets deben servir `index.html`.
+6. Configurar en el backend `CORS_ORIGIN_PRODUCTION` con el origen exacto del frontend y conservar credenciales habilitadas para la cookie de refresh.
+7. Verificar manualmente login, refresh tras recargar, catálogo, colección y logout en staging.
+
+El frontend no contiene secretos. Si `VITE_API_BASE_URL` falta o no utiliza `http://` o `https://`, la aplicación muestra una pantalla de configuración incompleta y no inicia el cliente API.
+
 Antes de iniciar staging también se puede validar la configuración sin abrir conexiones:
 
 ```powershell

@@ -45,3 +45,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          VITE_API_BASE_URL: https://api.example.invalid/api
+
+      - name: Verify build artifact
+        run: pnpm check:build

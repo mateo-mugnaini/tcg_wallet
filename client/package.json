@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:build": "node scripts/check-build.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
