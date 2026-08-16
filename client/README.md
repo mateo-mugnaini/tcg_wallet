@@ -26,7 +26,9 @@ The application is organized as routes, pages, reusable components and backend d
 
 Each domain exposes Redux Toolkit async actions under `src/redux/actions/<domain>/<http-method>/`. Reducers live in `src/redux/slices/`, and the shared HTTP client in `src/lib/http` handles query parameters, JSON, cookies, access-token refresh and normalized API errors.
 
-The access token stays in memory. Only the current user is persisted locally; refresh remains delegated to the backend `httpOnly` cookie.
+New pages follow the `<domain>/<domain>Pages.jsx` and `<domain>Pages.module.css` convention. Components used only by one page live under that page's `components/<ComponentName>/` folder with its JSX and CSS Module; shared components stay under `src/components`.
+
+The access token stays in memory. Only the current user is persisted locally; refresh remains delegated to the backend `httpOnly` cookie. On startup the app calls `/auth/refresh`, and while the app is open it renews the access token one minute before expiration. A new login is required only after explicit logout, refresh-token expiration/revocation, or an unrecoverable session error.
 
 ## Development
 

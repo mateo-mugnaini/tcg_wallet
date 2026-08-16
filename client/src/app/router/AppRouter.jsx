@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   BrowserRouter,
@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import SessionLoading from "../../components/routing/SessionLoading.jsx";
 import AppLayout from "../../components/layout/AppLayout.jsx";
-import AuthPage from "../../pages/auth/AuthPage.jsx";
+import AuthPages from "../../pages/auth/authPages.jsx";
 import DashboardPage from "../../pages/dashboard/DashboardPage.jsx";
 import CatalogPage from "../../pages/catalog/CatalogPage.jsx";
 import CatalogDetailPage from "../../pages/catalog/CatalogDetailPage.jsx";
@@ -20,15 +20,35 @@ import GradingCompaniesPage from "../../pages/grading/GradingCompaniesPage.jsx";
 import ProfilePage from "../../pages/profile/ProfilePage.jsx";
 import SyncJobsPage from "../../pages/admin/SyncJobsPage.jsx";
 import UsersPage from "../../pages/admin/UsersPage.jsx";
+import { getAccessTokenExpiration } from "../../lib/auth/access-token.js";
 import { refreshSession } from "../../redux/actions/auth/post/auth.actions.js";
 
 function SessionBootstrap({ children }) {
   const dispatch = useDispatch();
+  const refreshRequestedRef = useRef(false);
   const initialized = useSelector((state) => state.auth.initialized);
+  const accessToken = useSelector((state) => state.auth.accessToken);
 
   useEffect(() => {
-    if (!initialized) dispatch(refreshSession());
+    if (!initialized && !refreshRequestedRef.current) {
+      refreshRequestedRef.current = true;
+      dispatch(refreshSession());
+    }
   }, [dispatch, initialized]);
+
+  useEffect(() => {
+    if (!accessToken) return undefined;
+
+    const expiresAt = getAccessTokenExpiration(accessToken);
+    if (!expiresAt) return undefined;
+
+    const refreshIn = Math.max(1000, expiresAt - Date.now() - 60_000);
+    const timeoutId = window.setTimeout(() => {
+      dispatch(refreshSession());
+    }, refreshIn);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [accessToken, dispatch]);
 
   if (!initialized) return <SessionLoading />;
 
@@ -42,7 +62,7 @@ function ProtectedRoute() {
 
 function AuthRoute() {
   const accessToken = useSelector((state) => state.auth.accessToken);
-  return accessToken ? <Navigate to="/dashboard" replace /> : <AuthPage />;
+  return accessToken ? <Navigate to="/dashboard" replace /> : <AuthPages />;
 }
 
 function AppRouter() {

@@ -56,7 +56,7 @@ const authSlice = createSlice({
       .addCase(refreshSession.rejected, (state, action) => {
         state.status = "failed";
         state.accessToken = null;
-        state.user = null;
+        if (action.payload?.status === 401) state.user = null;
         state.error = action.payload || null;
         state.initialized = true;
       })
