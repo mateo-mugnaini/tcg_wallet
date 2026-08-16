@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import App from "./App.jsx";
 import { configureReduxApiClient } from "./redux/configure-api-client.js";
 import { store } from "./redux/store.js";
-import "./index.css";
+import "./styles/global.css";
 
 configureReduxApiClient();
 

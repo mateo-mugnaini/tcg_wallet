@@ -8,6 +8,7 @@ import {
   Routes,
 } from "react-router-dom";
 import SessionLoading from "../../components/routing/SessionLoading.jsx";
+import AdminRoute from "../../components/routing/AdminRoute.jsx";
 import AppLayout from "../../components/layout/AppLayout.jsx";
 import AuthPages from "../../pages/auth/authPages.jsx";
 import DashboardPage from "../../pages/dashboard/DashboardPage.jsx";
@@ -20,6 +21,7 @@ import GradingCompaniesPage from "../../pages/grading/GradingCompaniesPage.jsx";
 import ProfilePage from "../../pages/profile/ProfilePage.jsx";
 import SyncJobsPage from "../../pages/admin/SyncJobsPage.jsx";
 import UsersPage from "../../pages/admin/UsersPage.jsx";
+import NotFoundPage from "../../pages/not-found/NotFoundPage.jsx";
 import { getAccessTokenExpiration } from "../../lib/auth/access-token.js";
 import { refreshSession } from "../../redux/actions/auth/post/auth.actions.js";
 
@@ -84,8 +86,11 @@ function AppRouter() {
               <Route path="collection/:itemId" element={<CollectionDetailPage />} />
               <Route path="grading" element={<GradingCompaniesPage />} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="admin/sync" element={<SyncJobsPage />} />
-              <Route path="admin/users" element={<UsersPage />} />
+              <Route element={<AdminRoute />}>
+                <Route path="admin/sync" element={<SyncJobsPage />} />
+                <Route path="admin/users" element={<UsersPage />} />
+              </Route>
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/auth" replace />} />
