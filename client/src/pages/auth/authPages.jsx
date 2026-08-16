@@ -10,7 +10,7 @@ function AuthPages() {
       <section className={styles.card} aria-labelledby="auth-title">
         <div className={styles.brand} aria-hidden="true">T</div>
         <p className={styles.eyebrow}>TCG Wallet</p>
-        <h1 id="auth-title">
+        <h1 className={styles.title} id="auth-title">
           {mode === "login" ? "Bienvenido de nuevo" : "Crea tu cuenta"}
         </h1>
         <p className={styles.subtitle}>

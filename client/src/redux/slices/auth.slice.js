@@ -57,7 +57,7 @@ const authSlice = createSlice({
         state.status = "failed";
         state.accessToken = null;
         if (action.payload?.status === 401) state.user = null;
-        state.error = action.payload || null;
+        state.error = null;
         state.initialized = true;
       })
       .addCase(logout.fulfilled, (state) => {

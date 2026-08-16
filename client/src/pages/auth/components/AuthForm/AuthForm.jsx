@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../../../../redux/actions/auth/post/auth.actions.js";
+import { clearAuthError } from "../../../../redux/slices/auth.slice.js";
+import { login as loginAction } from "../../../../redux/actions/auth/post/auth.actions.js";
 import { createUser } from "../../../../redux/actions/users/post/users.actions.js";
+import { clearUsersError } from "../../../../redux/slices/users.slice.js";
 import styles from "./AuthForm.module.css";
 
 const initialForm = {
@@ -13,21 +15,27 @@ const initialForm = {
 
 function validateForm(mode, form) {
   const errors = {};
+  const username = form.username.trim();
+  const email = form.email.trim();
 
-  if (mode === "register" && form.username.trim().length < 3) {
-    errors.username = "El usuario debe tener al menos 3 caracteres.";
+  if (mode === "register" && (username.length < 3 || username.length > 50)) {
+    errors.username = "El usuario debe tener entre 3 y 50 caracteres.";
   }
-  if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) {
+  if (!email || email.length > 255 || !/^\S+@\S+\.\S+$/.test(email)) {
     errors.email = "Ingresa un email válido.";
   }
-  if (form.password.length < 8) {
-    errors.password = "La contraseña debe tener al menos 8 caracteres.";
+  if (form.password.length < 8 || form.password.length > 255) {
+    errors.password = "La contraseña debe tener entre 8 y 255 caracteres.";
   }
   if (mode === "register" && form.password !== form.confirmPassword) {
     errors.confirmPassword = "Las contraseñas no coinciden.";
   }
 
   return errors;
+}
+
+function FieldError({ id, message }) {
+  return message ? <small id={id} role="alert">{message}</small> : null;
 }
 
 function AuthForm({ mode, onModeChange }) {
@@ -40,10 +48,12 @@ function AuthForm({ mode, onModeChange }) {
   const isSubmitting = authState.status === "loading" || usersState.status === "loading";
   const serverError = mode === "login" ? authState.error : usersState.error;
 
-  const changeMode = (nextMode) => {
+  const changeMode = (nextMode, nextMessage = null) => {
     setForm(initialForm);
     setFieldErrors({});
-    setMessage(null);
+    setMessage(nextMessage);
+    dispatch(clearAuthError());
+    dispatch(clearUsersError());
     onModeChange(nextMode);
   };
 
@@ -51,6 +61,7 @@ function AuthForm({ mode, onModeChange }) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => ({ ...current, [name]: undefined }));
+    setMessage(null);
   };
 
   const handleSubmit = async (event) => {
@@ -62,8 +73,10 @@ function AuthForm({ mode, onModeChange }) {
 
     try {
       if (mode === "login") {
-        await dispatch(login({ email: form.email, password: form.password })).unwrap();
-        setMessage({ type: "success", text: "Sesión iniciada correctamente." });
+        await dispatch(loginAction({
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+        })).unwrap();
         return;
       }
 
@@ -72,7 +85,10 @@ function AuthForm({ mode, onModeChange }) {
         email: form.email.trim().toLowerCase(),
         password: form.password,
       })).unwrap();
-      changeMode("login");
+      changeMode("login", {
+        type: "success",
+        text: "Cuenta creada correctamente. Ya puedes iniciar sesión.",
+      });
     } catch {
       setMessage(null);
     }
@@ -81,41 +97,97 @@ function AuthForm({ mode, onModeChange }) {
   return (
     <>
       <div className={styles.tabs} role="tablist" aria-label="Acceso">
-        <button className={mode === "login" ? styles.activeTab : styles.tab} type="button" role="tab" aria-selected={mode === "login"} onClick={() => changeMode("login")}>
+        <button
+          aria-controls="auth-form"
+          aria-selected={mode === "login"}
+          className={mode === "login" ? styles.activeTab : styles.tab}
+          onClick={() => changeMode("login")}
+          role="tab"
+          type="button"
+        >
           Iniciar sesión
         </button>
-        <button className={mode === "register" ? styles.activeTab : styles.tab} type="button" role="tab" aria-selected={mode === "register"} onClick={() => changeMode("register")}>
+        <button
+          aria-controls="auth-form"
+          aria-selected={mode === "register"}
+          className={mode === "register" ? styles.activeTab : styles.tab}
+          onClick={() => changeMode("register")}
+          role="tab"
+          type="button"
+        >
           Registrarse
         </button>
       </div>
 
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <form className={styles.form} id="auth-form" onSubmit={handleSubmit} noValidate>
         {mode === "register" && (
           <label className={styles.field}>
             Usuario
-            <input name="username" type="text" autoComplete="username" value={form.username} onChange={handleChange} aria-invalid={Boolean(fieldErrors.username)} />
-            {fieldErrors.username && <small>{fieldErrors.username}</small>}
+            <input
+              aria-describedby={fieldErrors.username ? "username-error" : undefined}
+              aria-invalid={Boolean(fieldErrors.username)}
+              autoComplete="username"
+              maxLength={50}
+              minLength={3}
+              name="username"
+              onChange={handleChange}
+              required
+              type="text"
+              value={form.username}
+            />
+            <FieldError id="username-error" message={fieldErrors.username} />
           </label>
         )}
         <label className={styles.field}>
           Email
-          <input name="email" type="email" autoComplete="email" value={form.email} onChange={handleChange} aria-invalid={Boolean(fieldErrors.email)} />
-          {fieldErrors.email && <small>{fieldErrors.email}</small>}
+          <input
+            aria-describedby={fieldErrors.email ? "email-error" : undefined}
+            aria-invalid={Boolean(fieldErrors.email)}
+            autoComplete="email"
+            maxLength={255}
+            name="email"
+            onChange={handleChange}
+            required
+            type="email"
+            value={form.email}
+          />
+          <FieldError id="email-error" message={fieldErrors.email} />
         </label>
         <label className={styles.field}>
           Contraseña
-          <input name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={form.password} onChange={handleChange} aria-invalid={Boolean(fieldErrors.password)} />
-          {fieldErrors.password && <small>{fieldErrors.password}</small>}
+          <input
+            aria-describedby={fieldErrors.password ? "password-error" : undefined}
+            aria-invalid={Boolean(fieldErrors.password)}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            maxLength={255}
+            minLength={8}
+            name="password"
+            onChange={handleChange}
+            required
+            type="password"
+            value={form.password}
+          />
+          <FieldError id="password-error" message={fieldErrors.password} />
         </label>
         {mode === "register" && (
           <label className={styles.field}>
             Repetir contraseña
-            <input name="confirmPassword" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={handleChange} aria-invalid={Boolean(fieldErrors.confirmPassword)} />
-            {fieldErrors.confirmPassword && <small>{fieldErrors.confirmPassword}</small>}
+            <input
+              aria-describedby={fieldErrors.confirmPassword ? "confirm-password-error" : undefined}
+              aria-invalid={Boolean(fieldErrors.confirmPassword)}
+              autoComplete="new-password"
+              maxLength={255}
+              name="confirmPassword"
+              onChange={handleChange}
+              required
+              type="password"
+              value={form.confirmPassword}
+            />
+            <FieldError id="confirm-password-error" message={fieldErrors.confirmPassword} />
           </label>
         )}
-        {serverError && <p className={styles.error}>{serverError.message}</p>}
-        {message && <p className={styles.success}>{message.text}</p>}
+        {serverError && <p className={styles.error} role="alert">{serverError.message}</p>}
+        {message && <p className={styles.success} role="status">{message.text}</p>}
         <button className={styles.submit} type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
         </button>

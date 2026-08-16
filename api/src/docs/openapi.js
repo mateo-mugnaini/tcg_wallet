@@ -287,15 +287,15 @@ export const openapiDocument = {
       post: operation({ operationId: "logout", summary: "Clear the refresh session cookie", tag: "Auth", successSchema: "EmptyResponse", successStatus: "204", auth: false }),
     },
     "/users": {
-      post: operation({ operationId: "createUser", summary: "Register a user", tag: "Users", successSchema: "UserResponse", successStatus: "201", auth: false, body: "CreateUserRequest", extraResponses: { "409": errorResponses["409"] } }),
+      post: operation({ operationId: "createUser", summary: "Register a user", tag: "Users", successSchema: "User", successStatus: "201", auth: false, body: "CreateUserRequest", extraResponses: { "409": errorResponses["409"] } }),
       get: operation({ operationId: "listUsers", summary: "List users (admin)", tag: "Users", successSchema: "UserListResponse", admin: true, query: [queryString("search"), queryString("page"), queryString("limit"), queryString("sortBy"), queryString("sortOrder")] }),
     },
     "/users/email/{email}": {
-      get: operation({ operationId: "getUserByEmail", summary: "Get a user by email (admin)", tag: "Users", successSchema: "UserResponse", admin: true, params: [parameter("email", "path", { type: "string", format: "email" }, true)] }),
+      get: operation({ operationId: "getUserByEmail", summary: "Get a user by email (admin)", tag: "Users", successSchema: "User", admin: true, params: [parameter("email", "path", { type: "string", format: "email" }, true)] }),
     },
     "/users/{id}": {
-      get: operation({ operationId: "getUser", summary: "Get own user or any user (admin)", tag: "Users", successSchema: "UserResponse", params: [parameter("id", "path", uuid, true)] }),
-      patch: operation({ operationId: "updateUser", summary: "Update own user or any user (admin)", tag: "Users", successSchema: "UserResponse", body: "UpdateUserRequest", params: [parameter("id", "path", uuid, true)] }),
+      get: operation({ operationId: "getUser", summary: "Get own user or any user (admin)", tag: "Users", successSchema: "User", params: [parameter("id", "path", uuid, true)] }),
+      patch: operation({ operationId: "updateUser", summary: "Update own user or any user (admin)", tag: "Users", successSchema: "User", body: "UpdateUserRequest", params: [parameter("id", "path", uuid, true)] }),
       delete: operation({ operationId: "deleteUser", summary: "Delete own user or any user (admin)", tag: "Users", successSchema: "UserDeleteResponse", params: [parameter("id", "path", uuid, true)] }),
     },
     "/tcgs": {

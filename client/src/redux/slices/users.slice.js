@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getUserById, getUsers } from "../actions/users/get/users.actions.js";
+import { getUserByEmail, getUserById, getUsers } from "../actions/users/get/users.actions.js";
 import { createUser } from "../actions/users/post/users.actions.js";
 
 const usersSlice = createSlice({
@@ -23,7 +23,7 @@ const usersSlice = createSlice({
       .addCase(createUser.pending, pending)
       .addCase(createUser.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.current = action.payload?.data || null;
+        state.current = action.payload?.data || action.payload || null;
       })
       .addCase(createUser.rejected, rejected)
       .addCase(getUsers.pending, pending)
@@ -35,9 +35,15 @@ const usersSlice = createSlice({
       .addCase(getUserById.pending, pending)
       .addCase(getUserById.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.current = action.payload?.data || null;
+        state.current = action.payload?.data || action.payload || null;
       })
-      .addCase(getUserById.rejected, rejected);
+      .addCase(getUserById.rejected, rejected)
+      .addCase(getUserByEmail.pending, pending)
+      .addCase(getUserByEmail.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.current = action.payload?.data || action.payload || null;
+      })
+      .addCase(getUserByEmail.rejected, rejected);
   },
 });
 

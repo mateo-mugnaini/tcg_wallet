@@ -1,10 +1,10 @@
 .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin-bottom: 24px;
-  padding: 4px;
-  border-radius: 12px;
+  gap: var(--space-1);
+  margin-bottom: var(--space-6);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
   background: rgba(30, 41, 59, 0.8);
 }
 
@@ -12,28 +12,20 @@
 .activeTab {
   padding: 10px;
   border: 0;
-  border-radius: 9px;
-  color: #94a3b8;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
   background: transparent;
   font-size: 0.88rem;
   font-weight: 700;
 }
 
 .activeTab {
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--color-surface);
+  background: var(--color-text-primary);
 }
 
 .tab:hover {
-  color: #f8fafc;
-}
-
-.tab:focus-visible,
-.activeTab:focus-visible,
-.submit:focus-visible,
-input:focus-visible {
-  outline: 3px solid #a5b4fc;
-  outline-offset: 2px;
+  color: var(--color-text-primary);
 }
 
 .form {
@@ -44,29 +36,29 @@ input:focus-visible {
 .field {
   display: grid;
   gap: 7px;
-  color: #cbd5e1;
+  color: var(--color-text-secondary);
   font-size: 0.86rem;
   font-weight: 700;
 }
 
-input {
+.field input {
   width: 100%;
   padding: 12px 13px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
   outline: 0;
-  color: #f8fafc;
+  color: var(--color-text-primary);
   background: rgba(15, 23, 42, 0.9);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-input:focus {
-  border-color: #5eead4;
+.field input:focus {
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.1);
 }
 
-input[aria-invalid="true"] {
-  border-color: #fb7185;
+.field input[aria-invalid="true"] {
+  border-color: var(--color-danger);
 }
 
 small,
@@ -79,22 +71,22 @@ small,
 
 small,
 .error {
-  color: #fb7185;
+  color: var(--color-danger);
 }
 
 .success {
-  color: #5eead4;
+  color: var(--color-accent);
 }
 
 .submit {
-  margin-top: 4px;
+  margin-top: var(--space-1);
   padding: 13px 16px;
   border: 0;
-  border-radius: 10px;
-  color: #08111f;
-  background: #5eead4;
+  border-radius: var(--radius-md);
+  color: var(--color-bg);
+  background: var(--color-accent);
   font-weight: 800;
-  transition: background 160ms ease, transform 160ms ease;
+  transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
 .submit:hover:not(:disabled) {

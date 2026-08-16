@@ -29,5 +29,11 @@ describe("OpenAPI contract", () => {
     expect(schemas.ImportGradedPricesRequest.properties.prices.items).toEqual({
       $ref: "#/components/schemas/ImportGradedPriceItem",
     });
+    expect(openapiDocument.paths["/users"].post.responses["201"].content["application/json"].schema).toEqual({
+      $ref: "#/components/schemas/User",
+    });
+    expect(openapiDocument.paths["/users/{id}"].get.responses["200"].content["application/json"].schema).toEqual({
+      $ref: "#/components/schemas/User",
+    });
   });
 });
