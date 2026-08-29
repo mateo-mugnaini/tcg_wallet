@@ -34,6 +34,7 @@ function CardPricesPage() {
   const [gradedQuery, setGradedQuery] = useState(initialGradedQuery);
   const [normalDraft, setNormalDraft] = useState(initialNormalQuery);
   const [gradedDraft, setGradedDraft] = useState(initialGradedQuery);
+  const selectedGradingCompany = companies.find((company) => company.id === gradedQuery.gradingCompanyId);
 
   useEffect(() => {
     dispatch(getCardById(cardId));
@@ -94,11 +95,25 @@ function CardPricesPage() {
 
       <div className={styles.panels}>
         <PricePanel latest={normal.latest} list={normal.list} stats={normal.stats} title="Precio normal" />
-        <PricePanel graded latest={graded.latest} list={graded.list} stats={graded.stats} title="Precio graded" />
+        <PricePanel
+          companies={companies}
+          graded
+          latest={graded.latest}
+          list={graded.list}
+          selectedCompanyId={gradedQuery.gradingCompanyId}
+          stats={graded.stats}
+          title="Precio graded"
+        />
       </div>
       <div className={styles.panels}>
         <PriceAnalytics aggregations={normal.aggregations} currency={normal.latest?.currency || "USD"} title="Evolución normal" variation={normal.variation} />
-        <PriceAnalytics aggregations={graded.aggregations} currency={graded.latest?.currency || "USD"} graded title="Evolución graded" variation={graded.variation} />
+        <PriceAnalytics
+          aggregations={graded.aggregations}
+          currency={graded.latest?.currency || "USD"}
+          graded
+          title={`Evolución graded${selectedGradingCompany ? ` · ${selectedGradingCompany.name}` : ""}`}
+          variation={graded.variation}
+        />
       </div>
     </section>
   );

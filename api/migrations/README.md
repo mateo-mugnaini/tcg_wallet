@@ -23,4 +23,4 @@ Antes de aplicar una migration en producción hay que:
 3. aplicar el SQL mediante el runner de migrations elegido por el despliegue;
 4. verificar índices y constraints con `pnpm db:check:schema`.
 
-Las migrations `000_baseline_schema.sql`, `001_critical_read_indexes.sql`, `002_sync_jobs.sql` y `003_price_integrity_constraints.sql` fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. El baseline no reemplaza tablas existentes; permite inicializar entornos limpios. Sus rollbacks están documentados en los propios archivos.
+Las migrations `000_baseline_schema.sql`, `001_critical_read_indexes.sql`, `002_sync_jobs.sql` y `003_price_integrity_constraints.sql` fueron aplicadas en desarrollo y quedaron registradas en `schema_migrations`. La migration `004_psa_grading_company.sql` registra PSA de forma idempotente y `005_unique_graded_price_snapshots.sql` evita snapshots graded duplicados. El baseline no reemplaza tablas existentes; permite inicializar entornos limpios. Sus rollbacks están documentados en los propios archivos.

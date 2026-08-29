@@ -13,7 +13,7 @@ import CollectionItemForm from "./components/CollectionItemForm/CollectionItemFo
 import ValuationBreakdown from "./components/ValuationBreakdown/ValuationBreakdown.jsx";
 import styles from "./CollectionPage.module.css";
 
-const initialQuery = { tcgId: POKEMON_TCG_ID, limit: 20, offset: 0, sortBy: "card_name", sortOrder: "ASC" };
+const initialQuery = { tcgId: POKEMON_TCG_ID, gradingCompanyId: "", limit: 20, offset: 0, sortBy: "card_name", sortOrder: "ASC" };
 
 function formatCurrency(value, currency = "USD") {
   if (value === null || value === undefined) return "—";
@@ -161,6 +161,7 @@ function CollectionPage() {
             </select>
           </label>
           <SelectField label="Estado" onChange={(event) => setDraft((current) => ({ ...current, isGraded: event.target.value || undefined }))} options={[["", "Todas"], ["false", "Sin grading"], ["true", "Gradadas"]]} value={draft.isGraded || ""} />
+          <SelectField label="Empresa" onChange={(event) => setDraft((current) => ({ ...current, gradingCompanyId: event.target.value || undefined }))} options={[["", "Todas"], ...grading.companies.map((company) => [company.id, company.name])]} value={draft.gradingCompanyId || ""} />
           <SelectField label="Set" onChange={(event) => setDraft((current) => ({ ...current, setId: event.target.value || undefined }))} options={[["", "Todos los sets"], ...catalog.sets.map((set) => [set.id, set.name])]} value={draft.setId || ""} />
           <SelectField label="Ordenar por" onChange={(event) => setDraft((current) => ({ ...current, sortBy: event.target.value }))} options={[["card_name", "Carta"], ["quantity", "Cantidad"], ["grade", "Nota"], ["created_at", "Más recientes"]]} value={draft.sortBy} />
           <SelectField label="Dirección" onChange={(event) => setDraft((current) => ({ ...current, sortOrder: event.target.value }))} options={[["ASC", "Ascendente"], ["DESC", "Descendente"]]} value={draft.sortOrder} />
@@ -177,7 +178,7 @@ function CollectionPage() {
                 <span className={styles.itemContent}>
                   <strong>{item.card?.name || item.card_id}</strong>
                   <small>{item.set?.name || "Set desconocido"} · {getConditionLabel(item.condition)}</small>
-                  <span className={styles.tags}>{item.quantity} unidades {item.is_graded ? `· Grado ${item.grade}` : "· Sin grading"}</span>
+                  <span className={styles.tags}>{item.quantity} unidades {item.is_graded ? `· ${item.grading_company?.name || "Graded"} ${item.grade}` : "· Sin grading"}</span>
                 </span>
               </Link>
             ))}

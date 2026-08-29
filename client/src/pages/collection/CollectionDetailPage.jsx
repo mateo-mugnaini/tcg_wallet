@@ -14,11 +14,13 @@ import {
 } from "../../redux/actions/prices/get/prices.actions.js";
 import { clearPrices } from "../../redux/slices/prices.slice.js";
 import { getConditionLabel } from "../../app/config/card-conditions.js";
+import {
+  getAllPriceHistory,
+  getVisiblePriceHistory,
+} from "../../lib/prices/price-history.js";
 import CollectionItemForm from "./components/CollectionItemForm/CollectionItemForm.jsx";
 import PriceHistoryChart from "./components/PriceHistoryChart/PriceHistoryChart.jsx";
 import styles from "./CollectionDetailPage.module.css";
-
-const YEAR_IN_MILLISECONDS = 365 * 24 * 60 * 60 * 1000;
 
 function formatCurrency(value, currency = "USD") {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return "Sin precio";
@@ -41,27 +43,6 @@ function formatDate(value) {
     month: "short",
     year: "numeric",
   }).format(date);
-}
-
-function getHistory(aggregations, onlyLastYear = true) {
-  const cutoff = Date.now() - YEAR_IN_MILLISECONDS;
-
-  const history = (aggregations || [])
-    .map((item) => {
-      const date = new Date(item.period);
-      return {
-        ...item,
-        date,
-        label: Number.isNaN(date.getTime())
-          ? item.period
-          : new Intl.DateTimeFormat("es-ES", { month: "short", year: "2-digit" }).format(date),
-      };
-    })
-    .filter((item) => !Number.isNaN(item.date.getTime()));
-
-  return onlyLastYear
-    ? history.filter((item) => item.date.getTime() >= cutoff)
-    : history;
 }
 
 function summarizeHistory(history, allHistory, latest) {
@@ -164,9 +145,9 @@ function CollectionDetailPage() {
   }
 
   const priceResource = selectedItem.is_graded ? prices.graded : prices.normal;
-  const history = getHistory(priceResource.aggregations);
-  const allHistory = getHistory(priceResource.aggregations, false);
-  const priceSummary = summarizeHistory(history, allHistory, priceResource.latest);
+  const visibleHistory = getVisiblePriceHistory(priceResource.aggregations);
+  const allHistory = getAllPriceHistory(priceResource.aggregations);
+  const priceSummary = summarizeHistory(visibleHistory.data, allHistory, priceResource.latest);
   const currency = priceResource.latest?.currency || "USD";
   const totalValue = priceSummary.current === null
     ? null
@@ -251,7 +232,27 @@ function CollectionDetailPage() {
             <Stat label="Valor de tus unidades" value={formatCurrency(totalValue, currency)} caption={`${selectedItem.quantity} ${selectedItem.quantity === 1 ? "unidad" : "unidades"}`} accent />
           </div>
 
-          <PriceHistoryChart currency={currency} data={history} />
+          {selectedItem.is_graded && (
+            <aside className={styles.priceMetadata}>
+              <div>
+                <span>Mercado seleccionado</span>
+                <strong>{selectedItem.grading_company?.name || "Graded"} · Grado {selectedItem.grade}</strong>
+              </div>
+              <div>
+                <span>Fuente del precio</span>
+                <strong>{priceResource.latest?.source || "Precio exacto no disponible"}</strong>
+              </div>
+              <div>
+                <span>Último dato</span>
+                <strong>{formatDate(priceResource.latest?.recorded_at)}</strong>
+              </div>
+              {!priceResource.latest && (
+                <p>Esta carta solo se valorará cuando exista un precio para la empresa y el grado exactos.</p>
+              )}
+            </aside>
+          )}
+
+          <PriceHistoryChart currency={currency} data={visibleHistory.data} isFallback={visibleHistory.isFallback} />
         </>
       )}
     </section>

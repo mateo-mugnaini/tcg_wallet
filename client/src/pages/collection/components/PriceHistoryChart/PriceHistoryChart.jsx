@@ -20,7 +20,7 @@ function formatCurrency(value, currency) {
   }).format(value);
 }
 
-function PriceHistoryChart({ currency = "USD", data }) {
+function PriceHistoryChart({ currency = "USD", data, isFallback = false }) {
   return (
     <article className={styles.card}>
       <header className={styles.header}>
@@ -31,6 +31,7 @@ function PriceHistoryChart({ currency = "USD", data }) {
         <span className={styles.legendHint}>Mínimo · Media · Máximo</span>
       </header>
 
+      {isFallback && <p className={styles.empty}>No hay datos del último año; se muestra el último registro disponible.</p>}
       {data.length === 0 ? (
         <p className={styles.empty}>No hay histórico suficiente para mostrar un gráfico.</p>
       ) : (

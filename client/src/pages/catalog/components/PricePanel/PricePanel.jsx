@@ -15,12 +15,15 @@ function formatCurrency(value, currency = "USD") {
   }
 }
 
-function PricePanel({ title, latest, stats, list, graded = false }) {
+function PricePanel({ companies = [], title, latest, stats, list, graded = false, selectedCompanyId = "" }) {
+  const getCompanyName = (companyId) => companies.find((company) => company.id === companyId)?.name || "Empresa no disponible";
+  const selectedCompanyName = selectedCompanyId ? getCompanyName(selectedCompanyId) : "Todas las empresas";
+
   return (
     <article className={styles.panel}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>{graded ? "Graded" : "Normal"}</p>
+          <p className={styles.eyebrow}>{graded ? `Graded · ${selectedCompanyName}` : "Normal"}</p>
           <h2>{title}</h2>
         </div>
         <span className={styles.count}>{list.length} registros</span>
@@ -29,7 +32,7 @@ function PricePanel({ title, latest, stats, list, graded = false }) {
         <div>
           <span>Último precio</span>
           <strong>{formatCurrency(latest?.price, latest?.currency)}</strong>
-          <small>{latest?.source || "Sin fuente"}</small>
+          <small>{graded && latest?.grading_company_id ? `${getCompanyName(latest.grading_company_id)} · ` : ""}{latest?.source || "Sin fuente"}</small>
         </div>
         <div>
           <span>Promedio histórico</span>
@@ -37,7 +40,7 @@ function PricePanel({ title, latest, stats, list, graded = false }) {
           <small>{stats?.total ?? 0} registros analizados</small>
         </div>
       </div>
-      {graded ? <GradedHistory list={list} /> : <NormalHistory list={list} />}
+      {graded ? <GradedHistory getCompanyName={getCompanyName} list={list} /> : <NormalHistory list={list} />}
     </article>
   );
 }
@@ -60,15 +63,15 @@ function NormalHistory({ list }) {
   );
 }
 
-function GradedHistory({ list }) {
+function GradedHistory({ getCompanyName, list }) {
   return (
     <div className={styles.history}>
       <h3>Historial reciente</h3>
-      {list.length === 0 ? <p className={styles.empty}>No hay precios graded registrados.</p> : (
+      {list.length === 0 ? <p className={styles.empty}>No hay precios graded para los filtros seleccionados.</p> : (
         <ul>
           {list.slice(0, 5).map((price) => (
             <li key={price.id}>
-              <span>Grado {price.grade} · {price.source}</span>
+              <span>{getCompanyName(price.grading_company_id)} · Grado {price.grade} · {price.source}</span>
               <strong>{formatCurrency(price.price, price.currency)}</strong>
             </li>
           ))}

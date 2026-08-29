@@ -697,19 +697,19 @@ export async function getCollectionValue(userId) {
         ci.grading_company_id,
         gc.name AS grading_company_name,
         CASE
-          WHEN ci.is_graded = true THEN COALESCE(lgp.price, lcp.price)
+          WHEN ci.is_graded = true THEN lgp.price
           ELSE COALESCE(lp.price, lcp.price)
         END AS unit_price,
         CASE
           WHEN ci.is_graded = true AND lgp.price IS NOT NULL THEN 'exact'
           WHEN ci.is_graded = false AND lp.price IS NOT NULL THEN 'exact'
-          WHEN lcp.price IS NOT NULL THEN 'fallback'
+          WHEN ci.is_graded = false AND lcp.price IS NOT NULL THEN 'fallback'
           ELSE NULL
         END AS price_match,
         (
           ci.quantity * COALESCE(
             CASE
-              WHEN ci.is_graded = true THEN COALESCE(lgp.price, lcp.price)
+              WHEN ci.is_graded = true THEN lgp.price
               ELSE COALESCE(lp.price, lcp.price)
             END,
             0

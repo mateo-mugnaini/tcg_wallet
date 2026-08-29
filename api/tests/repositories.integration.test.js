@@ -13,6 +13,7 @@ import {
 import {
   countCollectionItems,
   findCollectionItems,
+  getCollectionValue,
 } from "../src/repositories/collection-items.repository.js";
 import {
   countSets,
@@ -128,6 +129,74 @@ databaseTests("repository integration against PostgreSQL", () => {
     expect(collectionItems).toEqual([]);
     expect(collectionTotal).toBe(0);
     expect(gradedTotal).toBeGreaterThanOrEqual(gradedPrices.length);
+  });
+
+  it("does not use a normal price when the exact graded price is missing", async () => {
+    const userId = randomUUID();
+    const cardId = randomUUID();
+    const collectionItemId = randomUUID();
+    const normalSource = `integration-normal-${userId}`;
+    const gradedSource = `integration-graded-${userId}`;
+    let psaCompanyId;
+
+    try {
+      const companyResult = await pool.query(
+        "SELECT id FROM grading_companies WHERE name = $1",
+        ["PSA"],
+      );
+      psaCompanyId = companyResult.rows[0]?.id;
+      expect(psaCompanyId).toBeDefined();
+
+      await pool.query(
+        `
+          INSERT INTO users (id, username, password, email, role)
+          VALUES ($1, $2, $3, $4, $5)
+        `,
+        [userId, `integration-${userId}`, "not-a-real-password", `${userId}@example.test`, "user"],
+      );
+      await pool.query(
+        `
+          INSERT INTO cards (id, set_id, external_id, name, card_number)
+          VALUES ($1, $2, $3, $4, $5)
+        `,
+        [cardId, fixture.set_id, `integration-${cardId}`, "Integration PSA card", "INT-1"],
+      );
+      await pool.query(
+        `
+          INSERT INTO collection_items (id, user_id, card_id, quantity, condition, is_graded, grading_company_id, grade)
+          VALUES ($1, $2, $3, 2, $4, true, $5, 9.5)
+        `,
+        [collectionItemId, userId, cardId, "near_mint", psaCompanyId],
+      );
+      await pool.query(
+        `
+          INSERT INTO card_prices (card_id, condition, price, currency, source)
+          VALUES ($1, $2, 999, $3, $4)
+        `,
+        [cardId, "near_mint", "USD", normalSource],
+      );
+      await pool.query(
+        `
+          INSERT INTO graded_card_prices (card_id, grading_company_id, grade, price, currency, source)
+          VALUES ($1, $2, 9, 500, $3, $4)
+        `,
+        [cardId, psaCompanyId, "USD", gradedSource],
+      );
+
+      const value = await getCollectionValue(userId);
+
+      expect(value.summary.totalEstimatedValue).toBe(0);
+      expect(value.summary.itemsEvaluatedCount).toBe(0);
+      expect(value.summary.itemsMissingPriceCount).toBe(1);
+      expect(value.summary.gradedItemsMissingPriceCount).toBe(1);
+      expect(value.summary.gradedItemsUsingFallbackPriceCount).toBe(0);
+    } finally {
+      await pool.query("DELETE FROM graded_card_prices WHERE card_id = $1", [cardId]);
+      await pool.query("DELETE FROM card_prices WHERE card_id = $1", [cardId]);
+      await pool.query("DELETE FROM collection_items WHERE id = $1", [collectionItemId]);
+      await pool.query("DELETE FROM cards WHERE id = $1", [cardId]);
+      await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+    }
   });
 
   it("exposes the persistent sync jobs table and concurrency index", async () => {

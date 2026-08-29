@@ -42,6 +42,8 @@ export async function createGradedCardPrice({
         source
       )
       VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (card_id, grading_company_id, grade, price, currency, source, recorded_at)
+      DO NOTHING
       RETURNING
         id,
         card_id,
@@ -96,6 +98,8 @@ export async function createGradedCardPrices(gradedCardPrices) {
         recorded_at
       )
       VALUES ${placeholders.join(", ")}
+      ON CONFLICT (card_id, grading_company_id, grade, price, currency, source, recorded_at)
+      DO NOTHING
       RETURNING
         id,
         card_id,
