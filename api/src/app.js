@@ -14,6 +14,7 @@ import gradingCompaniesRoutes from "./routes/grading-companies.routes.js";
 import syncRoutes from "./routes/sync.pipeline.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import docsRoutes from "./routes/docs.routes.js";
+import packOpeningsRoutes from "./routes/pack-openings.routes.js";
 
 import { corsOptions, helmetOptions } from "./config/security.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
@@ -38,6 +39,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/tcgs", tcgRoutes);
 app.use("/api/sets", setRoutes);
+app.use("/api/openings", packOpeningsRoutes);
 app.use("/api/cards", cardsRoutes);
 app.use("/api/collection-items", collectionItemsRoutes);
 app.use("/api/grading-companies", gradingCompaniesRoutes);

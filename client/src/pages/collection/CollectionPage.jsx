@@ -1,15 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
 import Pagination from "../../components/ui/Pagination/Pagination.jsx";
 import { POKEMON_TCG_ID } from "../../app/config/catalog.js";
 import { CARD_CONDITION_OPTIONS, getConditionLabel } from "../../app/config/card-conditions.js";
-import { getAllSets, getCards } from "../../redux/actions/catalog/get/catalog.actions.js";
+import { getAllSets } from "../../redux/actions/catalog/get/catalog.actions.js";
 import { getGradingCompanies } from "../../redux/actions/grading/get/grading.actions.js";
 import { getCollectionItems, getCollectionStats, getCollectionValue } from "../../redux/actions/collection/get/collection.actions.js";
-import { createCollectionItem } from "../../redux/actions/collection/post/collection.actions.js";
-import CollectionItemForm from "./components/CollectionItemForm/CollectionItemForm.jsx";
 import ValuationBreakdown from "./components/ValuationBreakdown/ValuationBreakdown.jsx";
 import styles from "./CollectionPage.module.css";
 
@@ -40,7 +38,6 @@ function CollectionPage() {
   const grading = useSelector((state) => state.grading);
   const [query, setQuery] = useState(initialQuery);
   const [draft, setDraft] = useState(initialQuery);
-  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     dispatch(getCollectionItems({ query }));
@@ -53,49 +50,10 @@ function CollectionPage() {
     dispatch(getGradingCompanies());
   }, [dispatch]);
 
-  const refreshCollection = () => {
-    dispatch(getCollectionItems({ query }));
-    dispatch(getCollectionStats());
-    dispatch(getCollectionValue());
-  };
-
   const handleFilterSubmit = (event) => {
     event.preventDefault();
     setQuery({ ...draft, offset: 0 });
   };
-
-  const handleCreate = async (data) => {
-    await dispatch(createCollectionItem(data)).unwrap();
-    setShowForm(false);
-    refreshCollection();
-  };
-
-  const handleSetChange = useCallback((setId) => {
-    if (!setId) return;
-
-    dispatch(getCards({
-      query: {
-        limit: 100,
-        setId,
-        sortBy: "card_number",
-        sortOrder: "ASC",
-      },
-    }));
-  }, [dispatch]);
-
-  const handleCardSearch = useCallback((setId, search) => {
-    if (!setId) return;
-
-    dispatch(getCards({
-      query: {
-        limit: 100,
-        search: search || undefined,
-        setId,
-        sortBy: "card_number",
-        sortOrder: "ASC",
-      },
-    }));
-  }, [dispatch]);
 
   const summary = collection.stats?.summary;
   const valueSummary = collection.value?.summary;
@@ -104,30 +62,10 @@ function CollectionPage() {
   return (
     <section className={styles.page}>
       <PageHeader
-        description="Administra tus cartas, cantidades, condiciones y valoración estimada."
+        description="Consulta las cartas obtenidas al abrir sobres y su valoración estimada."
         eyebrow="Mi colección"
         title="Tus cartas Pokémon"
-      >
-        <button className={styles.addButton} onClick={() => setShowForm((current) => !current)} type="button">
-          {showForm ? "Cerrar formulario" : "Agregar carta"}
-        </button>
-      </PageHeader>
-
-
-      {showForm && (
-        <CollectionItemForm
-          cards={catalog.cards}
-          sets={catalog.sets}
-          companies={grading.companies}
-          loading={collection.mutationStatus === "loading"}
-          setsLoading={catalog.resourceStatus.sets === "loading"}
-          cardsLoading={catalog.resourceStatus.cards === "loading"}
-          onCancel={() => setShowForm(false)}
-          onCardSearch={handleCardSearch}
-          onSetChange={handleSetChange}
-          onSubmit={handleCreate}
-        />
-      )}
+      />
 
       <div className={styles.metrics}>
         <Metric label="Cartas distintas" value={summary?.totalDistinctCards ?? "—"} />

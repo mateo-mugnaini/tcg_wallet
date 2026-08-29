@@ -5,6 +5,36 @@ const silentRejections = new Set([
   "auth/logout/rejected",
 ]);
 
+const fieldLabels = {
+  username: "Usuario",
+  email: "Email",
+  password: "Contraseña",
+  confirmPassword: "Confirmación de contraseña",
+};
+
+export function getNotificationMessage(action) {
+  const payload = action.payload || {};
+  const errors = payload.details?.errors || payload.errors;
+
+  if (Array.isArray(errors) && errors.length > 0) {
+    return errors
+      .map((error) => `${fieldLabels[error.field] || error.field || "Dato"}: ${error.message}`)
+      .join(" ");
+  }
+
+  return payload.message || action.error?.message;
+}
+
+export function getNotificationTitle(action) {
+  if (action.type === "users/create/rejected") return "No se pudo crear la cuenta";
+  if (action.type === "auth/login/rejected") return "No se pudo iniciar sesión";
+  if (action.type === "openings/openPacks/rejected") return "No se pudo abrir el sobre";
+  if (action.payload?.status === 409) return "El registro ya existe";
+  if (action.payload?.status === 429) return "Demasiados intentos";
+  if (action.payload?.status === 400) return "Revisa los datos";
+  return "No se pudo completar la solicitud";
+}
+
 export const notificationsMiddleware = ({ dispatch }) => (next) => (action) => {
   const result = next(action);
   const isRejectedRequest = typeof action.type === "string"
@@ -13,11 +43,11 @@ export const notificationsMiddleware = ({ dispatch }) => (next) => (action) => {
     && !action.meta?.aborted;
 
   if (isRejectedRequest) {
-    const message = action.payload?.message || action.error?.message;
+    const message = getNotificationMessage(action);
     if (message && message !== "Rejected") {
       dispatch(addNotification({
         message,
-        title: "No se pudo completar la solicitud",
+        title: getNotificationTitle(action),
         type: "error",
       }));
     }

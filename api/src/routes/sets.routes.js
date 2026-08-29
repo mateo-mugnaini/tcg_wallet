@@ -28,6 +28,16 @@ import {
 import { syncJobResponseSchema } from "../schemas/sync-jobs.schema.js";
 import { syncRateLimiter } from "../middlewares/rate-limit.middleware.js";
 import { syncExecutionLock } from "../middlewares/sync-lock.middleware.js";
+import {
+  getPokedexController,
+  openPacksController,
+} from "../controllers/pack-openings.controller.js";
+import {
+  openingSetParamsSchema,
+  openPacksSchema,
+  openingResponseSchema,
+  pokedexResponseSchema,
+} from "../schemas/pack-openings.schema.js";
 
 const router = express.Router();
 
@@ -68,6 +78,23 @@ router.get(
   validate(getSetsQuerySchema, "query"),
   validateResponse(setsListResponseSchema),
   getSetsController,
+);
+
+router.get(
+  "/:id/pokedex",
+  authenticate,
+  validate(openingSetParamsSchema, "params"),
+  validateResponse(pokedexResponseSchema),
+  getPokedexController,
+);
+
+router.post(
+  "/:id/open",
+  authenticate,
+  validate(openingSetParamsSchema, "params"),
+  validate(openPacksSchema, "body"),
+  validateResponse(openingResponseSchema),
+  openPacksController,
 );
 
 /* ====================================

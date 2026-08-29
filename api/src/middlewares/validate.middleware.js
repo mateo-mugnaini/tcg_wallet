@@ -8,8 +8,12 @@ export function validate(schema, target = "body") {
     if (!result.success) {
       return res.status(400).json({
         status: "error",
-        message: "Datos de entrada inválidos",
-        errors: result.error.issues,
+        code: "VALIDATION_ERROR",
+        message: "Revisa los datos ingresados.",
+        errors: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
       });
     }
 

@@ -5,6 +5,7 @@ export function serializeApiError(error) {
     message: error?.message || "La solicitud no pudo completarse",
     code: error?.code || "API_ERROR",
     status: error?.status || 0,
+    details: error?.details || null,
   };
 }
 

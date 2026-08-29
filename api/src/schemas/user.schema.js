@@ -14,6 +14,7 @@ export const createUserSchema = z.object({
   email: z
     .string()
     .trim()
+    .toLowerCase()
     .email("El email no es válido")
     .max(255, "El email no puede superar los 255 caracteres"),
 

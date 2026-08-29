@@ -11,6 +11,7 @@ import {
 } from "../controllers/collection-items.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 
 import { validateResponse } from "../middlewares/validate-response.middleware.js";
 
@@ -83,6 +84,7 @@ router.get(
 router.post(
   "/",
   authenticate,
+  requireRole("admin"),
   validate(createCollectionItemSchema, "body"),
   validateResponse(collectionItemMutationResponseSchema),
   createCollectionItemController,
@@ -95,6 +97,7 @@ router.post(
 router.put(
   "/:id",
   authenticate,
+  requireRole("admin"),
   validate(collectionItemIdParamsSchema, "params"),
   validate(updateCollectionItemSchema, "body"),
   validateResponse(collectionItemMutationResponseSchema),

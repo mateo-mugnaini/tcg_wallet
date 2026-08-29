@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../components/ui/PageHeader/PageHeader.jsx";
-import { getGradingCompanies } from "../../redux/actions/grading/get/grading.actions.js";
 import { getCollectionItemById } from "../../redux/actions/collection/get/collection.actions.js";
 import { deleteCollectionItem } from "../../redux/actions/collection/delete/collection.actions.js";
-import { updateCollectionItem } from "../../redux/actions/collection/put/collection.actions.js";
 import {
   getGradedPriceAggregations,
   getLatestGradedPrice,
@@ -18,7 +16,6 @@ import {
   getAllPriceHistory,
   getVisiblePriceHistory,
 } from "../../lib/prices/price-history.js";
-import CollectionItemForm from "./components/CollectionItemForm/CollectionItemForm.jsx";
 import PriceHistoryChart from "./components/PriceHistoryChart/PriceHistoryChart.jsx";
 import styles from "./CollectionDetailPage.module.css";
 
@@ -76,13 +73,10 @@ function CollectionDetailPage() {
     status,
     mutationStatus,
   } = useSelector((state) => state.collection);
-  const companies = useSelector((state) => state.grading.companies);
   const prices = useSelector((state) => state.prices);
-  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     dispatch(getCollectionItemById(itemId));
-    dispatch(getGradingCompanies());
     dispatch(clearPrices());
   }, [dispatch, itemId]);
 
@@ -109,23 +103,6 @@ function CollectionDetailPage() {
     dispatch(getPriceAggregations({ cardId: selectedItem.card_id, query: { period: "month" } }));
     dispatch(getLatestPrice({ cardId: selectedItem.card_id, query: {} }));
   }, [dispatch, itemId, selectedItem, selectedItem?.card_id, selectedItem?.grade, selectedItem?.grading_company_id, selectedItem?.id, selectedItem?.is_graded]);
-
-  const handleUpdate = async (data) => {
-    await dispatch(updateCollectionItem({ id: itemId, data })).unwrap();
-    await dispatch(getCollectionItemById(itemId));
-    setEditing(false);
-  };
-
-  const handleQuantityChange = async (delta) => {
-    const nextQuantity = selectedItem.quantity + delta;
-    if (nextQuantity < 1) return;
-
-    await dispatch(updateCollectionItem({
-      id: itemId,
-      data: { quantity: nextQuantity },
-    })).unwrap();
-    await dispatch(getCollectionItemById(itemId));
-  };
 
   const handleDelete = async () => {
     if (selectedItem.quantity !== 1) return;
@@ -162,22 +139,9 @@ function CollectionDetailPage() {
         title={selectedItem.card?.name || "Carta"}
       >
         <Link className={styles.back} to="/collection">Volver</Link>
-        {!editing && <button className={styles.edit} onClick={() => setEditing(true)} type="button">Editar datos</button>}
       </PageHeader>
 
-      {editing ? (
-        <CollectionItemForm
-          cards={selectedItem.card ? [selectedItem.card] : []}
-          sets={selectedItem.set ? [selectedItem.set] : []}
-          companies={companies}
-          item={selectedItem}
-          loading={isBusy}
-          onCancel={() => setEditing(false)}
-          onSubmit={handleUpdate}
-        />
-      ) : (
-        <>
-          <article className={styles.cardHero}>
+      <article className={styles.cardHero}>
             <div className={styles.imageWrapper}>
               {selectedItem.card?.image_url ? (
                 <img
@@ -203,11 +167,6 @@ function CollectionDetailPage() {
                 <div>
                   <span className={styles.panelLabel}>En tu colección</span>
                   <strong>{selectedItem.quantity} {selectedItem.quantity === 1 ? "unidad" : "unidades"}</strong>
-                </div>
-                <div className={styles.quantityControls}>
-                  <button aria-label="Restar una unidad" disabled={isBusy || selectedItem.quantity === 1} onClick={() => handleQuantityChange(-1)} type="button">−</button>
-                  <span aria-live="polite">{selectedItem.quantity}</span>
-                  <button aria-label="Sumar una unidad" disabled={isBusy} onClick={() => handleQuantityChange(1)} type="button">+</button>
                 </div>
                 {selectedItem.quantity === 1 && (
                   <button className={styles.delete} disabled={isBusy} onClick={handleDelete} type="button">
@@ -253,8 +212,6 @@ function CollectionDetailPage() {
           )}
 
           <PriceHistoryChart currency={currency} data={visibleHistory.data} isFallback={visibleHistory.isFallback} />
-        </>
-      )}
     </section>
   );
 }

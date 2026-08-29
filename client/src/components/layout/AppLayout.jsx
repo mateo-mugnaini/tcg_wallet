@@ -8,6 +8,7 @@ const navigation = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/catalog", label: "Catálogo" },
   { to: "/collection", label: "Colección" },
+  { to: "/opening", label: "Abrir sobres" },
   { to: "/grading", label: "Grading" },
   { to: "/profile", label: "Perfil" },
 ];

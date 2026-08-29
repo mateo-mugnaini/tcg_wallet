@@ -117,7 +117,15 @@ describe("API end-to-end contracts", () => {
 
     expect(response.status).toBe(400);
     expect(body.status).toBe("error");
-    expect(body.message).toContain("inválidos");
+    expect(body).toEqual({
+      status: "error",
+      code: "VALIDATION_ERROR",
+      message: "Revisa los datos ingresados.",
+      errors: expect.arrayContaining([
+        expect.objectContaining({ field: "email", message: "El email no es válido" }),
+        expect.objectContaining({ field: "password", message: "La contraseña debe tener al menos 8 caracteres" }),
+      ]),
+    });
   });
 
   it("rejects unauthenticated collection access with 401", async () => {
@@ -126,6 +134,7 @@ describe("API end-to-end contracts", () => {
     expect(response.status).toBe(401);
     expect(body).toEqual({
       status: "error",
+      code: "APP_ERROR",
       message: "Token de autenticación requerido",
     });
   });

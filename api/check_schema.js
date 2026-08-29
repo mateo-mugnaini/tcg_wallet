@@ -22,6 +22,10 @@ const tableNames = [
   "grading_companies",
   "graded_card_prices",
   "sync_jobs",
+  "pack_rarity_rules",
+  "pack_opening_cooldowns",
+  "pack_openings",
+  "pack_opening_cards",
 ];
 
 try {

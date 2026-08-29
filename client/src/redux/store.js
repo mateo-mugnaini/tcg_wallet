@@ -8,6 +8,7 @@ import pricesReducer from "./slices/prices.slice.js";
 import syncReducer from "./slices/sync.slice.js";
 import usersReducer from "./slices/users.slice.js";
 import notificationsReducer from "./slices/notifications.slice.js";
+import openingsReducer from "./slices/openings.slice.js";
 import { notificationsMiddleware } from "./notifications.middleware.js";
 
 const persistedUserKey = "tcg-wallet-user";
@@ -33,6 +34,7 @@ export const store = configureStore({
     sync: syncReducer,
     health: healthReducer,
     notifications: notificationsReducer,
+    openings: openingsReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(notificationsMiddleware),
   preloadedState: {

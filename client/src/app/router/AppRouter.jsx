@@ -26,6 +26,7 @@ const ProfilePage = lazy(() => import("../../pages/profile/ProfilePage.jsx"));
 const SyncJobsPage = lazy(() => import("../../pages/admin/SyncJobsPage.jsx"));
 const UsersPage = lazy(() => import("../../pages/admin/UsersPage.jsx"));
 const NotFoundPage = lazy(() => import("../../pages/not-found/NotFoundPage.jsx"));
+const OpeningPage = lazy(() => import("../../pages/opening/OpeningPage.jsx"));
 
 function SessionBootstrap({ children }) {
   const dispatch = useDispatch();
@@ -97,6 +98,7 @@ function AppRouter() {
                 <Route path="catalog/cards/:cardId" element={<CatalogDetailPage type="card" />} />
                 <Route path="catalog/cards/:cardId/prices" element={<CardPricesPage />} />
                 <Route path="collection" element={<CollectionPage />} />
+                <Route path="opening" element={<OpeningPage />} />
                 <Route path="collection/:itemId" element={<CollectionDetailPage />} />
                 <Route path="grading" element={<GradingCompaniesPage />} />
                 <Route path="profile" element={<ProfilePage />} />

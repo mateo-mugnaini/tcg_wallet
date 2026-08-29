@@ -33,6 +33,11 @@ import {
   createSyncJob,
   findSyncJobById,
 } from "../src/repositories/sync-jobs.repository.js";
+import {
+  getOpeningStatus,
+  getSetPokedex,
+  openPackBatch,
+} from "../src/repositories/pack-openings.repository.js";
 
 const databaseTests = process.env.RUN_DB_TESTS === "true" ? describe : describe.skip;
 const EMPTY_USER_ID = "00000000-0000-4000-8000-000000000000";
@@ -242,6 +247,46 @@ databaseTests("repository integration against PostgreSQL", () => {
       });
     } finally {
       await pool.query("DELETE FROM sync_jobs WHERE id = $1", [id]);
+    }
+  });
+
+  it("opens a batch atomically, updates the collection and enforces cooldown", async () => {
+    const userId = randomUUID();
+
+    try {
+      await pool.query(
+        `
+          INSERT INTO users (id, username, password, email, role)
+          VALUES ($1, $2, $3, $4, $5)
+        `,
+        [userId, `opening-${userId}`, "not-a-real-password", `${userId}@example.test`, "user"],
+      );
+
+      const opening = await openPackBatch({
+        userId,
+        setId: fixture.set_id,
+        quantity: 2,
+      });
+
+      expect(opening.pack_quantity).toBe(2);
+      expect(opening.total_cards).toBe(10);
+      expect(opening.cards).toHaveLength(10);
+      expect(new Set(opening.cards.map((card) => card.pack_number))).toEqual(new Set([1, 2]));
+
+      const status = await getOpeningStatus(userId);
+      expect(status.can_open).toBe(false);
+      expect(status.next_open_at).toBe(opening.next_open_at);
+
+      await expect(
+        openPackBatch({ userId, setId: fixture.set_id, quantity: 1 }),
+      ).rejects.toMatchObject({ code: "OPENING_COOLDOWN", statusCode: 429 });
+
+      const pokedex = await getSetPokedex({ userId, setId: fixture.set_id });
+      expect(pokedex.length).toBeGreaterThan(0);
+      expect(pokedex.some((card) => card.owned_quantity > 0)).toBe(true);
+    } finally {
+      await pool.query("DELETE FROM collection_items WHERE user_id = $1", [userId]);
+      await pool.query("DELETE FROM users WHERE id = $1", [userId]);
     }
   });
 });

@@ -319,6 +319,12 @@ export const openapiDocument = {
       patch: operation({ operationId: "updateSet", summary: "Update a set (admin)", tag: "Sets", successSchema: "SetResponse", admin: true, params: [parameter("id", "path", uuid, true)], body: "UpdateSetRequest" }),
       delete: operation({ operationId: "deleteSet", summary: "Delete a set (admin)", tag: "Sets", successSchema: "SetResponse", admin: true, params: [parameter("id", "path", uuid, true)] }),
     },
+    "/sets/{id}/pokedex": {
+      get: operation({ operationId: "getSetPokedex", summary: "Get the authenticated user's set Pokedex", tag: "Openings", successSchema: "PokedexResponse", params: [parameter("id", "path", uuid, true)] }),
+    },
+    "/sets/{id}/open": {
+      post: operation({ operationId: "openPacks", summary: "Open one or more virtual packs", tag: "Openings", successSchema: "OpeningResponse", successStatus: "201", params: [parameter("id", "path", uuid, true)], body: "OpenPacksRequest" }),
+    },
     "/cards": {
       get: operation({ operationId: "listCards", summary: "List cards", tag: "Cards", successSchema: "CardListResponse", query: [queryString("setId"), queryString("tcgId"), queryString("search"), queryString("rarity"), queryString("cardNumber"), queryString("externalId"), queryString("page"), queryString("limit"), queryString("sortBy"), queryString("sortOrder")] }),
       post: operation({ operationId: "createCard", summary: "Create a card (admin)", tag: "Cards", successSchema: "CardResponse", successStatus: "201", admin: true, body: "CreateCardRequest" }),
@@ -368,7 +374,7 @@ export const openapiDocument = {
     },
     "/collection-items": {
       get: operation({ operationId: "listCollectionItems", summary: "List the authenticated collection", tag: "Collection", successSchema: "CollectionListResponse", query: [queryString("cardId"), queryString("condition"), queryString("isGraded"), queryString("setId"), queryString("tcgId"), queryString("rarity"), queryString("gradingCompanyId"), queryString("minGrade"), queryString("maxGrade"), queryString("limit"), queryString("offset"), queryString("sortBy"), queryString("sortOrder")] }),
-      post: operation({ operationId: "createCollectionItem", summary: "Add a card to the collection", tag: "Collection", successSchema: "CollectionMutationResponse", successStatus: "201", body: "CreateCollectionItemRequest" }),
+      post: operation({ operationId: "createCollectionItem", summary: "Add a card to the collection (admin)", tag: "Collection", successSchema: "CollectionMutationResponse", successStatus: "201", admin: true, body: "CreateCollectionItemRequest" }),
     },
     "/collection-items/stats": {
       get: operation({ operationId: "collectionStats", summary: "Get collection statistics", tag: "Collection", successSchema: "CollectionStatsResponse" }),
@@ -378,7 +384,7 @@ export const openapiDocument = {
     },
     "/collection-items/{id}": {
       get: operation({ operationId: "getCollectionItem", summary: "Get a collection item", tag: "Collection", successSchema: "CollectionItemResponse", params: [parameter("id", "path", uuid, true)] }),
-      put: operation({ operationId: "updateCollectionItem", summary: "Update a collection item", tag: "Collection", successSchema: "CollectionMutationResponse", params: [parameter("id", "path", uuid, true)], body: "UpdateCollectionItemRequest" }),
+      put: operation({ operationId: "updateCollectionItem", summary: "Update a collection item (admin)", tag: "Collection", successSchema: "CollectionMutationResponse", admin: true, params: [parameter("id", "path", uuid, true)], body: "UpdateCollectionItemRequest" }),
       delete: operation({ operationId: "deleteCollectionItem", summary: "Delete a collection item", tag: "Collection", successSchema: "CollectionMutationResponse", params: [parameter("id", "path", uuid, true)] }),
     },
     "/grading-companies": {
@@ -402,6 +408,9 @@ export const openapiDocument = {
     },
     "/sync/graded-prices": {
       post: operation({ operationId: "importGradedPrices", summary: "Import graded price snapshots (admin)", tag: "Sync", successSchema: "GradedPricesImportResponse", admin: true, body: "ImportGradedPricesRequest" }),
+    },
+    "/openings/status": {
+      get: operation({ operationId: "openingStatus", summary: "Get the authenticated user's pack opening cooldown", tag: "Openings", successSchema: "OpeningStatusResponse" }),
     },
   },
   components: {
@@ -607,6 +616,16 @@ export const openapiDocument = {
       CreateGradedCardPriceRequest: { type: "object", required: ["gradingCompanyId", "grade", "price", "currency", "source"], additionalProperties: false, properties: { gradingCompanyId: uuid, grade: { type: "number", minimum: 0, maximum: 10 }, price: { type: "number", minimum: 0 }, currency: { type: "string", minLength: 1, maxLength: 10 }, source: { type: "string", minLength: 1, maxLength: 100 } } },
       CreateCollectionItemRequest: { type: "object", required: ["cardId", "quantity", "condition"], properties: { cardId: uuid, quantity: { type: "integer", minimum: 1 }, condition: { type: "string" }, isGraded: { type: "boolean", default: false }, gradingCompanyId: { ...uuid, nullable: true }, grade: { type: "number", minimum: 0, maximum: 10, nullable: true } } },
       UpdateCollectionItemRequest: { type: "object", properties: { quantity: { type: "integer", minimum: 1 }, condition: { type: "string" }, isGraded: { type: "boolean" }, gradingCompanyId: { ...uuid, nullable: true }, grade: { type: "number", minimum: 0, maximum: 10, nullable: true } } },
+      OpenPacksRequest: { type: "object", properties: { quantity: { type: "integer", minimum: 1, maximum: 10, default: 1 } } },
+      OpeningCardData: { type: "object", required: ["id", "set_id", "name"], properties: { id: uuid, set_id: uuid, external_id: { type: "string", nullable: true }, name: { type: "string" }, card_number: { type: "string", nullable: true }, rarity: { type: "string", nullable: true }, image_url: { type: "string", nullable: true } } },
+      OpeningCard: { type: "object", required: ["id", "opening_id", "card_id", "pack_number", "slot_number", "rarity_key", "card"], properties: { id: uuid, opening_id: uuid, card_id: uuid, pack_number: { type: "integer", minimum: 1, maximum: 10 }, slot_number: { type: "integer", minimum: 1, maximum: 5 }, rarity_key: { type: "string" }, card: ref("OpeningCardData") } },
+      Opening: { type: "object", required: ["opening_id", "set_id", "pack_quantity", "cards_per_pack", "total_cards", "opened_at", "next_open_at", "cards"], properties: { opening_id: uuid, set_id: uuid, pack_quantity: { type: "integer", minimum: 1, maximum: 10 }, cards_per_pack: { type: "integer", enum: [5] }, total_cards: { type: "integer", minimum: 5, maximum: 50 }, opened_at: { type: "string", format: "date-time" }, next_open_at: { type: "string", format: "date-time" }, cards: { type: "array", items: ref("OpeningCard") } } },
+      OpeningResponse: dataResponse("Opening"),
+      OpeningStatus: { type: "object", required: ["can_open", "next_open_at"], properties: { can_open: { type: "boolean" }, next_open_at: { type: "string", format: "date-time", nullable: true } } },
+      OpeningStatusResponse: dataResponse("OpeningStatus"),
+      PokedexCard: { type: "object", required: ["id", "set_id", "name", "owned_quantity", "owned"], properties: { id: uuid, set_id: uuid, external_id: { type: "string", nullable: true }, name: { type: "string" }, card_number: { type: "string", nullable: true }, rarity: { type: "string", nullable: true }, image_url: { type: "string", nullable: true }, rarity_key: { type: "string" }, owned_quantity: { type: "integer", minimum: 0 }, owned: { type: "boolean" } } },
+      Pokedex: { type: "object", required: ["set", "summary", "data"], properties: { set: { type: "object", properties: { id: uuid, tcg_id: uuid, name: { type: "string" }, code: { type: "string", nullable: true } } }, summary: { type: "object", properties: { total_cards: { type: "integer" }, owned_cards: { type: "integer" }, missing_cards: { type: "integer" }, completion_percentage: { type: "number" }, cards_per_pack: { type: "integer", enum: [5] } } }, data: { type: "array", items: ref("PokedexCard") } } },
+      PokedexResponse: dataResponse("Pokedex"),
       CreateGradingCompanyRequest: { type: "object", required: ["name"], properties: { name: { type: "string", maxLength: 50 } } },
       UpdateGradingCompanyRequest: { type: "object", properties: { name: { type: "string", maxLength: 50 } } },
       ImportGradedPricesRequest: { type: "object", required: ["prices"], additionalProperties: false, properties: { prices: { type: "array", minItems: 1, maxItems: 1000, items: ref("ImportGradedPriceItem") } } },

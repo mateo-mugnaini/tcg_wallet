@@ -33,6 +33,25 @@ describe("security hardening configuration", () => {
     );
   });
 
+  it("refleja solo los orígenes locales permitidos en desarrollo", () => {
+    const checkOrigin = (origin) =>
+      new Promise((resolve) => {
+        corsOptions.origin(origin, (error, allowed) =>
+          resolve({ error, allowed }),
+        );
+      });
+
+    return Promise.all([
+      checkOrigin("http://localhost:5173"),
+      checkOrigin("http://127.0.0.1:5173"),
+      checkOrigin("https://untrusted.example.com"),
+    ]).then(([localhostResult, loopbackResult, untrustedResult]) => {
+      expect(localhostResult).toEqual({ error: null, allowed: true });
+      expect(loopbackResult).toEqual({ error: null, allowed: true });
+      expect(untrustedResult).toEqual({ error: null, allowed: false });
+    });
+  });
+
   it("monta Helmet, CORS, body parser limitado y cookies en la app", () => {
     const middlewareNames = app.router.stack.map((layer) => layer.name);
 

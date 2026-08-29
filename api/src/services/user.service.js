@@ -42,22 +42,44 @@ export async function registerUser({ username, email, password }) {
   const existingUserByEmail = await findUserByEmail(email);
 
   if (existingUserByEmail) {
-    throw createAppError("El email ya está registrado", 409);
+    throw createAppError(
+      "Ese email ya está registrado. Usa otro email o inicia sesión.",
+      409,
+      "USER_EMAIL_EXISTS",
+    );
   }
 
   const existingUserByUsername = await findUserByUsername(username);
 
   if (existingUserByUsername) {
-    throw createAppError("El username ya está registrado", 409);
+    throw createAppError(
+      "Ese nombre de usuario ya está registrado. Elige otro.",
+      409,
+      "USER_USERNAME_EXISTS",
+    );
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  return createUser({
-    username,
-    email,
-    password: hashedPassword,
-  });
+  try {
+    return await createUser({
+      username,
+      email,
+      password: hashedPassword,
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      if (error.constraint === "users_email_key") {
+        throw createAppError("Ese email ya está registrado. Usa otro email o inicia sesión.", 409, "USER_EMAIL_EXISTS");
+      }
+
+      if (error.constraint === "users_username_key") {
+        throw createAppError("Ese nombre de usuario ya está registrado. Elige otro.", 409, "USER_USERNAME_EXISTS");
+      }
+    }
+
+    throw error;
+  }
 }
 
 /* ====================================
@@ -107,7 +129,11 @@ export async function editUser(id, { username, email, password }) {
     const existingUserByEmail = await findUserByEmail(email);
 
     if (existingUserByEmail && existingUserByEmail.id !== id) {
-      throw createAppError("El email ya está registrado", 409);
+      throw createAppError(
+        "Ese email ya está registrado. Usa otro email.",
+        409,
+        "USER_EMAIL_EXISTS",
+      );
     }
   }
 
@@ -115,7 +141,11 @@ export async function editUser(id, { username, email, password }) {
     const existingUserByUsername = await findUserByUsername(username);
 
     if (existingUserByUsername && existingUserByUsername.id !== id) {
-      throw createAppError("El username ya está registrado", 409);
+      throw createAppError(
+        "Ese nombre de usuario ya está registrado. Elige otro.",
+        409,
+        "USER_USERNAME_EXISTS",
+      );
     }
   }
 

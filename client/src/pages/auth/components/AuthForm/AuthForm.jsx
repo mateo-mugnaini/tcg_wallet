@@ -70,7 +70,14 @@ function AuthForm({ mode, onModeChange }) {
     event.preventDefault();
     const errors = validateForm(mode, form);
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) {
+      dispatch(addNotification({
+        message: Object.values(errors).join(" "),
+        title: "Revisa el formulario",
+        type: "error",
+      }));
+      return;
+    }
 
     try {
       if (mode === "login") {

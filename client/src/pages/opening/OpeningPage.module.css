@@ -1,0 +1,224 @@
+.page {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.controls,
+.results,
+.pokedex {
+  min-width: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-panel);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(150px, 0.8fr) auto;
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.controlGroup {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.controlGroup label {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.controlGroup select {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+}
+
+.openButton,
+.pokedexToolbar button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-accent-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-accent);
+  font-weight: 800;
+}
+
+.helper {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.error {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+.sectionHeader,
+.pokedexToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.sectionHeader > span,
+.sectionHeader > strong,
+.pokedexToolbar > span {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-panel-soft);
+}
+
+.card img,
+.placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2.5 / 3.5;
+  object-fit: cover;
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--color-accent-strong);
+  background: var(--color-surface-raised);
+  font-weight: 900;
+}
+
+.cardInfo {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: var(--space-3);
+}
+
+.cardInfo strong,
+.cardInfo small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardInfo strong {
+  color: var(--color-text-primary);
+}
+
+.cardInfo small,
+.quantity {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.quantity {
+  color: var(--color-success);
+  font-weight: 800;
+}
+
+.missing {
+  opacity: 0.54;
+  filter: grayscale(0.7);
+}
+
+.progressTrack {
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  background: var(--color-success);
+  transition: width var(--transition-fast);
+}
+
+.pokedexToolbar {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.pokedexToolbar button {
+  min-height: 36px;
+  padding: 7px 10px;
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+.empty {
+  margin: var(--space-6) 0 0;
+  color: var(--color-success);
+}
+
+@media (max-width: 900px) {
+  .cardGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .controls,
+  .results,
+  .pokedex {
+    padding: var(--space-4);
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 440px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sectionHeader,
+  .pokedexToolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
